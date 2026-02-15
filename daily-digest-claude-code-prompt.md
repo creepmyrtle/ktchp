@@ -16,7 +16,7 @@ The app should feel calm and intentional. It is explicitly **anti-addictive** by
 | Styling | **Tailwind CSS** |
 | Database | **SQLite** via `better-sqlite3` (with a clean DB abstraction layer for future migration to Postgres) |
 | AI | **Anthropic Claude API** (claude-sonnet-4-20250514) for relevance scoring and summarization |
-| Deployment | **Vercel** (use Vercel Cron for scheduled ingestion) |
+| Deployment | **Vercel** (frontend/API), **GitHub Actions** (daily ingestion cron) |
 | Auth | Simple token/password-based auth for now (single env var `DIGEST_PASSWORD`), but design user model to support multi-user later |
 
 ---
@@ -137,7 +137,7 @@ CREATE TABLE learned_preferences (
 
 ### API Route: `/api/ingest` (POST, protected by API key)
 
-This endpoint is triggered by Vercel Cron (or manually). It:
+This endpoint can be triggered manually from the UI. Daily scheduled ingestion runs via GitHub Actions (see `.github/workflows/ingest.yml` and `scripts/ingest.ts`). The API route:
 
 1. **Fetches content from all enabled sources** for the user
 2. **Deduplicates** against existing articles (by URL hash / external_id)
@@ -169,19 +169,14 @@ This endpoint is triggered by Vercel Cron (or manually). It:
 - These get queued and processed in the next ingestion run
 - Fetch page title and meta description, or use Claude to summarize the page content
 
-### Vercel Cron Configuration
+### GitHub Actions Cron
 
-```json
-// vercel.json
-{
-  "crons": [
-    {
-      "path": "/api/ingest",
-      "schedule": "0 7,17 * * *"  // 7 AM and 5 PM CT
-    }
-  ]
-}
-```
+Daily ingestion runs as a GitHub Actions workflow (`.github/workflows/ingest.yml`) instead of Vercel Cron, because the pipeline takes ~20 minutes — longer than Vercel's serverless timeout. The workflow:
+
+- Runs daily at 11:00 UTC (5 AM CT) via cron schedule
+- Can be triggered manually from the GitHub Actions tab (`workflow_dispatch`)
+- Executes `scripts/ingest.ts` via `npm run ingest`
+- Requires `POSTGRES_URL`, `SYNTHETIC_API_KEY`, and `DIGEST_PASSWORD` as GitHub Actions secrets
 
 ---
 
@@ -393,7 +388,7 @@ Each article card should display:
 - Middleware: Check session token on all protected routes
 
 ### Ingestion
-- `POST /api/ingest` — Trigger content ingestion (protected by `CRON_SECRET` env var for Vercel Cron, or session token for manual trigger)
+- `POST /api/ingest` — Trigger content ingestion manually (protected by session token). Daily ingestion runs via GitHub Actions.
 - `POST /api/sources` — Add a new source
 - `PUT /api/sources/[id]` — Update source
 - `DELETE /api/sources/[id]` — Remove source
@@ -541,7 +536,8 @@ daily-digest/
 │   └── types/
 │       └── index.ts                # TypeScript type definitions
 ├── data/                           # SQLite database location (gitignored)
-├── vercel.json                     # Cron configuration
+├── .github/workflows/ingest.yml    # GitHub Actions daily ingestion cron
+├── scripts/ingest.ts               # Standalone ingestion script (used by GH Actions)
 ├── .env.local                      # Environment variables
 ├── tailwind.config.ts
 ├── tsconfig.json
@@ -590,7 +586,7 @@ Build in this order:
 ### Phase 6: Polish
 23. Dark mode
 24. Mobile responsiveness pass
-25. Vercel Cron configuration
+25. GitHub Actions ingestion workflow
 26. Error handling and loading states
 27. README with setup instructions
 

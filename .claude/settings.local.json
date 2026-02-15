@@ -17,7 +17,10 @@
       "Bash(git add:*)",
       "Bash(git reset:*)",
       "Bash(node -e:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(dir:*)",
+      "Bash(if not exist \"C:\\\\Users\\\\joeco\\\\OneDrive\\\\Desktop\\\\ktchp\\\\scripts\" mkdir \"C:\\\\Users\\\\joeco\\\\OneDrive\\\\Desktop\\\\ktchp\\\\scripts\")",
+      "Bash(ls:*)"
     ]
   }
 }

@@ -37,8 +37,10 @@ export async function runIngestion(userId: string, provider: string, logger?: In
     sources: sources.map(s => ({ id: s.id, name: s.name, type: s.type, url: s.config.url })),
   });
 
-  for (const source of sources) {
-    try {
+  // Fetch all sources in parallel
+  const fetchStart = Date.now();
+  const fetchResults = await Promise.allSettled(
+    sources.map(async (source) => {
       const existingIds = await getRecentArticleExternalIds(source.id, provider);
 
       logger?.log('fetch', `Fetching source: ${source.name} (${source.type})`, {
@@ -47,67 +49,77 @@ export async function runIngestion(userId: string, provider: string, logger?: In
         existingArticleCount: existingIds.size,
       });
 
-      const fetchStart = Date.now();
+      const sourceStart = Date.now();
       const rawArticles = await fetchFromSource(source);
-      const fetchDurationMs = Date.now() - fetchStart;
-      result.totalFetched += rawArticles.length;
+      const fetchDurationMs = Date.now() - sourceStart;
 
       logger?.log('fetch', `RSS fetched: ${source.name}`, {
         fetchDurationMs,
         itemCount: rawArticles.length,
       });
 
-      let sourceNew = 0;
-      let sourceDupes = 0;
+      return { source, rawArticles, existingIds };
+    })
+  );
+  const totalFetchDurationMs = Date.now() - fetchStart;
 
-      for (const raw of rawArticles) {
-        if (raw.external_id && existingIds.has(raw.external_id)) {
-          result.duplicates++;
-          sourceDupes++;
-          logger?.log('fetch', `Duplicate skipped: "${raw.title}"`, {
-            title: raw.title,
-            url: raw.url,
-            externalId: raw.external_id,
-          });
-          continue;
-        }
+  logger?.log('fetch', `All sources fetched in ${totalFetchDurationMs}ms`);
 
-        const article = await createArticle(raw, provider);
-        if (article) {
-          result.newArticles++;
-          sourceNew++;
-          logger?.log('fetch', `New article: "${raw.title}"`, {
-            articleId: article.id,
-            title: raw.title,
-            url: raw.url,
-            externalId: raw.external_id,
-            publishedAt: raw.published_at,
-          });
-        } else {
-          result.duplicates++;
-          sourceDupes++;
-          logger?.log('fetch', `DB duplicate: "${raw.title}"`, {
-            title: raw.title,
-            url: raw.url,
-            externalId: raw.external_id,
-          });
-        }
-      }
-
-      logger?.log('fetch', `Source complete: ${source.name}`, {
-        articlesFetched: rawArticles.length,
-        new: sourceNew,
-        duplicates: sourceDupes,
-      });
-    } catch (error) {
-      const msg = `Error fetching ${source.name}: ${error}`;
+  // Process results sequentially (DB writes)
+  for (const fetchResult of fetchResults) {
+    if (fetchResult.status === 'rejected') {
+      const msg = `Source fetch error: ${fetchResult.reason}`;
       console.error(msg);
       result.errors.push(msg);
-      logger?.error('fetch', `Source error: ${source.name}`, {
-        error: String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-      });
+      logger?.error('fetch', 'Source error', { error: String(fetchResult.reason) });
+      continue;
     }
+
+    const { source, rawArticles, existingIds } = fetchResult.value;
+    result.totalFetched += rawArticles.length;
+
+    let sourceNew = 0;
+    let sourceDupes = 0;
+
+    for (const raw of rawArticles) {
+      if (raw.external_id && existingIds.has(raw.external_id)) {
+        result.duplicates++;
+        sourceDupes++;
+        logger?.log('fetch', `Duplicate skipped: "${raw.title}"`, {
+          title: raw.title,
+          url: raw.url,
+          externalId: raw.external_id,
+        });
+        continue;
+      }
+
+      const article = await createArticle(raw, provider);
+      if (article) {
+        result.newArticles++;
+        sourceNew++;
+        logger?.log('fetch', `New article: "${raw.title}"`, {
+          articleId: article.id,
+          title: raw.title,
+          url: raw.url,
+          externalId: raw.external_id,
+          publishedAt: raw.published_at,
+        });
+      } else {
+        result.duplicates++;
+        sourceDupes++;
+        logger?.log('fetch', `DB duplicate: "${raw.title}"`, {
+          title: raw.title,
+          url: raw.url,
+          externalId: raw.external_id,
+        });
+      }
+    }
+
+    logger?.log('fetch', `Source complete: ${source.name}`, {
+      articlesFetched: rawArticles.length,
+      new: sourceNew,
+      duplicates: sourceDupes,
+    });
   }
 
   logger?.log('fetch', 'Ingestion complete', {

@@ -51,6 +51,15 @@ export async function getIngestionLogs(
   return rows as Omit<IngestionLog, 'events'>[];
 }
 
+export async function markStaleLogsAsTimedOut(): Promise<number> {
+  const { rowCount } = await sql`
+    UPDATE ingestion_logs
+    SET status = 'error', finished_at = NOW(), error = 'Timed out (stale running state)'
+    WHERE status = 'running' AND finished_at IS NULL
+  `;
+  return rowCount ?? 0;
+}
+
 export async function getIngestionLogById(id: string): Promise<IngestionLog | null> {
   const { rows } = await sql`
     SELECT * FROM ingestion_logs WHERE id = ${id}
