@@ -8,25 +8,20 @@ interface ActionBarProps {
   articleId: string;
   articleUrl: string;
   initialSentiment: Sentiment | null;
-  initialIsRead: boolean;
   initialIsBookmarked: boolean;
   onArchive: () => void;
   onSentimentChange?: (sentiment: Sentiment | null) => void;
-  compact?: boolean;
 }
 
 export default function ActionBar({
   articleId,
   articleUrl,
   initialSentiment,
-  initialIsRead,
   initialIsBookmarked,
   onArchive,
   onSentimentChange,
-  compact = false,
 }: ActionBarProps) {
   const [sentiment, setSentiment] = useState<Sentiment | null>(initialSentiment);
-  const [isRead, setIsRead] = useState(initialIsRead);
   const [isBookmarked, setIsBookmarked] = useState(initialIsBookmarked);
   const [sentimentPulse, setSentimentPulse] = useState(false);
   const { showToast } = useToast();
@@ -44,11 +39,6 @@ export default function ActionBar({
     setSentiment(newSentiment);
     onSentimentChange?.(newSentiment);
     sendAction(value);
-  }
-
-  function handleRead() {
-    setIsRead(!isRead);
-    sendAction('read');
   }
 
   function handleBookmark() {
@@ -111,19 +101,12 @@ export default function ActionBar({
         </button>
       </div>
 
-      {/* Read toggle — hidden on mobile if compact */}
-      {!compact && (
-        <button onClick={handleRead} className={`${iconBtnClass(isRead)} hidden sm:inline-flex`} title={isRead ? 'Mark unread' : 'Mark read'}>
-          {isRead ? '\u2611' : '\u2610'}
-        </button>
-      )}
-
       {/* Bookmark */}
       <button onClick={handleBookmark} className={iconBtnClass(isBookmarked)} title={isBookmarked ? 'Remove bookmark' : 'Bookmark'}>
-        {isBookmarked ? '\uD83D\uDD16' : '\uD83D\uDD17'}
+        {isBookmarked ? '\uD83D\uDD16' : '\uD83D\uDCCC'}
       </button>
 
-      {/* Share */}
+      {/* Share / copy link */}
       <button onClick={handleShare} className={iconBtnClass(false)} title="Copy link">
         &#x1F517;
       </button>

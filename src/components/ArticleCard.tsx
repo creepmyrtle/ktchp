@@ -14,6 +14,7 @@ export default function ArticleCard({ article, swipeDirection = 'right' }: Artic
   const [archiving, setArchiving] = useState(false);
   const [archived, setArchived] = useState(false);
   const [sentiment, setSentiment] = useState<Sentiment | null>(article.sentiment);
+  const [isRead, setIsRead] = useState(article.is_read);
 
   const isSerendipity = !!article.is_serendipity;
 
@@ -37,6 +38,7 @@ export default function ArticleCard({ article, swipeDirection = 'right' }: Artic
 
   // Auto-track read on link click
   function handleLinkClick() {
+    setIsRead(true);
     fetch('/api/feedback', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -84,7 +86,10 @@ export default function ArticleCard({ article, swipeDirection = 'right' }: Artic
       >
         {/* Header: source + relevance tag */}
         <div className="flex items-start justify-between gap-2 mb-2 flex-wrap">
-          <span className="text-xs text-muted">{article.source_name}</span>
+          <span className="text-xs text-muted flex items-center gap-1.5">
+            {!isRead && <span className="inline-block w-1.5 h-1.5 rounded-full bg-accent" />}
+            {article.source_name}
+          </span>
           <span
             className={`text-xs px-2 py-0.5 rounded-full leading-tight ${
               isSerendipity
@@ -102,7 +107,7 @@ export default function ArticleCard({ article, swipeDirection = 'right' }: Artic
           href={article.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="block text-base font-medium leading-snug hover:text-accent transition-colors mb-2"
+          className={`block text-base font-medium leading-snug hover:text-accent transition-colors mb-2 ${isRead ? 'text-muted' : ''}`}
           onClick={handleLinkClick}
         >
           {article.title}
@@ -124,7 +129,6 @@ export default function ArticleCard({ article, swipeDirection = 'right' }: Artic
             articleId={article.id}
             articleUrl={article.url}
             initialSentiment={article.sentiment}
-            initialIsRead={article.is_read}
             initialIsBookmarked={article.is_bookmarked}
             onArchive={handleArchive}
             onSentimentChange={(s) => setSentiment(s)}
