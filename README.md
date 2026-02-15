@@ -6,7 +6,7 @@ A personal, AI-curated daily digest app. Aggregates articles from RSS feeds, sco
 
 ### The Pipeline
 
-Every ingestion run (triggered by a daily Vercel cron job or manually via the UI) executes this pipeline:
+Every ingestion run (triggered by a daily GitHub Actions workflow or manually via the UI) executes this pipeline:
 
 1. **Fetch** — Loops over your enabled RSS sources, fetches new articles, deduplicates against existing articles by normalized URL.
 2. **Prefilter** — Removes spam domains, very short titles, exact title duplicates, and stale articles (>7 days old).
@@ -21,7 +21,7 @@ Articles scoring below the threshold are still stored — they just aren't assig
 
 ### Feedback Loop
 
-Thumbs up/down, bookmark, and dismiss actions are recorded per article. These feed into a learned preferences system that extracts patterns from your feedback over time, which are then included in future scoring prompts.
+Thumbs up/down, bookmark, and dismiss actions are recorded per article. Toggleable actions (thumbs, bookmarks) can be undone by clicking again. These feed into a learned preferences system that extracts patterns from your feedback over time, which are then included in future scoring prompts.
 
 ## Architecture
 
@@ -32,6 +32,7 @@ src/
 │   ├── settings/page.tsx         # Settings (interests, sources, schedule, logs)
 │   ├── digest/page.tsx           # Latest digest view
 │   ├── digest/[id]/page.tsx      # Historical digest view
+│   ├── digest/bookmarks/page.tsx # Bookmarked articles
 │   └── api/
 │       ├── auth/                 # login, logout
 │       ├── ingest/route.ts       # POST — runs full ingestion pipeline
@@ -39,7 +40,7 @@ src/
 │       ├── digests/              # GET recent, GET by ID, GET latest, POST clear
 │       ├── interests/            # CRUD for user interests
 │       ├── sources/              # CRUD for RSS sources
-│       ├── feedback/             # POST feedback actions
+│       ├── feedback/             # POST feedback actions (toggleable)
 │       ├── preferences/          # GET/DELETE learned preferences
 │       ├── manual-url/           # POST a URL for manual ingestion
 │       └── settings/             # provider, schedule settings
@@ -47,14 +48,14 @@ src/
 ├── components/
 │   ├── ArticleCard.tsx           # Article display with feedback buttons
 │   ├── DigestHeader.tsx          # Date/time header for a digest
-│   ├── DigestSelector.tsx        # Horizontal date pill selector for navigating digests
-│   ├── FeedbackButtons.tsx       # Thumbs up/down, bookmark, dismiss
+│   ├── DigestSelector.tsx        # Dropdown selector for navigating digests
+│   ├── FeedbackButtons.tsx       # Thumbs up/down, bookmark, dismiss (toggleable)
 │   ├── IngestButton.tsx          # "Ingest Now" + "Clear Provider" actions
 │   ├── IngestionLogs.tsx         # Log viewer with expandable event timelines
 │   ├── InterestManager.tsx       # Add/edit/delete interests with weight sliders
 │   ├── ManualUrlInput.tsx        # Paste a URL for manual inclusion
 │   ├── PreferenceViewer.tsx      # View/delete learned preferences
-│   ├── ScheduleManager.tsx       # Cron schedule info
+│   ├── ScheduleManager.tsx       # GitHub Actions schedule info
 │   ├── SourceManager.tsx         # Add/edit/delete RSS sources
 │   └── CaughtUpMessage.tsx       # "You're all caught up" footer
 │
@@ -70,7 +71,7 @@ src/
 │   │   ├── digests.ts            # Digest CRUD
 │   │   ├── sources.ts            # Source CRUD
 │   │   ├── interests.ts          # Interest CRUD
-│   │   ├── feedback.ts           # Feedback recording
+│   │   ├── feedback.ts           # Feedback recording, toggle support, bookmarks query
 │   │   ├── preferences.ts        # Learned preference queries
 │   │   ├── settings.ts           # Key-value settings store
 │   │   ├── users.ts              # User queries
@@ -123,8 +124,8 @@ Logs are viewable in Settings > Logs and exportable as JSON.
 - **Framework**: Next.js 16 (App Router, React 19)
 - **Database**: Vercel Postgres
 - **LLM**: Kimi K2.5 via OpenAI-compatible API (Anthropic infrastructure preserved but inactive)
-- **Styling**: Tailwind CSS 4 with light/dark mode
-- **Deployment**: Vercel with daily cron
+- **Styling**: Tailwind CSS 4, dark theme (DM Sans + JetBrains Mono)
+- **Deployment**: Vercel (hosting) + GitHub Actions (daily cron)
 - **Auth**: Password-based single-user with session cookies
 
 ## Environment Variables
@@ -135,9 +136,8 @@ Logs are viewable in Settings > Logs and exportable as JSON.
 | `SYNTHETIC_API_KEY` | API key for Kimi K2.5 (via synthetic.new) |
 | `ANTHROPIC_API_KEY` | Anthropic API key (inactive, kept for future use) |
 | `DIGEST_PASSWORD` | Login password (plain text or bcrypt hash) |
-| `CRON_SECRET` | Secret for Vercel cron job auth |
+| `CRON_SECRET` | Secret used for session signing and API auth |
 | `MIN_RELEVANCE_SCORE` | Minimum score for digest inclusion (default 0.5) |
-| `MAX_ARTICLES_PER_DIGEST` | Unused — no longer enforced |
 
 ## Development
 
@@ -149,7 +149,7 @@ npm run build       # Production build
 
 ## Deployment
 
-Push to main. Vercel auto-deploys. The cron job runs daily at 11:00 UTC (5 AM CT) per `vercel.json`.
+Push to main. Vercel auto-deploys the app. The daily ingestion cron runs via GitHub Actions at 11:00 UTC (5 AM CT) per `.github/workflows/ingest.yml`.
 
 ---
 
@@ -190,7 +190,6 @@ Push to main. Vercel auto-deploys. The cron job runs daily at 11:00 UTC (5 AM CT
 
 ### UI/UX
 - **Search** — Full-text search across all ingested articles
-- **Bookmarks view** — Dedicated page for bookmarked articles
 - **Keyboard shortcuts** — j/k navigation, quick feedback keys
 - **Article preview** — Inline expand to read full content without leaving the digest
 - **Mobile app** — React Native or PWA wrapper for a native feel

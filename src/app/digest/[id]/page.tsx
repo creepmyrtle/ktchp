@@ -3,8 +3,7 @@ import { getSessionFromCookies } from '@/lib/auth';
 import { seedDatabase } from '@/lib/db/seed';
 import { getDefaultUser } from '@/lib/db/users';
 import { getDigestById, getRecentDigests } from '@/lib/db/digests';
-import { getArticlesByDigestId } from '@/lib/db/articles';
-import { getFeedbackByUserId } from '@/lib/db/feedback';
+import { getArticlesByDigestId, getDigestCompletionStats } from '@/lib/db/articles';
 import DigestHeader from '@/components/DigestHeader';
 import ArticleCard from '@/components/ArticleCard';
 import CaughtUpMessage from '@/components/CaughtUpMessage';
@@ -24,16 +23,19 @@ export default async function DigestByIdPage({ params }: { params: Promise<{ id:
   if (!digest) notFound();
 
   const articles = await getArticlesByDigestId(digest.id);
+  const stats = await getDigestCompletionStats(digest.id);
   const recentDigests = await getRecentDigests(user.id, 14, digest.provider);
-  const userFeedback = await getFeedbackByUserId(user.id, 200);
 
-  const feedbackMap = new Map<string, Set<string>>();
-  for (const fb of userFeedback) {
-    if (!feedbackMap.has(fb.article_id)) {
-      feedbackMap.set(fb.article_id, new Set());
-    }
-    feedbackMap.get(fb.article_id)!.add(fb.action);
-  }
+  const enrichedDigests = await Promise.all(
+    recentDigests.map(async (d) => {
+      const s = await getDigestCompletionStats(d.id);
+      return {
+        ...d,
+        remaining_count: s.remaining_count,
+        is_complete: s.remaining_count === 0 && s.total_article_count > 0,
+      };
+    })
+  );
 
   return (
     <div className="min-h-screen">
@@ -58,21 +60,29 @@ export default async function DigestByIdPage({ params }: { params: Promise<{ id:
         <DigestHeader
           date={digest.generated_at}
           articleCount={articles.length}
+          archivedCount={stats.archived_count}
+          totalCount={stats.total_article_count}
         />
 
-        <DigestSelector digests={recentDigests} currentId={digest.id} />
+        <DigestSelector digests={enrichedDigests} currentId={digest.id} />
 
         <div className="flex flex-col gap-4 mt-6">
           {articles.map(article => (
             <ArticleCard
               key={article.id}
               article={article}
-              initialFeedback={Array.from(feedbackMap.get(article.id) || [])}
             />
           ))}
         </div>
 
-        <CaughtUpMessage />
+        <CaughtUpMessage
+          isComplete={stats.remaining_count === 0 && stats.total_article_count > 0}
+          totalCount={stats.total_article_count}
+          likedCount={stats.liked_count}
+          neutralCount={stats.neutral_count}
+          dislikedCount={stats.disliked_count}
+          bookmarkedCount={stats.bookmarked_count}
+        />
       </main>
     </div>
   );

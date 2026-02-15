@@ -4,7 +4,7 @@ export default function ScheduleManager() {
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted">
-        Your digest is generated once daily by a Vercel cron job. You can also trigger ingestion
+        Your digest is generated once daily by a GitHub Actions workflow. You can also trigger ingestion
         anytime with the <strong>Ingest Now</strong> button on the digest page.
       </p>
 
@@ -14,8 +14,8 @@ export default function ScheduleManager() {
 
         <p className="text-xs text-muted">
           To change the schedule, update the cron expression in{' '}
-          <code className="px-1 py-0.5 rounded bg-background text-foreground text-xs">vercel.json</code>{' '}
-          and redeploy. Use{' '}
+          <code className="px-1 py-0.5 rounded bg-background text-foreground text-xs font-mono">.github/workflows/ingest.yml</code>{' '}
+          and push to main. Use{' '}
           <a
             href="https://crontab.guru/"
             target="_blank"
@@ -24,7 +24,7 @@ export default function ScheduleManager() {
           >
             crontab.guru
           </a>{' '}
-          to build cron expressions. Vercel Hobby plans are limited to one daily job.
+          to build cron expressions. You can also trigger the workflow manually from the GitHub Actions tab.
         </p>
       </div>
     </div>

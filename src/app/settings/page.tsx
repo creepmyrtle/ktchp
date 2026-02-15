@@ -8,8 +8,9 @@ import ManualUrlInput from '@/components/ManualUrlInput';
 import PreferenceViewer from '@/components/PreferenceViewer';
 import ScheduleManager from '@/components/ScheduleManager';
 import IngestionLogs from '@/components/IngestionLogs';
+import SwipeSettings from '@/components/SwipeSettings';
 
-const TABS = ['Interests', 'Sources', 'Schedule', 'Manual URL', 'Preferences', 'Logs'] as const;
+const TABS = ['Interests', 'Sources', 'Schedule', 'Gestures', 'Manual URL', 'Preferences', 'Logs'] as const;
 type Tab = (typeof TABS)[number];
 
 export default function SettingsPage() {
@@ -46,6 +47,7 @@ export default function SettingsPage() {
         {activeTab === 'Interests' && <InterestManager />}
         {activeTab === 'Sources' && <SourceManager />}
         {activeTab === 'Schedule' && <ScheduleManager />}
+        {activeTab === 'Gestures' && <SwipeSettings />}
         {activeTab === 'Manual URL' && <ManualUrlInput />}
         {activeTab === 'Preferences' && <PreferenceViewer />}
         {activeTab === 'Logs' && <IngestionLogs />}

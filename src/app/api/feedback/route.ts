@@ -1,10 +1,17 @@
 import { NextResponse } from 'next/server';
 import { getSessionFromCookies } from '@/lib/auth';
-import { createFeedback, deleteFeedback, getFeedbackForArticle } from '@/lib/db/feedback';
-import type { FeedbackAction } from '@/types';
+import { logFeedbackEvent } from '@/lib/db/feedback';
+import {
+  getArticleById,
+  updateArticleSentiment,
+  updateArticleRead,
+  updateArticleBookmark,
+  archiveArticle,
+} from '@/lib/db/articles';
+import type { FeedbackAction, Sentiment } from '@/types';
 
-const VALID_ACTIONS: FeedbackAction[] = ['thumbs_up', 'thumbs_down', 'bookmark', 'dismiss', 'click'];
-const TOGGLEABLE_ACTIONS: FeedbackAction[] = ['thumbs_up', 'thumbs_down', 'bookmark'];
+const VALID_ACTIONS: FeedbackAction[] = ['liked', 'neutral', 'disliked', 'read', 'bookmark', 'unbookmark', 'archived'];
+const SENTIMENTS: Sentiment[] = ['liked', 'neutral', 'disliked'];
 
 export async function POST(request: Request) {
   try {
@@ -19,32 +26,59 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
     }
 
-    // Toggleable actions: check if already exists, delete if so
-    if (TOGGLEABLE_ACTIONS.includes(action)) {
-      const existing = await getFeedbackForArticle(userId, articleId);
-      const hasAction = existing.some((fb) => fb.action === action);
-
-      if (hasAction) {
-        await deleteFeedback(userId, articleId, action);
-        return NextResponse.json({ success: true, toggled: 'off' });
-      }
-
-      // Thumbs mutual exclusivity: remove the opposite thumb
-      if (action === 'thumbs_up') {
-        const hasDown = existing.some((fb) => fb.action === 'thumbs_down');
-        if (hasDown) await deleteFeedback(userId, articleId, 'thumbs_down');
-      } else if (action === 'thumbs_down') {
-        const hasUp = existing.some((fb) => fb.action === 'thumbs_up');
-        if (hasUp) await deleteFeedback(userId, articleId, 'thumbs_up');
-      }
-
-      const feedback = await createFeedback(userId, articleId, action);
-      return NextResponse.json({ success: true, toggled: 'on', feedback });
+    const article = await getArticleById(articleId);
+    if (!article) {
+      return NextResponse.json({ error: 'Article not found' }, { status: 404 });
     }
 
-    // Non-toggleable actions (dismiss, click): create-only
-    const feedback = await createFeedback(userId, articleId, action);
-    return NextResponse.json({ success: true, feedback });
+    // Handle sentiment (liked / neutral / disliked) — three-way toggle
+    if (SENTIMENTS.includes(action as Sentiment)) {
+      const sentiment = action as Sentiment;
+      // If already set to this sentiment, clear it (toggle off)
+      const newSentiment = article.sentiment === sentiment ? null : sentiment;
+      const state = await updateArticleSentiment(articleId, newSentiment);
+      await logFeedbackEvent(userId, articleId, action);
+      return NextResponse.json({ success: true, ...state });
+    }
+
+    // Handle read toggle
+    if (action === 'read') {
+      const state = await updateArticleRead(articleId, !article.is_read);
+      await logFeedbackEvent(userId, articleId, action);
+      return NextResponse.json({ success: true, ...state });
+    }
+
+    // Handle bookmark
+    if (action === 'bookmark') {
+      const state = await updateArticleBookmark(articleId, true);
+      await logFeedbackEvent(userId, articleId, action);
+      return NextResponse.json({ success: true, ...state });
+    }
+
+    // Handle unbookmark
+    if (action === 'unbookmark') {
+      const state = await updateArticleBookmark(articleId, false);
+      await logFeedbackEvent(userId, articleId, action);
+      return NextResponse.json({ success: true, ...state });
+    }
+
+    // Handle archive — requires sentiment
+    if (action === 'archived') {
+      if (!article.sentiment) {
+        return NextResponse.json(
+          { error: 'Sentiment required before archiving' },
+          { status: 400 }
+        );
+      }
+      const state = await archiveArticle(articleId);
+      if (!state) {
+        return NextResponse.json({ error: 'Failed to archive' }, { status: 500 });
+      }
+      await logFeedbackEvent(userId, articleId, action);
+      return NextResponse.json({ success: true, ...state });
+    }
+
+    return NextResponse.json({ error: 'Unhandled action' }, { status: 400 });
   } catch (error) {
     console.error('Feedback error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

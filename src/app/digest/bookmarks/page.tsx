@@ -1,10 +1,9 @@
 import { redirect } from 'next/navigation';
 import { getSessionFromCookies } from '@/lib/auth';
 import { getDefaultUser } from '@/lib/db/users';
-import { getBookmarkedArticles, getFeedbackByUserId } from '@/lib/db/feedback';
-import ArticleCard from '@/components/ArticleCard';
+import { getBookmarkedArticles } from '@/lib/db/feedback';
+import BookmarkCard from '@/components/BookmarkCard';
 import Link from 'next/link';
-import type { ArticleWithSource } from '@/types';
 
 export default async function BookmarksPage() {
   const userId = await getSessionFromCookies();
@@ -13,16 +12,7 @@ export default async function BookmarksPage() {
   const user = await getDefaultUser();
   if (!user) redirect('/');
 
-  const bookmarkedArticles = await getBookmarkedArticles(user.id) as ArticleWithSource[];
-  const userFeedback = await getFeedbackByUserId(user.id, 200);
-
-  const feedbackMap = new Map<string, Set<string>>();
-  for (const fb of userFeedback) {
-    if (!feedbackMap.has(fb.article_id)) {
-      feedbackMap.set(fb.article_id, new Set());
-    }
-    feedbackMap.get(fb.article_id)!.add(fb.action);
-  }
+  const bookmarkedArticles = await getBookmarkedArticles(user.id);
 
   return (
     <div className="min-h-screen">
@@ -49,11 +39,7 @@ export default async function BookmarksPage() {
         {bookmarkedArticles.length > 0 ? (
           <div className="flex flex-col gap-4">
             {bookmarkedArticles.map((article) => (
-              <ArticleCard
-                key={article.id}
-                article={article}
-                initialFeedback={Array.from(feedbackMap.get(article.id) || [])}
-              />
+              <BookmarkCard key={article.id} article={article} />
             ))}
           </div>
         ) : (

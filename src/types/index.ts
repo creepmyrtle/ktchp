@@ -1,8 +1,11 @@
 // Source types
 export type SourceType = 'rss' | 'manual_url';
 
-// Feedback actions
-export type FeedbackAction = 'thumbs_up' | 'thumbs_down' | 'bookmark' | 'dismiss' | 'click';
+// Sentiment values
+export type Sentiment = 'liked' | 'neutral' | 'disliked';
+
+// Feedback actions (append-only event log)
+export type FeedbackAction = 'liked' | 'neutral' | 'disliked' | 'read' | 'bookmark' | 'unbookmark' | 'archived';
 
 // User
 export interface User {
@@ -39,12 +42,26 @@ export interface Article {
   digest_id: string | null;
   published_at: string | null;
   ingested_at: string;
+  sentiment: Sentiment | null;
+  is_read: boolean;
+  is_bookmarked: boolean;
+  is_archived: boolean;
+  archived_at: string | null;
 }
 
 // Article with source info for display
 export interface ArticleWithSource extends Article {
   source_name: string;
   source_type: SourceType;
+}
+
+// Article engagement state returned by the feedback API
+export interface ArticleEngagementState {
+  articleId: string;
+  sentiment: Sentiment | null;
+  is_read: boolean;
+  is_bookmarked: boolean;
+  is_archived: boolean;
 }
 
 // Digest
@@ -54,6 +71,14 @@ export interface Digest {
   provider: string;
   generated_at: string;
   article_count: number;
+}
+
+// Digest with completion stats
+export interface DigestWithStats extends Digest {
+  total_article_count: number;
+  archived_count: number;
+  remaining_count: number;
+  is_complete: boolean;
 }
 
 // User Interest
@@ -67,7 +92,7 @@ export interface Interest {
   created_at: string;
 }
 
-// Feedback
+// Feedback (append-only event log)
 export interface Feedback {
   id: string;
   user_id: string;

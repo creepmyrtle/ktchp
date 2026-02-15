@@ -1,25 +1,17 @@
 import { sql } from '@vercel/postgres';
-import type { Feedback, FeedbackAction } from '@/types';
+import type { Feedback, FeedbackAction, ArticleWithSource } from '@/types';
 
-export async function createFeedback(userId: string, articleId: string, action: FeedbackAction): Promise<Feedback | null> {
-  try {
-    const { rows } = await sql`
-      INSERT INTO feedback (user_id, article_id, action)
-      VALUES (${userId}, ${articleId}, ${action})
-      RETURNING *
-    `;
-    return rows[0] as Feedback;
-  } catch (e: unknown) {
-    if (e instanceof Error && (e.message.includes('unique') || e.message.includes('duplicate'))) return null;
-    throw e;
-  }
-}
-
-export async function getFeedbackForArticle(userId: string, articleId: string): Promise<Feedback[]> {
+/**
+ * Append a feedback event to the log. This is a pure event log —
+ * every action creates a new row, no upserts or deletes.
+ */
+export async function logFeedbackEvent(userId: string, articleId: string, action: FeedbackAction): Promise<Feedback> {
   const { rows } = await sql`
-    SELECT * FROM feedback WHERE user_id = ${userId} AND article_id = ${articleId}
+    INSERT INTO feedback (user_id, article_id, action)
+    VALUES (${userId}, ${articleId}, ${action})
+    RETURNING *
   `;
-  return rows as Feedback[];
+  return rows[0] as Feedback;
 }
 
 export async function getFeedbackByUserId(userId: string, limit: number = 50): Promise<Feedback[]> {
@@ -49,21 +41,18 @@ export async function getRecentFeedbackWithArticles(userId: string, limit: numbe
   return rows;
 }
 
-export async function getBookmarkedArticles(userId: string) {
+/**
+ * Get bookmarked articles using the is_bookmarked column on articles.
+ * Returns articles regardless of archive status, ordered by most recently ingested.
+ */
+export async function getBookmarkedArticles(userId: string): Promise<ArticleWithSource[]> {
   const { rows } = await sql`
     SELECT a.*, s.name as source_name, s.type as source_type
-    FROM feedback f
-    JOIN articles a ON f.article_id = a.id
+    FROM articles a
     JOIN sources s ON a.source_id = s.id
-    WHERE f.user_id = ${userId} AND f.action = 'bookmark'
-    ORDER BY f.created_at DESC
+    WHERE a.is_bookmarked = TRUE
+      AND a.source_id IN (SELECT id FROM sources WHERE user_id = ${userId})
+    ORDER BY a.ingested_at DESC
   `;
-  return rows;
-}
-
-export async function deleteFeedback(userId: string, articleId: string, action: FeedbackAction): Promise<boolean> {
-  const { rowCount } = await sql`
-    DELETE FROM feedback WHERE user_id = ${userId} AND article_id = ${articleId} AND action = ${action}
-  `;
-  return (rowCount ?? 0) > 0;
+  return rows as ArticleWithSource[];
 }

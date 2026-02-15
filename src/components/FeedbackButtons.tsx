@@ -1,61 +1,136 @@
 'use client';
 
 import { useState } from 'react';
+import { useToast } from './Toast';
+import type { Sentiment } from '@/types';
 
-interface FeedbackButtonsProps {
+interface ActionBarProps {
   articleId: string;
-  initialFeedback: string[];
-  onDismiss: () => void;
+  articleUrl: string;
+  initialSentiment: Sentiment | null;
+  initialIsRead: boolean;
+  initialIsBookmarked: boolean;
+  onArchive: () => void;
+  onSentimentChange?: (sentiment: Sentiment | null) => void;
+  compact?: boolean;
 }
 
-export default function FeedbackButtons({ articleId, initialFeedback, onDismiss }: FeedbackButtonsProps) {
-  const [feedback, setFeedback] = useState<Set<string>>(new Set(initialFeedback));
+export default function ActionBar({
+  articleId,
+  articleUrl,
+  initialSentiment,
+  initialIsRead,
+  initialIsBookmarked,
+  onArchive,
+  onSentimentChange,
+  compact = false,
+}: ActionBarProps) {
+  const [sentiment, setSentiment] = useState<Sentiment | null>(initialSentiment);
+  const [isRead, setIsRead] = useState(initialIsRead);
+  const [isBookmarked, setIsBookmarked] = useState(initialIsBookmarked);
+  const [sentimentPulse, setSentimentPulse] = useState(false);
+  const { showToast } = useToast();
 
-  async function sendFeedback(action: string) {
-    // Optimistic UI
-    const newFeedback = new Set(feedback);
-    if (newFeedback.has(action)) {
-      newFeedback.delete(action);
-    } else {
-      newFeedback.add(action);
-      // thumbs_up and thumbs_down are mutually exclusive
-      if (action === 'thumbs_up') newFeedback.delete('thumbs_down');
-      if (action === 'thumbs_down') newFeedback.delete('thumbs_up');
-    }
-    setFeedback(newFeedback);
-
-    if (action === 'dismiss') {
-      onDismiss();
-    }
-
-    // Background API call
+  function sendAction(action: string) {
     fetch('/api/feedback', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ articleId, action }),
-    });
+    }).catch(() => showToast('Action failed', 'error'));
   }
 
-  const btnClass = (action: string) =>
-    `p-1.5 rounded text-sm transition-colors ${
-      feedback.has(action)
-        ? 'bg-accent-light text-accent'
-        : 'text-muted hover:text-foreground hover:bg-card-border/50'
+  function handleSentiment(value: Sentiment) {
+    const newSentiment = sentiment === value ? null : value;
+    setSentiment(newSentiment);
+    onSentimentChange?.(newSentiment);
+    sendAction(value);
+  }
+
+  function handleRead() {
+    setIsRead(!isRead);
+    sendAction('read');
+  }
+
+  function handleBookmark() {
+    const willBookmark = !isBookmarked;
+    setIsBookmarked(willBookmark);
+    sendAction(willBookmark ? 'bookmark' : 'unbookmark');
+  }
+
+  function handleShare() {
+    navigator.clipboard.writeText(articleUrl).then(
+      () => showToast('Link copied!'),
+      () => showToast('Failed to copy', 'error')
+    );
+  }
+
+  function handleArchive() {
+    if (!sentiment) {
+      setSentimentPulse(true);
+      setTimeout(() => setSentimentPulse(false), 600);
+      showToast('Rate this article first', 'error');
+      return;
+    }
+    sendAction('archived');
+    onArchive();
+  }
+
+  const sentimentBtnClass = (value: Sentiment) => {
+    const isActive = sentiment === value;
+    const colors = {
+      liked: isActive ? 'bg-success/15 text-success border-success/30' : '',
+      neutral: isActive ? 'bg-muted/15 text-muted border-muted/30' : '',
+      disliked: isActive ? 'bg-danger/15 text-danger border-danger/30' : '',
+    };
+    return `p-1.5 sm:p-2 rounded-md text-sm border transition-all ${
+      isActive
+        ? colors[value]
+        : 'border-transparent text-muted hover:text-foreground hover:bg-card-border/30'
+    } ${sentimentPulse && !sentiment ? 'animate-pulse' : ''}`;
+  };
+
+  const iconBtnClass = (active: boolean) =>
+    `p-1.5 sm:p-2 rounded-md text-sm transition-colors ${
+      active
+        ? 'text-accent bg-accent-light'
+        : 'text-muted hover:text-foreground hover:bg-card-border/30'
     }`;
 
   return (
-    <div className="flex gap-1">
-      <button onClick={() => sendFeedback('thumbs_up')} className={btnClass('thumbs_up')} title="More like this">
-        &#128077;
+    <div className="flex items-center gap-0.5 sm:gap-1 flex-wrap">
+      {/* Sentiment group */}
+      <div className="flex items-center border border-card-border rounded-lg overflow-hidden">
+        <button onClick={() => handleSentiment('liked')} className={sentimentBtnClass('liked')} title="Liked">
+          &#x1F44D;
+        </button>
+        <button onClick={() => handleSentiment('neutral')} className={sentimentBtnClass('neutral')} title="Neutral">
+          &#x2796;
+        </button>
+        <button onClick={() => handleSentiment('disliked')} className={sentimentBtnClass('disliked')} title="Disliked">
+          &#x1F44E;
+        </button>
+      </div>
+
+      {/* Read toggle — hidden on mobile if compact */}
+      {!compact && (
+        <button onClick={handleRead} className={`${iconBtnClass(isRead)} hidden sm:inline-flex`} title={isRead ? 'Mark unread' : 'Mark read'}>
+          {isRead ? '\u2611' : '\u2610'}
+        </button>
+      )}
+
+      {/* Bookmark */}
+      <button onClick={handleBookmark} className={iconBtnClass(isBookmarked)} title={isBookmarked ? 'Remove bookmark' : 'Bookmark'}>
+        {isBookmarked ? '\uD83D\uDD16' : '\uD83D\uDD17'}
       </button>
-      <button onClick={() => sendFeedback('thumbs_down')} className={btnClass('thumbs_down')} title="Less like this">
-        &#128078;
+
+      {/* Share */}
+      <button onClick={handleShare} className={iconBtnClass(false)} title="Copy link">
+        &#x1F517;
       </button>
-      <button onClick={() => sendFeedback('bookmark')} className={btnClass('bookmark')} title="Bookmark">
-        &#128278;
-      </button>
-      <button onClick={() => sendFeedback('dismiss')} className={btnClass('dismiss')} title="Dismiss">
-        &#10005;
+
+      {/* Archive */}
+      <button onClick={handleArchive} className={`${iconBtnClass(false)} ${sentiment ? 'hover:text-success hover:bg-success/10' : ''}`} title="Archive">
+        &#x2705;
       </button>
     </div>
   );
