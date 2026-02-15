@@ -76,6 +76,35 @@ Respond ONLY with a JSON array (no markdown code fences):
 ]`;
 }
 
+function salvateTruncatedJson(text: string): ScoringResult[] | null {
+  // Find the start of the JSON array
+  const startIdx = text.indexOf('[');
+  if (startIdx === -1) return null;
+
+  let json = text.slice(startIdx);
+
+  // Try to find complete objects by matching closing braces before truncation
+  const lastComplete = json.lastIndexOf('}');
+  if (lastComplete === -1) return null;
+
+  // Trim to last complete object and close the array
+  json = json.slice(0, lastComplete + 1);
+  // Remove any trailing comma
+  json = json.replace(/,\s*$/, '');
+  json += ']';
+
+  try {
+    const parsed = JSON.parse(json);
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      console.warn(`Salvaged ${parsed.length} article(s) from truncated LLM response`);
+      return parsed;
+    }
+  } catch {
+    // Salvage failed
+  }
+  return null;
+}
+
 function parseJsonResponse(text: string): ScoringResult[] {
   // Try direct parse first
   try {
@@ -91,6 +120,10 @@ function parseJsonResponse(text: string): ScoringResult[] {
     if (arrayMatch) {
       return JSON.parse(arrayMatch[0]);
     }
+    // Try salvaging complete objects from truncated response
+    const salvaged = salvateTruncatedJson(text);
+    if (salvaged) return salvaged;
+
     console.error('Unparseable LLM response:', text.slice(0, 500));
     throw new Error('Could not parse JSON from response');
   }
@@ -109,7 +142,7 @@ export async function scoreArticles(
     const prompt = buildScoringPrompt(batch, interests, preferences, recentFeedback);
 
     try {
-      const response = await llmComplete(prompt, 8192);
+      const response = await llmComplete(prompt, 16384);
 
       if (!response) {
         // No API available — fallback

@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 interface DigestSummary {
   id: string;
-  generated_at: string;
+  generated_at: string | Date;
   article_count: number;
 }
 
@@ -16,7 +16,8 @@ export default function PreviousDigests({ digests }: { digests: DigestSummary[] 
       <h3 className="text-sm font-medium text-muted mb-3">Previous digests</h3>
       <div className="flex flex-wrap gap-2">
         {digests.map(d => {
-          const utcDate = d.generated_at.endsWith('Z') ? d.generated_at : d.generated_at + 'Z';
+          const str = typeof d.generated_at === 'string' ? d.generated_at : d.generated_at.toISOString();
+          const utcDate = str.endsWith('Z') ? str : str + 'Z';
           const label = new Date(utcDate).toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',

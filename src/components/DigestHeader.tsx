@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 
 interface DigestHeaderProps {
-  date: string;
+  date: string | Date;
   articleCount: number;
 }
 
@@ -12,8 +12,8 @@ export default function DigestHeader({ date, articleCount }: DigestHeaderProps) 
   const [time, setTime] = useState('');
 
   useEffect(() => {
-    // Append 'Z' if missing so the browser knows it's UTC
-    const utcDate = date.endsWith('Z') ? date : date + 'Z';
+    const str = typeof date === 'string' ? date : date.toISOString();
+    const utcDate = str.endsWith('Z') ? str : str + 'Z';
     const d = new Date(utcDate);
 
     setFormatted(d.toLocaleDateString('en-US', {
