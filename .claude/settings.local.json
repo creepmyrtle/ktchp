@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-next-app@latest:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
+      "Bash(timeout 10 npm run dev:*)",
+      "WebSearch",
+      "WebFetch(domain:rss.feedspot.com)",
+      "WebFetch(domain:www.anthropic.com)",
+      "WebFetch(domain:www.dallasnews.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:rsshub.app)",
+      "Bash(npx next build)",
+      "Bash(npx next dev:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git reset:*)"
+    ]
+  }
+}
