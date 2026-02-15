@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "ingest": "tsx --env-file=.env.local -r tsconfig-paths/register scripts/ingest.ts"
+    "ingest": "tsx -r tsconfig-paths/register scripts/ingest.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.74.0",

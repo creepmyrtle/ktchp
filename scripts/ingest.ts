@@ -1,3 +1,12 @@
+import { existsSync } from 'fs';
+import { resolve } from 'path';
+
+// Load .env.local if it exists (local dev); in GitHub Actions, env vars come from secrets
+const envPath = resolve(process.cwd(), '.env.local');
+if (existsSync(envPath)) {
+  process.loadEnvFile(envPath);
+}
+
 import 'tsconfig-paths/register';
 import { seedDatabase } from '@/lib/db/seed';
 import { getDefaultUser } from '@/lib/db/users';
