@@ -110,9 +110,9 @@ export default function ActionBar({
         &#x1F517;
       </button>
 
-      {/* Archive */}
-      <button onClick={handleArchive} className={`${iconBtnClass(false)} ${sentiment ? 'hover:text-success hover:bg-success/10' : ''}`} title="Archive">
-        &#x2705;
+      {/* Archive — hidden on mobile (use swipe instead) */}
+      <button onClick={handleArchive} className={`${iconBtnClass(false)} ${sentiment ? 'hover:text-success hover:bg-success/10' : ''} hidden sm:inline-flex`} title="Archive">
+        &#x1F4E5;
       </button>
     </div>
   );

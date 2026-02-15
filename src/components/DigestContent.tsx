@@ -23,6 +23,7 @@ interface DigestContentProps {
 
 export default function DigestContent({ date, articles, stats, children }: DigestContentProps) {
   const [archivedCount, setArchivedCount] = useState(stats.archived_count);
+  const [hintDismissed, setHintDismissed] = useState(false);
   const totalCount = stats.total_article_count;
 
   function handleArticleArchived() {
@@ -39,6 +40,13 @@ export default function DigestContent({ date, articles, stats, children }: Diges
         archivedCount={archivedCount}
         totalCount={totalCount}
       />
+
+      {!hintDismissed && articles.length > 0 && (
+        <p className="sm:hidden text-xs text-muted mt-3 flex items-center justify-between">
+          <span>Rate articles, then swipe to archive</span>
+          <button onClick={() => setHintDismissed(true)} className="ml-2 text-muted hover:text-foreground">&times;</button>
+        </p>
+      )}
 
       {children}
 
