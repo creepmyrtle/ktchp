@@ -6,7 +6,6 @@ import { runIngestion } from '@/lib/ingestion';
 import { runRelevanceEngine } from '@/lib/relevance';
 import { getActiveProvider } from '@/lib/llm';
 import { IngestionLogger } from '@/lib/ingestion/logger';
-import { config } from '@/lib/config';
 
 export const maxDuration = 300; // 5 minute timeout
 
@@ -49,17 +48,7 @@ async function handleIngest(request: Request) {
     logger = new IngestionLogger(user.id, provider, trigger);
     await logger.init();
 
-    // Log setup/config
-    logger.log('setup', 'Ingestion started', {
-      trigger,
-      userId: user.id,
-      provider,
-      model: provider === 'synthetic' ? config.syntheticModel : config.claudeModel,
-      config: {
-        batchSize: config.batchSize,
-        minRelevanceScore: config.minRelevanceScore,
-      },
-    });
+    logger.log('setup', `Ingestion started (${trigger}, provider: ${provider})`);
 
     // Run ingestion
     const ingestionResult = await runIngestion(user.id, provider, logger);
@@ -82,8 +71,7 @@ async function handleIngest(request: Request) {
       digestArticleCount: digestResult?.digestArticleCount ?? 0,
     };
 
-    // Log final summary
-    logger.log('complete', 'Pipeline finished', summary);
+    logger.log('complete', 'Pipeline finished');
 
     // Persist success log
     await logger.persist('success', summary);
@@ -97,12 +85,8 @@ async function handleIngest(request: Request) {
   } catch (error) {
     console.error('Ingestion error:', error);
 
-    // Persist error log with stack trace
     if (logger) {
-      logger.error('pipeline', 'Pipeline failed', {
-        error: String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-      });
+      logger.error('pipeline', `Pipeline failed: ${error}`);
       await logger.persist('error', {}, String(error));
     }
 

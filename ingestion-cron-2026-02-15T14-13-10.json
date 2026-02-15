@@ -1,0 +1,3596 @@
+{
+  "id": "02560bab-9c18-4879-bc14-f327288f6e6d",
+  "user_id": "cbd80c68-3b9e-4fbf-888d-dc5958151a40",
+  "provider": "synthetic",
+  "trigger": "cron",
+  "status": "success",
+  "started_at": "2026-02-15T14:13:10.932Z",
+  "finished_at": "2026-02-15T14:22:29.566Z",
+  "duration_ms": 558452,
+  "summary": {
+    "digestId": "81b4c308-89fc-4b12-ae17-5442153e8546",
+    "duplicates": 119,
+    "errorCount": 0,
+    "newArticles": 6,
+    "totalFetched": 125,
+    "articlesScored": 34,
+    "digestArticleCount": 36
+  },
+  "events": [
+    {
+      "data": {
+        "model": "hf:moonshotai/Kimi-K2.5",
+        "config": {
+          "batchSize": 10,
+          "minRelevanceScore": 0.5
+        },
+        "userId": "cbd80c68-3b9e-4fbf-888d-dc5958151a40",
+        "trigger": "cron",
+        "provider": "synthetic"
+      },
+      "level": "info",
+      "phase": "setup",
+      "message": "Ingestion started (GitHub Actions)",
+      "timestamp": "2026-02-15T14:13:09.670Z"
+    },
+    {
+      "data": {
+        "sources": [
+          {
+            "id": "2e79ac80-864e-4a8d-b4d6-6bb7d9088aa1",
+            "url": "https://feeds.arstechnica.com/arstechnica/index",
+            "name": "Ars Technica",
+            "type": "rss"
+          },
+          {
+            "id": "8e30507e-e46e-47bd-acb1-e0de3e2e0108",
+            "url": "https://www.theverge.com/rss/index.xml",
+            "name": "The Verge",
+            "type": "rss"
+          },
+          {
+            "id": "a147d5b6-d89a-41e7-a819-28c445829987",
+            "url": "https://simonwillison.net/atom/everything/",
+            "name": "Simon Willison's Blog",
+            "type": "rss"
+          },
+          {
+            "id": "0441311f-3739-4ca0-8a28-0074ba87cd96",
+            "url": "https://cms.zerohedge.com/fullrss2.xml",
+            "name": "ZeroHedge",
+            "type": "rss"
+          },
+          {
+            "id": "218e0fd3-c361-4273-a2ce-8824d2929203",
+            "url": "https://hnrss.org/frontpage",
+            "name": "Hacker News",
+            "type": "rss"
+          },
+          {
+            "id": "d3032037-35c0-4758-b9f6-bfc5e1166f18",
+            "url": "https://www.oneusefulthing.org/feed",
+            "name": "One Useful Thing",
+            "type": "rss"
+          },
+          {
+            "id": "c30b90f4-9cf9-4c36-bfce-8df05d7aeaaa",
+            "url": "https://rss.app/feeds/zv2LMxQ55B4X6ydU.xml",
+            "name": "Google News",
+            "type": "rss"
+          }
+        ],
+        "sourceCount": 7
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Starting ingestion for 7 sources",
+      "timestamp": "2026-02-15T14:13:09.725Z"
+    },
+    {
+      "data": {
+        "url": "https://feeds.arstechnica.com/arstechnica/index",
+        "sourceId": "2e79ac80-864e-4a8d-b4d6-6bb7d9088aa1",
+        "existingArticleCount": 20
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Fetching source: Ars Technica (rss)",
+      "timestamp": "2026-02-15T14:13:09.800Z"
+    },
+    {
+      "data": {
+        "url": "https://www.theverge.com/rss/index.xml",
+        "sourceId": "8e30507e-e46e-47bd-acb1-e0de3e2e0108",
+        "existingArticleCount": 12
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Fetching source: The Verge (rss)",
+      "timestamp": "2026-02-15T14:13:10.000Z"
+    },
+    {
+      "data": {
+        "url": "https://simonwillison.net/atom/everything/",
+        "sourceId": "a147d5b6-d89a-41e7-a819-28c445829987",
+        "existingArticleCount": 32
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Fetching source: Simon Willison's Blog (rss)",
+      "timestamp": "2026-02-15T14:13:10.002Z"
+    },
+    {
+      "data": {
+        "url": "https://www.oneusefulthing.org/feed",
+        "sourceId": "d3032037-35c0-4758-b9f6-bfc5e1166f18",
+        "existingArticleCount": 20
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Fetching source: One Useful Thing (rss)",
+      "timestamp": "2026-02-15T14:13:10.003Z"
+    },
+    {
+      "data": {
+        "url": "https://hnrss.org/frontpage",
+        "sourceId": "218e0fd3-c361-4273-a2ce-8824d2929203",
+        "existingArticleCount": 30
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Fetching source: Hacker News (rss)",
+      "timestamp": "2026-02-15T14:13:10.003Z"
+    },
+    {
+      "data": {
+        "url": "https://rss.app/feeds/zv2LMxQ55B4X6ydU.xml",
+        "sourceId": "c30b90f4-9cf9-4c36-bfce-8df05d7aeaaa",
+        "existingArticleCount": 25
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Fetching source: Google News (rss)",
+      "timestamp": "2026-02-15T14:13:10.006Z"
+    },
+    {
+      "data": {
+        "url": "https://cms.zerohedge.com/fullrss2.xml",
+        "sourceId": "0441311f-3739-4ca0-8a28-0074ba87cd96",
+        "existingArticleCount": 32
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Fetching source: ZeroHedge (rss)",
+      "timestamp": "2026-02-15T14:13:10.101Z"
+    },
+    {
+      "data": {
+        "itemCount": 10,
+        "fetchDurationMs": 153
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "RSS fetched: The Verge",
+      "timestamp": "2026-02-15T14:13:10.153Z"
+    },
+    {
+      "data": {
+        "itemCount": 20,
+        "fetchDurationMs": 360
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "RSS fetched: Ars Technica",
+      "timestamp": "2026-02-15T14:13:10.160Z"
+    },
+    {
+      "data": {
+        "itemCount": 30,
+        "fetchDurationMs": 194
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "RSS fetched: Simon Willison's Blog",
+      "timestamp": "2026-02-15T14:13:10.196Z"
+    },
+    {
+      "data": {
+        "itemCount": 0,
+        "fetchDurationMs": 286
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "RSS fetched: Google News",
+      "timestamp": "2026-02-15T14:13:10.292Z"
+    },
+    {
+      "data": {
+        "itemCount": 20,
+        "fetchDurationMs": 371
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "RSS fetched: One Useful Thing",
+      "timestamp": "2026-02-15T14:13:10.374Z"
+    },
+    {
+      "data": {
+        "itemCount": 20,
+        "fetchDurationMs": 484
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "RSS fetched: Hacker News",
+      "timestamp": "2026-02-15T14:13:10.487Z"
+    },
+    {
+      "data": {
+        "itemCount": 25,
+        "fetchDurationMs": 539
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "RSS fetched: ZeroHedge",
+      "timestamp": "2026-02-15T14:13:10.640Z"
+    },
+    {
+      "level": "info",
+      "phase": "fetch",
+      "message": "All sources fetched in 915ms",
+      "timestamp": "2026-02-15T14:13:10.640Z"
+    },
+    {
+      "data": {
+        "url": "https://arstechnica.com/space/2026/02/nasa-chief-vows-to-solve-sls-rocket-fueling-issues-before-artemis-iii",
+        "title": "NASA has a new problem to fix before the next Artemis II countdown test",
+        "externalId": "https://arstechnica.com/space/2026/02/nasa-chief-vows-to-solve-sls-rocket-fueling-issues-before-artemis-iii"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"NASA has a new problem to fix before the next Artemis II countdown test\"",
+      "timestamp": "2026-02-15T14:13:10.640Z"
+    },
+    {
+      "data": {
+        "url": "https://arstechnica.com/culture/2026/02/a-valentines-day-homage-to-crouching-tiger-hidden-dragon",
+        "title": "A Valentine's Day homage to Crouching Tiger, Hidden Dragon",
+        "externalId": "https://arstechnica.com/culture/2026/02/a-valentines-day-homage-to-crouching-tiger-hidden-dragon"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"A Valentine's Day homage to Crouching Tiger, Hidden Dragon\"",
+      "timestamp": "2026-02-15T14:13:10.640Z"
+    },
+    {
+      "data": {
+        "url": "https://arstechnica.com/science/2026/02/astronomers-are-filling-in-the-blanks-of-the-kuiper-belt",
+        "title": "Astronomers are filling in the blanks of the Kuiper Belt",
+        "externalId": "https://arstechnica.com/science/2026/02/astronomers-are-filling-in-the-blanks-of-the-kuiper-belt"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Astronomers are filling in the blanks of the Kuiper Belt\"",
+      "timestamp": "2026-02-15T14:13:10.640Z"
+    },
+    {
+      "data": {
+        "url": "https://arstechnica.com/health/2026/02/who-slams-us-funded-newborn-vaccine-trial-as-unethical",
+        "title": "WHO slams US-funded newborn vaccine trial as \"unethical\"",
+        "externalId": "https://arstechnica.com/health/2026/02/who-slams-us-funded-newborn-vaccine-trial-as-unethical"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"WHO slams US-funded newborn vaccine trial as \"unethical\"\"",
+      "timestamp": "2026-02-15T14:13:10.640Z"
+    },
+    {
+      "data": {
+        "url": "https://arstechnica.com/tech-policy/2026/02/santa-monica-deploys-ai-powered-parking-cameras-to-protect-bike-lanes",
+        "title": "Aided by AI, California beach town broadens hunt for bike lane blockers",
+        "externalId": "https://arstechnica.com/tech-policy/2026/02/santa-monica-deploys-ai-powered-parking-cameras-to-protect-bike-lanes"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Aided by AI, California beach town broadens hunt for bike lane blockers\"",
+      "timestamp": "2026-02-15T14:13:10.640Z"
+    },
+    {
+      "data": {
+        "url": "https://arstechnica.com/tech-policy/2026/02/verizon-makes-customers-wait-35-days-to-unlock-fully-paid-off-phones",
+        "title": "Verizon imposes new roadblock on users trying to unlock paid-off phones",
+        "externalId": "https://arstechnica.com/tech-policy/2026/02/verizon-makes-customers-wait-35-days-to-unlock-fully-paid-off-phones"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Verizon imposes new roadblock on users trying to unlock paid-off phones\"",
+      "timestamp": "2026-02-15T14:13:10.640Z"
+    },
+    {
+      "data": {
+        "url": "https://arstechnica.com/tech-policy/2026/02/after-creepy-super-bowl-ad-sparks-outrage-ring-abandons-flock-deal",
+        "title": "Ring cancels Flock deal after dystopian Super Bowl ad prompts mass outrage",
+        "externalId": "https://arstechnica.com/tech-policy/2026/02/after-creepy-super-bowl-ad-sparks-outrage-ring-abandons-flock-deal"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Ring cancels Flock deal after dystopian Super Bowl ad prompts mass outrage\"",
+      "timestamp": "2026-02-15T14:13:10.640Z"
+    },
+    {
+      "data": {
+        "url": "https://arstechnica.com/gadgets/2026/02/the-first-android-17-beta-is-now-available-on-pixel-devices",
+        "title": "The first Android 17 beta is now available on Pixel devices",
+        "externalId": "https://arstechnica.com/gadgets/2026/02/the-first-android-17-beta-is-now-available-on-pixel-devices"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"The first Android 17 beta is now available on Pixel devices\"",
+      "timestamp": "2026-02-15T14:13:10.640Z"
+    },
+    {
+      "data": {
+        "url": "https://arstechnica.com/culture/2026/02/1-8-million-mst3k-kickstarter-brings-in-almost-everyone-from-the-old-show",
+        "title": "$1.8 million MST3K Kickstarter brings in (almost) everyone from the old show",
+        "externalId": "https://arstechnica.com/culture/2026/02/1-8-million-mst3k-kickstarter-brings-in-almost-everyone-from-the-old-show"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"$1.8 million MST3K Kickstarter brings in (almost) everyone from the old show\"",
+      "timestamp": "2026-02-15T14:13:10.640Z"
+    },
+    {
+      "data": {
+        "url": "https://arstechnica.com/science/2026/02/researchers-find-small-rnas-that-can-make-copies-of-themselves",
+        "title": "Tiny, 45 base long RNA can make copies of itself",
+        "externalId": "https://arstechnica.com/science/2026/02/researchers-find-small-rnas-that-can-make-copies-of-themselves"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Tiny, 45 base long RNA can make copies of itself\"",
+      "timestamp": "2026-02-15T14:13:10.640Z"
+    },
+    {
+      "data": {
+        "url": "https://arstechnica.com/cars/2026/02/what-if-riders-dont-close-a-robotaxi-door-after-a-ride-try-doordash",
+        "title": "What if riders don't close a robotaxi door after a ride? Try DoorDash.",
+        "externalId": "https://arstechnica.com/cars/2026/02/what-if-riders-dont-close-a-robotaxi-door-after-a-ride-try-doordash"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"What if riders don't close a robotaxi door after a ride? Try DoorDash.\"",
+      "timestamp": "2026-02-15T14:13:10.640Z"
+    },
+    {
+      "data": {
+        "url": "https://arstechnica.com/space/2026/02/why-is-bezos-trolling-musk-on-x-with-turtle-pics-because-he-has-a-new-moon-plan",
+        "title": "Why is Bezos trolling Musk on X with turtle pics? Because he has a new Moon plan.",
+        "externalId": "https://arstechnica.com/space/2026/02/why-is-bezos-trolling-musk-on-x-with-turtle-pics-because-he-has-a-new-moon-plan"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Why is Bezos trolling Musk on X with turtle pics? Because he has a new Moon plan.\"",
+      "timestamp": "2026-02-15T14:13:10.640Z"
+    },
+    {
+      "data": {
+        "url": "https://arstechnica.com/ai/2026/02/i-spent-two-days-gigging-at-rentahuman-and-didnt-make-a-single-cent",
+        "title": "I spent two days gigging at RentAHuman and didn't make a single cent",
+        "externalId": "https://arstechnica.com/ai/2026/02/i-spent-two-days-gigging-at-rentahuman-and-didnt-make-a-single-cent"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"I spent two days gigging at RentAHuman and didn't make a single cent\"",
+      "timestamp": "2026-02-15T14:13:10.640Z"
+    },
+    {
+      "data": {
+        "url": "https://arstechnica.com/space/2026/02/rocket-report-say-cheerio-to-orbex-china-is-getting-good-at-booster-landings",
+        "title": "Rocket Report: Say cheerio to Orbex; China is getting good at booster landings",
+        "externalId": "https://arstechnica.com/space/2026/02/rocket-report-say-cheerio-to-orbex-china-is-getting-good-at-booster-landings"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Rocket Report: Say cheerio to Orbex; China is getting good at booster landings\"",
+      "timestamp": "2026-02-15T14:13:10.640Z"
+    },
+    {
+      "data": {
+        "url": "https://arstechnica.com/tech-policy/2026/02/platforms-bend-over-backward-to-help-dhs-censor-ice-critics-advocates-say",
+        "title": "Platforms bend over backward to help DHS censor ICE critics, advocates say",
+        "externalId": "https://arstechnica.com/tech-policy/2026/02/platforms-bend-over-backward-to-help-dhs-censor-ice-critics-advocates-say"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Platforms bend over backward to help DHS censor ICE critics, advocates say\"",
+      "timestamp": "2026-02-15T14:13:10.640Z"
+    },
+    {
+      "data": {
+        "url": "https://arstechnica.com/space/2026/02/when-amazon-badly-needed-a-ride-europes-ariane-6-rocket-delivered",
+        "title": "When Amazon badly needed a ride, Europe's Ariane 6 rocket delivered",
+        "externalId": "https://arstechnica.com/space/2026/02/when-amazon-badly-needed-a-ride-europes-ariane-6-rocket-delivered"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"When Amazon badly needed a ride, Europe's Ariane 6 rocket delivered\"",
+      "timestamp": "2026-02-15T14:13:10.640Z"
+    },
+    {
+      "data": {
+        "url": "https://arstechnica.com/ai/2026/02/openai-sidesteps-nvidia-with-unusually-fast-coding-model-on-plate-sized-chips",
+        "title": "OpenAI sidesteps Nvidia with unusually fast coding model on plate-sized chips",
+        "externalId": "https://arstechnica.com/ai/2026/02/openai-sidesteps-nvidia-with-unusually-fast-coding-model-on-plate-sized-chips"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"OpenAI sidesteps Nvidia with unusually fast coding model on plate-sized chips\"",
+      "timestamp": "2026-02-15T14:13:10.640Z"
+    },
+    {
+      "data": {
+        "url": "https://arstechnica.com/health/2026/02/trump-official-overruled-fda-scientists-to-reject-modernas-flu-shot",
+        "title": "Trump official overruled FDA scientists to reject Moderna's flu shot",
+        "externalId": "https://arstechnica.com/health/2026/02/trump-official-overruled-fda-scientists-to-reject-modernas-flu-shot"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Trump official overruled FDA scientists to reject Moderna's flu shot\"",
+      "timestamp": "2026-02-15T14:13:10.640Z"
+    },
+    {
+      "data": {
+        "url": "https://arstechnica.com/culture/2026/02/spider-noir-teaser-comes-in-colorized-true-hue-and-black-and-white",
+        "title": "Spider-Noir teaser comes in colorized \"True Hue\" and black and white",
+        "externalId": "https://arstechnica.com/culture/2026/02/spider-noir-teaser-comes-in-colorized-true-hue-and-black-and-white"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Spider-Noir teaser comes in colorized \"True Hue\" and black and white\"",
+      "timestamp": "2026-02-15T14:13:10.640Z"
+    },
+    {
+      "data": {
+        "url": "https://arstechnica.com/space/2026/02/ulas-vulcan-launcher-still-has-a-solid-rocket-booster-problem",
+        "title": "ULA's Vulcan rocket suffers another booster problem on the way to orbit",
+        "externalId": "https://arstechnica.com/space/2026/02/ulas-vulcan-launcher-still-has-a-solid-rocket-booster-problem"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"ULA's Vulcan rocket suffers another booster problem on the way to orbit\"",
+      "timestamp": "2026-02-15T14:13:10.640Z"
+    },
+    {
+      "data": {
+        "new": 0,
+        "duplicates": 20,
+        "articlesFetched": 20
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Source complete: Ars Technica",
+      "timestamp": "2026-02-15T14:13:10.640Z"
+    },
+    {
+      "data": {
+        "url": "https://www.theverge.com/policy/879016/epstein-files-emails-text-errors-encoding",
+        "title": "Why are Epstein’s emails full of equals signs?",
+        "externalId": "https://www.theverge.com/policy/879016/epstein-files-emails-text-errors-encoding"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Why are Epstein’s emails full of equals signs?\"",
+      "timestamp": "2026-02-15T14:13:10.640Z"
+    },
+    {
+      "data": {
+        "url": "https://www.theverge.com/column/879524/ai-video-game-worlds-project-genie",
+        "title": "AI can’t make good video game worlds yet, and it might never be able to",
+        "externalId": "https://www.theverge.com/column/879524/ai-video-game-worlds-project-genie"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"AI can’t make good video game worlds yet, and it might never be able to\"",
+      "timestamp": "2026-02-15T14:13:10.640Z"
+    },
+    {
+      "data": {
+        "url": "https://www.theverge.com/policy/879508/jikipedia-epstein-email-encyclopedia",
+        "title": "Jikipedia turns Epstein’s emails into an encyclopedia of his powerful friends",
+        "externalId": "https://www.theverge.com/policy/879508/jikipedia-epstein-email-encyclopedia"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Jikipedia turns Epstein’s emails into an encyclopedia of his powerful friends\"",
+      "timestamp": "2026-02-15T14:13:10.640Z"
+    },
+    {
+      "data": {
+        "url": "https://www.theverge.com/gadgets/878927/ibuypower-gaming-desktop-pc-presidents-day-sale-deal",
+        "title": "iBuyPower’s gaming desktops are discounted for Presidents Day",
+        "externalId": "https://www.theverge.com/gadgets/878927/ibuypower-gaming-desktop-pc-presidents-day-sale-deal"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"iBuyPower’s gaming desktops are discounted for Presidents Day\"",
+      "timestamp": "2026-02-15T14:13:10.640Z"
+    },
+    {
+      "data": {
+        "url": "https://www.theverge.com/entertainment/879482/georgia-techs-musical-instrument-competition-fiddle-henge",
+        "title": "Georgia Tech announced the finalists in its wild musical instrument competition",
+        "externalId": "https://www.theverge.com/entertainment/879482/georgia-techs-musical-instrument-competition-fiddle-henge"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Georgia Tech announced the finalists in its wild musical instrument competition\"",
+      "timestamp": "2026-02-15T14:13:10.640Z"
+    },
+    {
+      "data": {
+        "url": "https://www.theverge.com/tech/877491/gamesir-pocket-taco-wireless-bluetooth-controller-clamp-hands-on",
+        "title": "The Pocket Taco is the best way to turn your phone into a Game Boy",
+        "externalId": "https://www.theverge.com/tech/877491/gamesir-pocket-taco-wireless-bluetooth-controller-clamp-hands-on"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"The Pocket Taco is the best way to turn your phone into a Game Boy\"",
+      "timestamp": "2026-02-15T14:13:10.640Z"
+    },
+    {
+      "data": {
+        "url": "https://www.theverge.com/policy/879273/alex-pretti-ice-cbp-trump-free-speech",
+        "title": "A powerful tool of resistance is already in your hands",
+        "externalId": "https://www.theverge.com/policy/879273/alex-pretti-ice-cbp-trump-free-speech"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"A powerful tool of resistance is already in your hands\"",
+      "timestamp": "2026-02-15T14:13:10.640Z"
+    },
+    {
+      "data": {
+        "url": "https://www.theverge.com/report/879327/eva-ai-cafe-dating-ai-companions",
+        "title": "My uncanny AI valentines",
+        "externalId": "https://www.theverge.com/report/879327/eva-ai-cafe-dating-ai-companions"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"My uncanny AI valentines\"",
+      "timestamp": "2026-02-15T14:13:10.640Z"
+    },
+    {
+      "data": {
+        "url": "https://www.theverge.com/games/878121/relooted-review-xbox-steam",
+        "title": "Returning stolen artifacts becomes a thrilling heist in Relooted",
+        "externalId": "https://www.theverge.com/games/878121/relooted-review-xbox-steam"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Returning stolen artifacts becomes a thrilling heist in Relooted\"",
+      "timestamp": "2026-02-15T14:13:10.640Z"
+    },
+    {
+      "data": {
+        "url": "https://www.theverge.com/gadgets/879003/anker-140w-2-in-1-usb-c-cable-presidents-day-sale-deal",
+        "title": "Anker’s USB-C cable that lets you charge two gadgets at once is 20 percent off",
+        "externalId": "https://www.theverge.com/gadgets/879003/anker-140w-2-in-1-usb-c-cable-presidents-day-sale-deal"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Anker’s USB-C cable that lets you charge two gadgets at once is 20 percent off\"",
+      "timestamp": "2026-02-15T14:13:10.640Z"
+    },
+    {
+      "data": {
+        "new": 0,
+        "duplicates": 10,
+        "articlesFetched": 10
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Source complete: The Verge",
+      "timestamp": "2026-02-15T14:13:10.640Z"
+    },
+    {
+      "data": {
+        "url": "https://simonwillison.net/2026/Feb/15/eric-meyer/#atom-everything",
+        "title": "Quoting Eric Meyer",
+        "articleId": "e0a2f650-54b2-4a6a-b8de-d5c9a0bda3d5",
+        "externalId": "https://simonwillison.net/2026/Feb/15/eric-meyer/#atom-everything",
+        "publishedAt": "2026-02-15T13:36:20.000Z"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "New article: \"Quoting Eric Meyer\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://simonwillison.net/2026/Feb/15/cognitive-debt/#atom-everything",
+        "title": "How Generative and Agentic AI Shift Concern from Technical Debt to Cognitive Debt",
+        "externalId": "https://simonwillison.net/2026/Feb/15/cognitive-debt/#atom-everything"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"How Generative and Agentic AI Shift Concern from Technical Debt to Cognitive Debt\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://simonwillison.net/2026/Feb/15/interop-2026/#atom-everything",
+        "title": "Launching Interop 2026",
+        "externalId": "https://simonwillison.net/2026/Feb/15/interop-2026/#atom-everything"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Launching Interop 2026\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://simonwillison.net/2026/Feb/14/boris/#atom-everything",
+        "title": "Quoting Boris Cherny",
+        "externalId": "https://simonwillison.net/2026/Feb/14/boris/#atom-everything"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Quoting Boris Cherny\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://simonwillison.net/2026/Feb/14/thoughtworks/#atom-everything",
+        "title": "Quoting Thoughtworks",
+        "externalId": "https://simonwillison.net/2026/Feb/14/thoughtworks/#atom-everything"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Quoting Thoughtworks\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://simonwillison.net/2026/Feb/13/anthropic-public-benefit-mission/#atom-everything",
+        "title": "Anthropic's public benefit mission",
+        "externalId": "https://simonwillison.net/2026/Feb/13/anthropic-public-benefit-mission/#atom-everything"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Anthropic's public benefit mission\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://simonwillison.net/2026/Feb/13/openai-mission-statement/#atom-everything",
+        "title": "The evolution of OpenAI's mission statement",
+        "externalId": "https://simonwillison.net/2026/Feb/13/openai-mission-statement/#atom-everything"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"The evolution of OpenAI's mission statement\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://simonwillison.net/2026/Feb/12/codex-spark/#atom-everything",
+        "title": "Introducing GPT‑5.3‑Codex‑Spark",
+        "externalId": "https://simonwillison.net/2026/Feb/12/codex-spark/#atom-everything"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Introducing GPT‑5.3‑Codex‑Spark\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://simonwillison.net/2026/Feb/12/anthropic/#atom-everything",
+        "title": "Quoting Anthropic",
+        "externalId": "https://simonwillison.net/2026/Feb/12/anthropic/#atom-everything"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Quoting Anthropic\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://simonwillison.net/2026/Feb/12/covering-electricity-price-increases/#atom-everything",
+        "title": "Covering electricity price increases from our data centers",
+        "externalId": "https://simonwillison.net/2026/Feb/12/covering-electricity-price-increases/#atom-everything"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Covering electricity price increases from our data centers\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://simonwillison.net/2026/Feb/12/gemini-3-deep-think/#atom-everything",
+        "title": "Gemini 3 Deep Think",
+        "externalId": "https://simonwillison.net/2026/Feb/12/gemini-3-deep-think/#atom-everything"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Gemini 3 Deep Think\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://simonwillison.net/2026/Feb/12/an-ai-agent-published-a-hit-piece-on-me/#atom-everything",
+        "title": "An AI Agent Published a Hit Piece on Me",
+        "externalId": "https://simonwillison.net/2026/Feb/12/an-ai-agent-published-a-hit-piece-on-me/#atom-everything"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"An AI Agent Published a Hit Piece on Me\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://simonwillison.net/2026/Feb/12/supervisor/#atom-everything",
+        "title": "Supervisor, not overseer",
+        "externalId": "https://simonwillison.net/2026/Feb/12/supervisor/#atom-everything"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Supervisor, not overseer\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://simonwillison.net/2026/Feb/11/manosphere-report/#atom-everything",
+        "title": "Quoting Andrew Deck for Niemen Lab",
+        "externalId": "https://simonwillison.net/2026/Feb/11/manosphere-report/#atom-everything"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Quoting Andrew Deck for Niemen Lab\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://simonwillison.net/2026/Feb/11/skills-in-openai-api/#atom-everything",
+        "title": "Skills in OpenAI API",
+        "externalId": "https://simonwillison.net/2026/Feb/11/skills-in-openai-api/#atom-everything"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Skills in OpenAI API\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://simonwillison.net/2026/Feb/11/glm-5/#atom-everything",
+        "title": "GLM-5: From Vibe Coding to Agentic Engineering",
+        "externalId": "https://simonwillison.net/2026/Feb/11/glm-5/#atom-everything"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"GLM-5: From Vibe Coding to Agentic Engineering\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://simonwillison.net/2026/Feb/11/cysqlite/#atom-everything",
+        "title": "cysqlite - a new sqlite driver",
+        "externalId": "https://simonwillison.net/2026/Feb/11/cysqlite/#atom-everything"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"cysqlite - a new sqlite driver\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://simonwillison.net/2026/Feb/10/showboat-and-rodney/#atom-everything",
+        "title": "Introducing Showboat and Rodney, so agents can demo what they’ve built",
+        "externalId": "https://simonwillison.net/2026/Feb/10/showboat-and-rodney/#atom-everything"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Introducing Showboat and Rodney, so agents can demo what they’ve built\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://simonwillison.net/2026/Feb/9/structured-context-engineering-for-file-native-agentic-systems/#atom-everything",
+        "title": "Structured Context Engineering for File-Native Agentic Systems",
+        "externalId": "https://simonwillison.net/2026/Feb/9/structured-context-engineering-for-file-native-agentic-systems/#atom-everything"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Structured Context Engineering for File-Native Agentic Systems\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://simonwillison.net/2026/Feb/9/ai-intensifies-work/#atom-everything",
+        "title": "AI Doesn’t Reduce Work—It Intensifies It",
+        "externalId": "https://simonwillison.net/2026/Feb/9/ai-intensifies-work/#atom-everything"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"AI Doesn’t Reduce Work—It Intensifies It\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://simonwillison.net/2026/Feb/8/kakapo-mug/#atom-everything",
+        "title": "Kākāpō mug by Karen James",
+        "externalId": "https://simonwillison.net/2026/Feb/8/kakapo-mug/#atom-everything"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Kākāpō mug by Karen James\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://simonwillison.net/2026/Feb/8/thomas-ptacek/#atom-everything",
+        "title": "Quoting Thomas Ptacek",
+        "externalId": "https://simonwillison.net/2026/Feb/8/thomas-ptacek/#atom-everything"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Quoting Thomas Ptacek\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://simonwillison.net/2026/Feb/7/vouch/#atom-everything",
+        "title": "Vouch",
+        "externalId": "https://simonwillison.net/2026/Feb/7/vouch/#atom-everything"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Vouch\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://simonwillison.net/2026/Feb/7/claude-fast-mode/#atom-everything",
+        "title": "Claude: Speed up responses with fast mode",
+        "externalId": "https://simonwillison.net/2026/Feb/7/claude-fast-mode/#atom-everything"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Claude: Speed up responses with fast mode\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://simonwillison.net/2026/Feb/7/david-crawshaw/#atom-everything",
+        "title": "Quoting David Crawshaw",
+        "externalId": "https://simonwillison.net/2026/Feb/7/david-crawshaw/#atom-everything"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Quoting David Crawshaw\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://simonwillison.net/2026/Feb/7/software-factory/#atom-everything",
+        "title": "How StrongDM's AI team build serious software without even looking at the code",
+        "externalId": "https://simonwillison.net/2026/Feb/7/software-factory/#atom-everything"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"How StrongDM's AI team build serious software without even looking at the code\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://simonwillison.net/2026/Feb/6/tom-dale/#atom-everything",
+        "title": "Quoting Tom Dale",
+        "externalId": "https://simonwillison.net/2026/Feb/6/tom-dale/#atom-everything"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Quoting Tom Dale\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://simonwillison.net/2026/Feb/6/pydantic-monty/#atom-everything",
+        "title": "Running Pydantic's Monty Rust sandboxed Python subset in WebAssembly",
+        "externalId": "https://simonwillison.net/2026/Feb/6/pydantic-monty/#atom-everything"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Running Pydantic's Monty Rust sandboxed Python subset in WebAssembly\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://simonwillison.net/2026/Feb/6/an-update-on-heroku/#atom-everything",
+        "title": "An Update on Heroku",
+        "externalId": "https://simonwillison.net/2026/Feb/6/an-update-on-heroku/#atom-everything"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"An Update on Heroku\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://simonwillison.net/2026/Feb/6/karel-doosterlinck/#atom-everything",
+        "title": "Quoting Karel D'Oosterlinck",
+        "externalId": "https://simonwillison.net/2026/Feb/6/karel-doosterlinck/#atom-everything"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Quoting Karel D'Oosterlinck\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "new": 1,
+        "duplicates": 29,
+        "articlesFetched": 30
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Source complete: Simon Willison's Blog",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://www.zerohedge.com/political/germanys-two-speed-europe-proposal-eus-adaptation-great-power-geopolitics",
+        "title": "Germany's \"Two-Speed Europe\" Proposal Is The EU's Adaptation To Great Power Geopolitics",
+        "externalId": "https://www.zerohedge.com/political/germanys-two-speed-europe-proposal-eus-adaptation-great-power-geopolitics"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Germany's \"Two-Speed Europe\" Proposal Is The EU's Adaptation To Great Power Geopolitics\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://www.zerohedge.com/military/dont-be-evil-drone-king-eric-schmidt-warns-ukraines-no-mans-land-future-war",
+        "title": "From \"Don't Be Evil\" To Drone King: Eric Schmidt Warns Ukraine's \"No Man's Land\" Is Future Of War",
+        "externalId": "https://www.zerohedge.com/military/dont-be-evil-drone-king-eric-schmidt-warns-ukraines-no-mans-land-future-war"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"From \"Don't Be Evil\" To Drone King: Eric Schmidt Warns Ukraine's \"No Man's Land\" Is Future Of War\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://www.zerohedge.com/geopolitical/month-after-mass-amnesty-illegals-spain-urges-brussels-take-migrants-its-hands",
+        "title": "A Month After Mass Amnesty For Illegals, Spain Urges Brussels To Take Migrants Off Its Hands",
+        "externalId": "https://www.zerohedge.com/geopolitical/month-after-mass-amnesty-illegals-spain-urges-brussels-take-migrants-its-hands"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"A Month After Mass Amnesty For Illegals, Spain Urges Brussels To Take Migrants Off Its Hands\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://www.zerohedge.com/geopolitical/lavrov-soberly-acknowledged-challenges-posed-trump-20",
+        "title": "Lavrov Soberly Acknowledged The Challenges Posed By Trump 2.0",
+        "externalId": "https://www.zerohedge.com/geopolitical/lavrov-soberly-acknowledged-challenges-posed-trump-20"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Lavrov Soberly Acknowledged The Challenges Posed By Trump 2.0\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://www.zerohedge.com/personal-finance/which-us-states-are-seeing-incomes-rise-fastest-and-slowest",
+        "title": "Which US States Are Seeing Incomes Rise The Fastest (And Slowest)",
+        "externalId": "https://www.zerohedge.com/personal-finance/which-us-states-are-seeing-incomes-rise-fastest-and-slowest"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Which US States Are Seeing Incomes Rise The Fastest (And Slowest)\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://www.zerohedge.com/geopolitical/epstein-egregore",
+        "title": "The Epstein Egregore",
+        "externalId": "https://www.zerohedge.com/geopolitical/epstein-egregore"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"The Epstein Egregore\"",
+      "timestamp": "2026-02-15T14:13:10.696Z"
+    },
+    {
+      "data": {
+        "url": "https://www.zerohedge.com/crypto/bitcoin-mining-electricity-grid-quiet-savior",
+        "title": "Bitcoin Mining & The Electricity Grid: A Quiet Savior",
+        "externalId": "https://www.zerohedge.com/crypto/bitcoin-mining-electricity-grid-quiet-savior"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Bitcoin Mining & The Electricity Grid: A Quiet Savior\"",
+      "timestamp": "2026-02-15T14:13:10.697Z"
+    },
+    {
+      "data": {
+        "url": "https://www.zerohedge.com/personal-finance/eat-rich-california-democrats-trigger-reverse-gold-rush-wealth-tax",
+        "title": "Eat The Rich: California Democrats Trigger Reverse Gold Rush With Wealth Tax",
+        "externalId": "https://www.zerohedge.com/personal-finance/eat-rich-california-democrats-trigger-reverse-gold-rush-wealth-tax"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Eat The Rich: California Democrats Trigger Reverse Gold Rush With Wealth Tax\"",
+      "timestamp": "2026-02-15T14:13:10.697Z"
+    },
+    {
+      "data": {
+        "url": "https://www.zerohedge.com/political/3-detained-1-rumored-suicide-swat-team-swarms-home-near-guthries-house",
+        "title": "3 Detained As SWAT Team Swarms Home Near Guthrie's House",
+        "externalId": "https://www.zerohedge.com/political/3-detained-1-rumored-suicide-swat-team-swarms-home-near-guthries-house"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"3 Detained As SWAT Team Swarms Home Near Guthrie's House\"",
+      "timestamp": "2026-02-15T14:13:10.697Z"
+    },
+    {
+      "data": {
+        "url": "https://www.zerohedge.com/political/trump-promises-voter-id-whether-congress-approves-or-not",
+        "title": "Trump Promises Voter ID \"Whether Congress Approves Or Not\"",
+        "externalId": "https://www.zerohedge.com/political/trump-promises-voter-id-whether-congress-approves-or-not"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Trump Promises Voter ID \"Whether Congress Approves Or Not\"\"",
+      "timestamp": "2026-02-15T14:13:10.697Z"
+    },
+    {
+      "data": {
+        "url": "https://www.zerohedge.com/political/indian-scrapyards-welcome-growing-number-dark-fleet-tankers",
+        "title": "Indian Scrapyards Welcome Growing Number Of Dark Fleet Tankers",
+        "externalId": "https://www.zerohedge.com/political/indian-scrapyards-welcome-growing-number-dark-fleet-tankers"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Indian Scrapyards Welcome Growing Number Of Dark Fleet Tankers\"",
+      "timestamp": "2026-02-15T14:13:10.697Z"
+    },
+    {
+      "data": {
+        "url": "https://www.zerohedge.com/ai/billion-dollar-movie-one-prompt-ai-disruption-crosshairs-hone-hollywood-studios",
+        "title": "\"Billion Dollar Movie In One Prompt\": AI Disruption Crosshairs Hone In On Hollywood Studios ",
+        "externalId": "https://www.zerohedge.com/ai/billion-dollar-movie-one-prompt-ai-disruption-crosshairs-hone-hollywood-studios"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"\"Billion Dollar Movie In One Prompt\": AI Disruption Crosshairs Hone In On Hollywood Studios \"",
+      "timestamp": "2026-02-15T14:13:10.697Z"
+    },
+    {
+      "data": {
+        "url": "https://www.zerohedge.com/political/judge-weighs-whether-block-vaccines-changes-cdc-rfk-jr",
+        "title": "Judge Weighs Whether To Block Vaccines Changes From CDC, RFK Jr.",
+        "externalId": "https://www.zerohedge.com/political/judge-weighs-whether-block-vaccines-changes-cdc-rfk-jr"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Judge Weighs Whether To Block Vaccines Changes From CDC, RFK Jr.\"",
+      "timestamp": "2026-02-15T14:13:10.697Z"
+    },
+    {
+      "data": {
+        "url": "https://www.zerohedge.com/political/faa-mandates-airlines-affirm-merit-hiring-pilots",
+        "title": "FAA Mandates Airlines To Affirm Merit Hiring For Pilots",
+        "externalId": "https://www.zerohedge.com/political/faa-mandates-airlines-affirm-merit-hiring-pilots"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"FAA Mandates Airlines To Affirm Merit Hiring For Pilots\"",
+      "timestamp": "2026-02-15T14:13:10.697Z"
+    },
+    {
+      "data": {
+        "url": "https://www.zerohedge.com/political/vast-majority-americans-want-voter-id-and-democrats-dont-care",
+        "title": "Vast Majority Of Americans Want Voter ID And Democrats Don't Care",
+        "externalId": "https://www.zerohedge.com/political/vast-majority-americans-want-voter-id-and-democrats-dont-care"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Vast Majority Of Americans Want Voter ID And Democrats Don't Care\"",
+      "timestamp": "2026-02-15T14:13:10.697Z"
+    },
+    {
+      "data": {
+        "url": "https://www.zerohedge.com/geopolitical/rubio-says-us-europe-belong-together-urges-alignment-trumps-vision-western-revival",
+        "title": "Rubio Says US & Europe \"Belong Together\", Urges Alignment With Trump's Vision For Western Revival",
+        "externalId": "https://www.zerohedge.com/geopolitical/rubio-says-us-europe-belong-together-urges-alignment-trumps-vision-western-revival"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Rubio Says US & Europe \"Belong Together\", Urges Alignment With Trump's Vision For Western Revival\"",
+      "timestamp": "2026-02-15T14:13:10.697Z"
+    },
+    {
+      "data": {
+        "url": "https://www.zerohedge.com/political/state-love-america-its-not-looking-good",
+        "title": "The State Of Love In America: It's Not Looking Good",
+        "externalId": "https://www.zerohedge.com/political/state-love-america-its-not-looking-good"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"The State Of Love In America: It's Not Looking Good\"",
+      "timestamp": "2026-02-15T14:13:10.697Z"
+    },
+    {
+      "data": {
+        "url": "https://www.zerohedge.com/political/elon-demands-investigation-reid-hoffmans-ice-cream-girls-epstein-ties",
+        "title": "Elon Demands Investigation Into Reid Hoffman’s \"Ice Cream For The Girls\" Epstein Ties",
+        "externalId": "https://www.zerohedge.com/political/elon-demands-investigation-reid-hoffmans-ice-cream-girls-epstein-ties"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Elon Demands Investigation Into Reid Hoffman’s \"Ice Cream For The Girls\" Epstein Ties\"",
+      "timestamp": "2026-02-15T14:13:10.697Z"
+    },
+    {
+      "data": {
+        "url": "https://www.zerohedge.com/geopolitical/iran-regime-change-would-be-best-thing-trump-signals",
+        "title": "Iran Regime Change Would Be 'Best Thing', Trump Signals",
+        "externalId": "https://www.zerohedge.com/geopolitical/iran-regime-change-would-be-best-thing-trump-signals"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Iran Regime Change Would Be 'Best Thing', Trump Signals\"",
+      "timestamp": "2026-02-15T14:13:10.697Z"
+    },
+    {
+      "data": {
+        "url": "https://www.zerohedge.com/political/miss-america-org-dethrones-winner-daring-say-woman-woman",
+        "title": "'Miss America' Org Dethrones Winner For Daring To Say 'A Woman Is A Woman'",
+        "externalId": "https://www.zerohedge.com/political/miss-america-org-dethrones-winner-daring-say-woman-woman"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"'Miss America' Org Dethrones Winner For Daring To Say 'A Woman Is A Woman'\"",
+      "timestamp": "2026-02-15T14:13:10.697Z"
+    },
+    {
+      "data": {
+        "url": "https://www.zerohedge.com/technology/more-nations-are-mulling-social-media-bans-teens",
+        "title": "More Nations Are Mulling Social Media Bans For Teens",
+        "externalId": "https://www.zerohedge.com/technology/more-nations-are-mulling-social-media-bans-teens"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"More Nations Are Mulling Social Media Bans For Teens\"",
+      "timestamp": "2026-02-15T14:13:10.697Z"
+    },
+    {
+      "data": {
+        "url": "https://www.zerohedge.com/energy/venezuela-oil-revenue-projected-hit-5-billion-under-us-control",
+        "title": "Venezuela Oil Revenue Projected To Hit $5 Billion Under U.S. Control",
+        "externalId": "https://www.zerohedge.com/energy/venezuela-oil-revenue-projected-hit-5-billion-under-us-control"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Venezuela Oil Revenue Projected To Hit $5 Billion Under U.S. Control\"",
+      "timestamp": "2026-02-15T14:13:10.697Z"
+    },
+    {
+      "data": {
+        "url": "https://www.zerohedge.com/ai/was-anthropics-claude-used-ai-kill-chain-during-maduro-venezuela-raid",
+        "title": "Was Anthropic's Claude Used In AI Kill-Chain During Maduro Venezuela Raid",
+        "externalId": "https://www.zerohedge.com/ai/was-anthropics-claude-used-ai-kill-chain-during-maduro-venezuela-raid"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Was Anthropic's Claude Used In AI Kill-Chain During Maduro Venezuela Raid\"",
+      "timestamp": "2026-02-15T14:13:10.697Z"
+    },
+    {
+      "data": {
+        "url": "https://www.zerohedge.com/political/demented-councillor-pushes-kids-send-valentines-cards-illegal-male-migrants",
+        "title": "Demented: Councillor Pushes Kids To Send Valentine's Cards To Illegal Male Migrants",
+        "externalId": "https://www.zerohedge.com/political/demented-councillor-pushes-kids-send-valentines-cards-illegal-male-migrants"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Demented: Councillor Pushes Kids To Send Valentine's Cards To Illegal Male Migrants\"",
+      "timestamp": "2026-02-15T14:13:10.697Z"
+    },
+    {
+      "data": {
+        "url": "https://www.zerohedge.com/political/latest-blow-free-speech-german-courts-could-issue-speaking-ban-against-top-afd-politician",
+        "title": "In Latest Blow To Free Speech, German Courts Could Issue \"Speaking Ban\" Against Top AfD Politician",
+        "externalId": "https://www.zerohedge.com/political/latest-blow-free-speech-german-courts-could-issue-speaking-ban-against-top-afd-politician"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"In Latest Blow To Free Speech, German Courts Could Issue \"Speaking Ban\" Against Top AfD Politician\"",
+      "timestamp": "2026-02-15T14:13:10.697Z"
+    },
+    {
+      "data": {
+        "new": 0,
+        "duplicates": 25,
+        "articlesFetched": 25
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Source complete: ZeroHedge",
+      "timestamp": "2026-02-15T14:13:10.697Z"
+    },
+    {
+      "data": {
+        "url": "https://github.com/denisepattenson/perlin-terminal",
+        "title": "Show HN: Perlin Noise Terminal Animation in Rust (60 FPS, Truecolor)",
+        "articleId": "f52f8043-5dcc-45cd-baff-e801cfdd7964",
+        "externalId": "https://github.com/denisepattenson/perlin-terminal",
+        "publishedAt": "2026-02-15T13:02:20.000Z"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "New article: \"Show HN: Perlin Noise Terminal Animation in Rust (60 FPS, Truecolor)\"",
+      "timestamp": "2026-02-15T14:13:10.750Z"
+    },
+    {
+      "data": {
+        "url": "https://greenwald.substack.com/p/amazons-ring-and-googles-nest-unwittingly",
+        "title": "Amazon, Google Unwittingly Reveal the Severity of the U.S. Surveillance State",
+        "articleId": "d784f7cf-8788-4c3f-b91a-24a7daffefb9",
+        "externalId": "https://greenwald.substack.com/p/amazons-ring-and-googles-nest-unwittingly",
+        "publishedAt": "2026-02-15T12:42:17.000Z"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "New article: \"Amazon, Google Unwittingly Reveal the Severity of the U.S. Surveillance State\"",
+      "timestamp": "2026-02-15T14:13:10.904Z"
+    },
+    {
+      "data": {
+        "url": "https://github.com/s-macke/starflight-reverse",
+        "title": "Reversed engineered game Starflight (1986)",
+        "articleId": "c5cc5987-c8da-4a9c-ba6f-2bb6c3aceb22",
+        "externalId": "https://github.com/s-macke/starflight-reverse",
+        "publishedAt": "2026-02-15T11:37:29.000Z"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "New article: \"Reversed engineered game Starflight (1986)\"",
+      "timestamp": "2026-02-15T14:13:10.999Z"
+    },
+    {
+      "data": {
+        "url": "https://marler8997.github.io/blog/fixed-windows",
+        "title": "I Fixed Windows Native Development",
+        "externalId": "https://marler8997.github.io/blog/fixed-windows"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"I Fixed Windows Native Development\"",
+      "timestamp": "2026-02-15T14:13:10.999Z"
+    },
+    {
+      "data": {
+        "url": "https://matthew.verive.me/blog/color",
+        "title": "A Pokémon of a Different Color",
+        "articleId": "0a5f4838-d89d-44a6-ae72-c4ecdc966e26",
+        "externalId": "https://matthew.verive.me/blog/color",
+        "publishedAt": "2026-02-15T10:40:49.000Z"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "New article: \"A Pokémon of a Different Color\"",
+      "timestamp": "2026-02-15T14:13:11.101Z"
+    },
+    {
+      "data": {
+        "url": "https://www.seangoedecke.com/fast-llm-inference",
+        "title": "Two different tricks for fast LLM inference",
+        "externalId": "https://www.seangoedecke.com/fast-llm-inference"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Two different tricks for fast LLM inference\"",
+      "timestamp": "2026-02-15T14:13:11.101Z"
+    },
+    {
+      "data": {
+        "url": "https://scottlocklin.wordpress.com/2023/05/31/djvu-and-its-connection-to-deep-learning",
+        "title": "DjVu and its connection to Deep Learning (2023)",
+        "externalId": "https://scottlocklin.wordpress.com/2023/05/31/djvu-and-its-connection-to-deep-learning"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"DjVu and its connection to Deep Learning (2023)\"",
+      "timestamp": "2026-02-15T14:13:11.101Z"
+    },
+    {
+      "data": {
+        "url": "https://oat.ink/",
+        "title": "Oat – Ultra-lightweight, semantic, zero-dependency HTML UI component library",
+        "articleId": "b57c9d34-4b9b-4743-a96c-c95a15a32380",
+        "externalId": "https://oat.ink/",
+        "publishedAt": "2026-02-15T08:17:05.000Z"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "New article: \"Oat – Ultra-lightweight, semantic, zero-dependency HTML UI component library\"",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "url": "https://kotaku.com/discord-palantir-peter-thiel-persona-age-verification-2000668951",
+        "title": "Discord Distances Itself from Peter Thiel's Palantir Age Verification Firm",
+        "externalId": "https://kotaku.com/discord-palantir-peter-thiel-persona-age-verification-2000668951"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Discord Distances Itself from Peter Thiel's Palantir Age Verification Firm\"",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "url": "https://flashpointarchive.org/",
+        "title": "Flashpoint Archive – Over 200k web games and animations preserved",
+        "externalId": "https://flashpointarchive.org/"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Flashpoint Archive – Over 200k web games and animations preserved\"",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "url": "https://caucascapades.wordpress.com/2012/06/14/guitars-of-the-ussr-and-the-jolana-special-in-azerbaijani-music",
+        "title": "Guitars of the USSR and the Jolana Special in Azerbaijani Music (2012)",
+        "externalId": "https://caucascapades.wordpress.com/2012/06/14/guitars-of-the-ussr-and-the-jolana-special-in-azerbaijani-music"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Guitars of the USSR and the Jolana Special in Azerbaijani Music (2012)\"",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "url": "https://k7r.eu/i-love-the-work-of-the-archwiki-maintainers",
+        "title": "I love the work of the ArchWiki maintainers",
+        "externalId": "https://k7r.eu/i-love-the-work-of-the-archwiki-maintainers"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"I love the work of the ArchWiki maintainers\"",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "url": "https://blog.sao.dev/cpns-llms-distributed-apps",
+        "title": "Colored Petri Nets, LLMs, and distributed applications",
+        "externalId": "https://blog.sao.dev/cpns-llms-distributed-apps"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Colored Petri Nets, LLMs, and distributed applications\"",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "url": "https://www.niemanlab.org/2026/01/news-publishers-limit-internet-archive-access-due-to-ai-scraping-concerns",
+        "title": "News publishers limit Internet Archive access due to AI scraping concerns",
+        "externalId": "https://www.niemanlab.org/2026/01/news-publishers-limit-internet-archive-access-due-to-ai-scraping-concerns"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"News publishers limit Internet Archive access due to AI scraping concerns\"",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "url": "https://github.com/i5heu/ublock-hide-yt-shorts",
+        "title": "uBlock filter list to hide all YouTube Shorts",
+        "externalId": "https://github.com/i5heu/ublock-hide-yt-shorts"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"uBlock filter list to hide all YouTube Shorts\"",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "url": "https://github.com/davidgiven/ack",
+        "title": "Amsterdam Compiler Kit",
+        "externalId": "https://github.com/davidgiven/ack"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Amsterdam Compiler Kit\"",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "url": "https://aimilios.bearblog.dev/reverse-engineering-sleep-mask",
+        "title": "My smart sleep mask broadcasts users' brainwaves to an open MQTT broker",
+        "externalId": "https://aimilios.bearblog.dev/reverse-engineering-sleep-mask"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"My smart sleep mask broadcasts users' brainwaves to an open MQTT broker\"",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "url": "https://ooh.directory/",
+        "title": "Ooh.directory: a place to find good blogs that interest you",
+        "externalId": "https://ooh.directory/"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Ooh.directory: a place to find good blogs that interest you\"",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "url": "https://www.latent.space/p/ainews-why-openai-should-build-slack",
+        "title": "OpenAI should build Slack",
+        "externalId": "https://www.latent.space/p/ainews-why-openai-should-build-slack"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"OpenAI should build Slack\"",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "url": "https://www.ycombinator.com/companies/cogram/jobs/LDTrViN-ex-technical-founder-product-engineer",
+        "title": "Cogram (YC W22) – Hiring former technical founders",
+        "externalId": "https://www.ycombinator.com/companies/cogram/jobs/LDTrViN-ex-technical-founder-product-engineer"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Cogram (YC W22) – Hiring former technical founders\"",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "new": 5,
+        "duplicates": 15,
+        "articlesFetched": 20
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Source complete: Hacker News",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "url": "https://www.oneusefulthing.org/p/management-as-ai-superpower",
+        "title": "Management as AI superpower",
+        "externalId": "https://www.oneusefulthing.org/p/management-as-ai-superpower"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Management as AI superpower\"",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "url": "https://www.oneusefulthing.org/p/claude-code-and-what-comes-next",
+        "title": "Claude Code and What Comes Next",
+        "externalId": "https://www.oneusefulthing.org/p/claude-code-and-what-comes-next"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Claude Code and What Comes Next\"",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "url": "https://www.oneusefulthing.org/p/the-shape-of-ai-jaggedness-bottlenecks",
+        "title": "The Shape of AI: Jaggedness, Bottlenecks and Salients",
+        "externalId": "https://www.oneusefulthing.org/p/the-shape-of-ai-jaggedness-bottlenecks"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"The Shape of AI: Jaggedness, Bottlenecks and Salients\"",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "url": "https://www.oneusefulthing.org/p/three-years-from-gpt-3-to-gemini",
+        "title": "Three Years from GPT-3 to Gemini 3",
+        "externalId": "https://www.oneusefulthing.org/p/three-years-from-gpt-3-to-gemini"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Three Years from GPT-3 to Gemini 3\"",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "url": "https://www.oneusefulthing.org/p/giving-your-ai-a-job-interview",
+        "title": "Giving your AI a Job Interview",
+        "externalId": "https://www.oneusefulthing.org/p/giving-your-ai-a-job-interview"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Giving your AI a Job Interview\"",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "url": "https://www.oneusefulthing.org/p/an-opinionated-guide-to-using-ai",
+        "title": "An Opinionated Guide to Using AI Right Now",
+        "externalId": "https://www.oneusefulthing.org/p/an-opinionated-guide-to-using-ai"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"An Opinionated Guide to Using AI Right Now\"",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "url": "https://www.oneusefulthing.org/p/real-ai-agents-and-real-work",
+        "title": "Real AI Agents and Real Work",
+        "externalId": "https://www.oneusefulthing.org/p/real-ai-agents-and-real-work"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Real AI Agents and Real Work\"",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "url": "https://www.oneusefulthing.org/p/on-working-with-wizards",
+        "title": "On Working with Wizards",
+        "externalId": "https://www.oneusefulthing.org/p/on-working-with-wizards"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"On Working with Wizards\"",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "url": "https://www.oneusefulthing.org/p/mass-intelligence",
+        "title": "Mass Intelligence",
+        "externalId": "https://www.oneusefulthing.org/p/mass-intelligence"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Mass Intelligence\"",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "url": "https://www.oneusefulthing.org/p/gpt-5-it-just-does-stuff",
+        "title": "GPT-5: It Just Does Stuff",
+        "externalId": "https://www.oneusefulthing.org/p/gpt-5-it-just-does-stuff"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"GPT-5: It Just Does Stuff\"",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "url": "https://www.oneusefulthing.org/p/the-bitter-lesson-versus-the-garbage",
+        "title": "The Bitter Lesson versus The Garbage Can",
+        "externalId": "https://www.oneusefulthing.org/p/the-bitter-lesson-versus-the-garbage"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"The Bitter Lesson versus The Garbage Can\"",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "url": "https://www.oneusefulthing.org/p/against-brain-damage",
+        "title": "Against \"Brain Damage\"",
+        "externalId": "https://www.oneusefulthing.org/p/against-brain-damage"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Against \"Brain Damage\"\"",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "url": "https://www.oneusefulthing.org/p/using-ai-right-now-a-quick-guide",
+        "title": "Using AI Right Now: A Quick Guide",
+        "externalId": "https://www.oneusefulthing.org/p/using-ai-right-now-a-quick-guide"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Using AI Right Now: A Quick Guide\"",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "url": "https://www.oneusefulthing.org/p/the-recent-history-of-ai-in-32-otters",
+        "title": "The recent history of AI in 32 otters",
+        "externalId": "https://www.oneusefulthing.org/p/the-recent-history-of-ai-in-32-otters"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"The recent history of AI in 32 otters\"",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "url": "https://www.oneusefulthing.org/p/making-ai-work-leadership-lab-and",
+        "title": "Making AI Work: Leadership, Lab, and Crowd",
+        "externalId": "https://www.oneusefulthing.org/p/making-ai-work-leadership-lab-and"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Making AI Work: Leadership, Lab, and Crowd\"",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "url": "https://www.oneusefulthing.org/p/personality-and-persuasion",
+        "title": "Personality and Persuasion",
+        "externalId": "https://www.oneusefulthing.org/p/personality-and-persuasion"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Personality and Persuasion\"",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "url": "https://www.oneusefulthing.org/p/on-jagged-agi-o3-gemini-25-and-everything",
+        "title": "On Jagged AGI: o3, Gemini 2.5, and everything after",
+        "externalId": "https://www.oneusefulthing.org/p/on-jagged-agi-o3-gemini-25-and-everything"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"On Jagged AGI: o3, Gemini 2.5, and everything after\"",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "url": "https://www.oneusefulthing.org/p/no-elephants-breakthroughs-in-image",
+        "title": "No elephants: Breakthroughs in image generation",
+        "externalId": "https://www.oneusefulthing.org/p/no-elephants-breakthroughs-in-image"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"No elephants: Breakthroughs in image generation\"",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "url": "https://www.oneusefulthing.org/p/the-cybernetic-teammate",
+        "title": "The Cybernetic Teammate",
+        "externalId": "https://www.oneusefulthing.org/p/the-cybernetic-teammate"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"The Cybernetic Teammate\"",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "url": "https://www.oneusefulthing.org/p/speaking-things-into-existence",
+        "title": "Speaking things into existence",
+        "externalId": "https://www.oneusefulthing.org/p/speaking-things-into-existence"
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Duplicate skipped: \"Speaking things into existence\"",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "new": 0,
+        "duplicates": 20,
+        "articlesFetched": 20
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Source complete: One Useful Thing",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "new": 0,
+        "duplicates": 0,
+        "articlesFetched": 0
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Source complete: Google News",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "data": {
+        "duplicates": 119,
+        "errorCount": 0,
+        "newArticles": 6,
+        "totalFetched": 125
+      },
+      "level": "info",
+      "phase": "fetch",
+      "message": "Ingestion complete",
+      "timestamp": "2026-02-15T14:13:11.162Z"
+    },
+    {
+      "level": "info",
+      "phase": "relevance",
+      "message": "Found 67 unscored articles",
+      "timestamp": "2026-02-15T14:13:11.370Z"
+    },
+    {
+      "data": {
+        "inputCount": 67,
+        "outputCount": 34,
+        "removedCount": 33,
+        "removalsByReason": {
+          "stale": 30,
+          "short_title": 2,
+          "spam_domain": 1
+        }
+      },
+      "level": "info",
+      "phase": "prefilter",
+      "message": "Prefilter: 67 → 34 articles (33 removed)",
+      "timestamp": "2026-02-15T14:13:11.370Z"
+    },
+    {
+      "data": {
+        "articles": [
+          {
+            "url": "https://www.washingtonpost.com/world/2026/02/14/alexei-navalny-russia-death-poison-frog",
+            "title": "‘Highly likely’ that rare poison killed Putin nemesis Navalny, Europeans say",
+            "reason": "spam_domain"
+          },
+          {
+            "url": "https://www.oneusefulthing.org/p/speaking-things-into-existence",
+            "title": "Speaking things into existence",
+            "reason": "stale"
+          },
+          {
+            "url": "https://www.oneusefulthing.org/p/the-cybernetic-teammate",
+            "title": "The Cybernetic Teammate",
+            "reason": "stale"
+          },
+          {
+            "url": "https://www.oneusefulthing.org/p/no-elephants-breakthroughs-in-image",
+            "title": "No elephants: Breakthroughs in image generation",
+            "reason": "stale"
+          },
+          {
+            "url": "https://www.oneusefulthing.org/p/on-jagged-agi-o3-gemini-25-and-everything",
+            "title": "On Jagged AGI: o3, Gemini 2.5, and everything after",
+            "reason": "stale"
+          },
+          {
+            "url": "https://www.oneusefulthing.org/p/personality-and-persuasion",
+            "title": "Personality and Persuasion",
+            "reason": "stale"
+          },
+          {
+            "url": "https://www.oneusefulthing.org/p/making-ai-work-leadership-lab-and",
+            "title": "Making AI Work: Leadership, Lab, and Crowd",
+            "reason": "stale"
+          },
+          {
+            "url": "https://www.oneusefulthing.org/p/the-recent-history-of-ai-in-32-otters",
+            "title": "The recent history of AI in 32 otters",
+            "reason": "stale"
+          },
+          {
+            "url": "https://www.oneusefulthing.org/p/using-ai-right-now-a-quick-guide",
+            "title": "Using AI Right Now: A Quick Guide",
+            "reason": "stale"
+          },
+          {
+            "url": "https://www.oneusefulthing.org/p/against-brain-damage",
+            "title": "Against \"Brain Damage\"",
+            "reason": "stale"
+          },
+          {
+            "url": "https://www.oneusefulthing.org/p/the-bitter-lesson-versus-the-garbage",
+            "title": "The Bitter Lesson versus The Garbage Can",
+            "reason": "stale"
+          },
+          {
+            "url": "https://www.oneusefulthing.org/p/gpt-5-it-just-does-stuff",
+            "title": "GPT-5: It Just Does Stuff",
+            "reason": "stale"
+          },
+          {
+            "url": "https://www.oneusefulthing.org/p/mass-intelligence",
+            "title": "Mass Intelligence",
+            "reason": "stale"
+          },
+          {
+            "url": "https://www.oneusefulthing.org/p/on-working-with-wizards",
+            "title": "On Working with Wizards",
+            "reason": "stale"
+          },
+          {
+            "url": "https://www.oneusefulthing.org/p/real-ai-agents-and-real-work",
+            "title": "Real AI Agents and Real Work",
+            "reason": "stale"
+          },
+          {
+            "url": "https://www.oneusefulthing.org/p/an-opinionated-guide-to-using-ai",
+            "title": "An Opinionated Guide to Using AI Right Now",
+            "reason": "stale"
+          },
+          {
+            "url": "https://www.oneusefulthing.org/p/giving-your-ai-a-job-interview",
+            "title": "Giving your AI a Job Interview",
+            "reason": "stale"
+          },
+          {
+            "url": "https://www.oneusefulthing.org/p/three-years-from-gpt-3-to-gemini",
+            "title": "Three Years from GPT-3 to Gemini 3",
+            "reason": "stale"
+          },
+          {
+            "url": "https://www.oneusefulthing.org/p/the-shape-of-ai-jaggedness-bottlenecks",
+            "title": "The Shape of AI: Jaggedness, Bottlenecks and Salients",
+            "reason": "stale"
+          },
+          {
+            "url": "https://www.oneusefulthing.org/p/claude-code-and-what-comes-next",
+            "title": "Claude Code and What Comes Next",
+            "reason": "stale"
+          },
+          {
+            "url": "https://www.oneusefulthing.org/p/management-as-ai-superpower",
+            "title": "Management as AI superpower",
+            "reason": "stale"
+          },
+          {
+            "url": "https://www.vim.org/vim-9.2-released.php",
+            "title": "Vim 9.2",
+            "reason": "short_title"
+          },
+          {
+            "url": "https://simonwillison.net/2026/Feb/5/the-world-factbook/#atom-everything",
+            "title": "Spotlighting The World Factbook as We Bid a Fond Farewell",
+            "reason": "stale"
+          },
+          {
+            "url": "https://simonwillison.net/2026/Feb/5/two-new-models/#atom-everything",
+            "title": "Opus 4.6 and Codex 5.3",
+            "reason": "stale"
+          },
+          {
+            "url": "https://simonwillison.net/2026/Feb/5/ai-adoption-journey/#atom-everything",
+            "title": "Mitchell Hashimoto: My AI Adoption Journey",
+            "reason": "stale"
+          },
+          {
+            "url": "https://simonwillison.net/2026/Feb/6/karel-doosterlinck/#atom-everything",
+            "title": "Quoting Karel D'Oosterlinck",
+            "reason": "stale"
+          },
+          {
+            "url": "https://simonwillison.net/2026/Feb/6/an-update-on-heroku/#atom-everything",
+            "title": "An Update on Heroku",
+            "reason": "stale"
+          },
+          {
+            "url": "https://simonwillison.net/2026/Feb/6/pydantic-monty/#atom-everything",
+            "title": "Running Pydantic's Monty Rust sandboxed Python subset in WebAssembly",
+            "reason": "stale"
+          },
+          {
+            "url": "https://simonwillison.net/2026/Feb/6/tom-dale/#atom-everything",
+            "title": "Quoting Tom Dale",
+            "reason": "stale"
+          },
+          {
+            "url": "https://simonwillison.net/2026/Feb/7/software-factory/#atom-everything",
+            "title": "How StrongDM's AI team build serious software without even looking at the code",
+            "reason": "stale"
+          },
+          {
+            "url": "https://simonwillison.net/2026/Feb/7/david-crawshaw/#atom-everything",
+            "title": "Quoting David Crawshaw",
+            "reason": "stale"
+          },
+          {
+            "url": "https://simonwillison.net/2026/Feb/7/claude-fast-mode/#atom-everything",
+            "title": "Claude: Speed up responses with fast mode",
+            "reason": "stale"
+          },
+          {
+            "url": "https://simonwillison.net/2026/Feb/7/vouch/#atom-everything",
+            "title": "Vouch",
+            "reason": "short_title"
+          }
+        ]
+      },
+      "level": "info",
+      "phase": "prefilter",
+      "message": "Removed articles",
+      "timestamp": "2026-02-15T14:13:11.371Z"
+    },
+    {
+      "data": {
+        "articles": [
+          {
+            "id": "b57c9d34-4b9b-4743-a96c-c95a15a32380",
+            "url": "https://oat.ink/",
+            "title": "Oat – Ultra-lightweight, semantic, zero-dependency HTML UI component library"
+          },
+          {
+            "id": "0a5f4838-d89d-44a6-ae72-c4ecdc966e26",
+            "url": "https://matthew.verive.me/blog/color",
+            "title": "A Pokémon of a Different Color"
+          },
+          {
+            "id": "c5cc5987-c8da-4a9c-ba6f-2bb6c3aceb22",
+            "url": "https://github.com/s-macke/starflight-reverse",
+            "title": "Reversed engineered game Starflight (1986)"
+          },
+          {
+            "id": "d784f7cf-8788-4c3f-b91a-24a7daffefb9",
+            "url": "https://greenwald.substack.com/p/amazons-ring-and-googles-nest-unwittingly",
+            "title": "Amazon, Google Unwittingly Reveal the Severity of the U.S. Surveillance State"
+          },
+          {
+            "id": "f52f8043-5dcc-45cd-baff-e801cfdd7964",
+            "url": "https://github.com/denisepattenson/perlin-terminal",
+            "title": "Show HN: Perlin Noise Terminal Animation in Rust (60 FPS, Truecolor)"
+          },
+          {
+            "id": "e0a2f650-54b2-4a6a-b8de-d5c9a0bda3d5",
+            "url": "https://simonwillison.net/2026/Feb/15/eric-meyer/#atom-everything",
+            "title": "Quoting Eric Meyer"
+          },
+          {
+            "id": "67890963-8817-4d43-8f73-db59edfbbe5c",
+            "url": "https://www.usatoday.com/story/life/health-wellness/2026/02/11/full-body-mris-cancer-aneurysm/88396037007",
+            "title": "How often do full-body MRIs find cancer?"
+          },
+          {
+            "id": "c977187e-a68f-4a66-99a5-1f348f192f06",
+            "url": "https://www.latent.space/p/ainews-why-openai-should-build-slack",
+            "title": "OpenAI should build Slack"
+          },
+          {
+            "id": "b284ebdc-c113-4de4-ad20-5301cd2dede3",
+            "url": "https://k7r.eu/i-love-the-work-of-the-archwiki-maintainers",
+            "title": "I love the work of the ArchWiki maintainers"
+          },
+          {
+            "id": "f6f2b5a1-af3a-47af-92d2-51fca8fe080f",
+            "url": "https://caucascapades.wordpress.com/2012/06/14/guitars-of-the-ussr-and-the-jolana-special-in-azerbaijani-music",
+            "title": "Guitars of the USSR and the Jolana Special in Azerbaijani Music (2012)"
+          },
+          {
+            "id": "f60797cd-1c82-498d-978c-3b0a02a08799",
+            "url": "https://flashpointarchive.org/",
+            "title": "Flashpoint Archive – Over 200k web games and animations preserved"
+          },
+          {
+            "id": "7347213a-82c6-4389-8da9-0dc8d5e66519",
+            "url": "https://kotaku.com/discord-palantir-peter-thiel-persona-age-verification-2000668951",
+            "title": "Discord Distances Itself from Peter Thiel's Palantir Age Verification Firm"
+          },
+          {
+            "id": "da207447-fff1-4e02-95f7-6a4dca85df48",
+            "url": "https://seeing-theory.brown.edu/",
+            "title": "Seeing Theory"
+          },
+          {
+            "id": "60c09b38-cbec-4709-8fc4-f7b85c126ab6",
+            "url": "https://scottlocklin.wordpress.com/2023/05/31/djvu-and-its-connection-to-deep-learning",
+            "title": "DjVu and its connection to Deep Learning (2023)"
+          },
+          {
+            "id": "7862c6f6-6eb8-4aad-84b0-2bb7498826ed",
+            "url": "https://www.seangoedecke.com/fast-llm-inference",
+            "title": "Two different tricks for fast LLM inference"
+          },
+          {
+            "id": "b2424b56-aba2-4d91-a693-d8900e46b5a6",
+            "url": "https://marler8997.github.io/blog/fixed-windows",
+            "title": "I Fixed Windows Native Development"
+          },
+          {
+            "id": "08192a78-98f4-44d7-b145-db6735a9c210",
+            "url": "https://www.zerohedge.com/crypto/bitcoin-mining-electricity-grid-quiet-savior",
+            "title": "Bitcoin Mining & The Electricity Grid: A Quiet Savior"
+          },
+          {
+            "id": "12c3eae6-8586-405f-b5c7-fc488111607b",
+            "url": "https://www.zerohedge.com/geopolitical/epstein-egregore",
+            "title": "The Epstein Egregore"
+          },
+          {
+            "id": "375a8048-ecf3-4fe2-9338-8d0aa63d6eeb",
+            "url": "https://www.zerohedge.com/personal-finance/which-us-states-are-seeing-incomes-rise-fastest-and-slowest",
+            "title": "Which US States Are Seeing Incomes Rise The Fastest (And Slowest)"
+          },
+          {
+            "id": "0379f41b-cc25-4fd5-ac8b-b39c214db23b",
+            "url": "https://www.zerohedge.com/geopolitical/lavrov-soberly-acknowledged-challenges-posed-trump-20",
+            "title": "Lavrov Soberly Acknowledged The Challenges Posed By Trump 2.0"
+          },
+          {
+            "id": "f3f421f1-0c27-4a72-8535-67e3f0773fb9",
+            "url": "https://www.zerohedge.com/geopolitical/month-after-mass-amnesty-illegals-spain-urges-brussels-take-migrants-its-hands",
+            "title": "A Month After Mass Amnesty For Illegals, Spain Urges Brussels To Take Migrants Off Its Hands"
+          },
+          {
+            "id": "9d97f73a-9586-4aee-bd37-b27a6b4885b8",
+            "url": "https://www.zerohedge.com/military/dont-be-evil-drone-king-eric-schmidt-warns-ukraines-no-mans-land-future-war",
+            "title": "From \"Don't Be Evil\" To Drone King: Eric Schmidt Warns Ukraine's \"No Man's Land\" Is Future Of War"
+          },
+          {
+            "id": "0f088d68-e8f8-468e-b5c9-a0f56593682d",
+            "url": "https://www.zerohedge.com/political/germanys-two-speed-europe-proposal-eus-adaptation-great-power-geopolitics",
+            "title": "Germany's \"Two-Speed Europe\" Proposal Is The EU's Adaptation To Great Power Geopolitics"
+          },
+          {
+            "id": "ce2fc7dc-e945-4f93-8b8d-1ad44aabda5b",
+            "url": "https://simonwillison.net/2026/Feb/15/interop-2026/#atom-everything",
+            "title": "Launching Interop 2026"
+          },
+          {
+            "id": "4e74544c-09d6-4ef3-962a-f9169e7d2a61",
+            "url": "https://simonwillison.net/2026/Feb/15/cognitive-debt/#atom-everything",
+            "title": "How Generative and Agentic AI Shift Concern from Technical Debt to Cognitive Debt"
+          },
+          {
+            "id": "7d28950b-3c0c-4b07-8d27-a42c387461f7",
+            "url": "https://www.theverge.com/column/879524/ai-video-game-worlds-project-genie",
+            "title": "AI can’t make good video game worlds yet, and it might never be able to"
+          },
+          {
+            "id": "e867aaff-1e9d-4975-bdc3-cb1f4e67d851",
+            "url": "https://www.theverge.com/policy/879016/epstein-files-emails-text-errors-encoding",
+            "title": "Why are Epstein’s emails full of equals signs?"
+          },
+          {
+            "id": "c9fbdb3b-4caf-4082-8be1-198aa21c696e",
+            "url": "https://www.nytimes.com/2026/02/14/world/europe/russia-navalny-poison.html",
+            "title": "Deadly Poison Detected in Navalny’s Body, Joint Analysis Finds"
+          },
+          {
+            "id": "13d8ab92-a233-424d-b696-fd91496e7257",
+            "url": "https://www.pbs.org/newshour/nation/how-the-homeland-security-shutdown-is-impacting-travel-in-the-u-s",
+            "title": "How the Homeland Security shutdown is impacting travel in the U.S."
+          },
+          {
+            "id": "05f546f2-9377-44da-87a6-dee3fc209f84",
+            "url": "https://turnto10.com/news/nation-world/no-arrests-made-in-nancy-guthrie-case-after-police-swarm-home-near-kidnapping-site-abduction-investigation-disappearance-tucson-arizona-home-search-dna-evidence-true-crime",
+            "title": "No arrests made in Nancy Guthrie case after police swarm home near kidnapping site"
+          },
+          {
+            "id": "96eedaaf-b8e4-400d-868d-482201b8726e",
+            "url": "https://thehill.com/homenews/administration/5739198-obama-trump-administration-rhetoric",
+            "title": "Obama pushes back on White House rhetoric, ape video: Decorum has ‘been lost’"
+          },
+          {
+            "id": "4445e2c0-3d16-4865-b502-6a923582e5a2",
+            "url": "https://www.npr.org/2026/02/14/nx-s1-5714609/epstein-europe-fallout",
+            "title": "Epstein files fallout takes down elite figures in Europe, while U.S. reckoning is muted"
+          },
+          {
+            "id": "afd22bc4-0ad1-4237-980d-5c8c897340ba",
+            "url": "https://unicornjelly.com/",
+            "title": "Unicorn Jelly"
+          },
+          {
+            "id": "791f77b3-1a1c-417d-9735-145e98a0fdb7",
+            "url": "https://www.zerohedge.com/political/elon-demands-investigation-reid-hoffmans-ice-cream-girls-epstein-ties",
+            "title": "Elon Demands Investigation Into Reid Hoffman’s \"Ice Cream For The Girls\" Epstein Ties"
+          }
+        ]
+      },
+      "level": "info",
+      "phase": "prefilter",
+      "message": "Kept articles",
+      "timestamp": "2026-02-15T14:13:11.371Z"
+    },
+    {
+      "data": {
+        "interests": [
+          {
+            "weight": 1,
+            "category": "AI / LLMs / Local Models",
+            "description": "Artificial intelligence, large language models, running models locally, GPU hardware for inference, tools like Ollama and LM Studio"
+          },
+          {
+            "weight": 1,
+            "category": "Civic Tech / GovTech",
+            "description": "Technology for government, municipal data, public service delivery, open data, civic engagement tools"
+          },
+          {
+            "weight": 1,
+            "category": "Web Development",
+            "description": "JavaScript, TypeScript, React, Next.js, Node.js, CSS, web frameworks, frontend and backend development"
+          },
+          {
+            "weight": 0.8,
+            "category": "Dallas / DFW Local News",
+            "description": "News and events in Dallas, Fort Worth, and the DFW metroplex area. Local politics, development, community events"
+          },
+          {
+            "weight": 0.7,
+            "category": "General Tech Industry",
+            "description": "Major tech company news, product launches, industry trends, startup ecosystem"
+          },
+          {
+            "weight": 0.6,
+            "category": "Gaming / PC Hardware",
+            "description": "PC gaming, GPU news, monitor tech, gaming hardware reviews and deals"
+          }
+        ],
+        "preferences": []
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scoring context loaded",
+      "timestamp": "2026-02-15T14:13:11.471Z"
+    },
+    {
+      "data": {
+        "batchSize": 10
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scoring 34 articles in 4 batch(es)",
+      "timestamp": "2026-02-15T14:13:11.471Z"
+    },
+    {
+      "data": {
+        "articles": [
+          {
+            "id": "b57c9d34-4b9b-4743-a96c-c95a15a32380",
+            "title": "Oat – Ultra-lightweight, semantic, zero-dependency HTML UI component library"
+          },
+          {
+            "id": "0a5f4838-d89d-44a6-ae72-c4ecdc966e26",
+            "title": "A Pokémon of a Different Color"
+          },
+          {
+            "id": "c5cc5987-c8da-4a9c-ba6f-2bb6c3aceb22",
+            "title": "Reversed engineered game Starflight (1986)"
+          },
+          {
+            "id": "d784f7cf-8788-4c3f-b91a-24a7daffefb9",
+            "title": "Amazon, Google Unwittingly Reveal the Severity of the U.S. Surveillance State"
+          },
+          {
+            "id": "f52f8043-5dcc-45cd-baff-e801cfdd7964",
+            "title": "Show HN: Perlin Noise Terminal Animation in Rust (60 FPS, Truecolor)"
+          },
+          {
+            "id": "e0a2f650-54b2-4a6a-b8de-d5c9a0bda3d5",
+            "title": "Quoting Eric Meyer"
+          },
+          {
+            "id": "67890963-8817-4d43-8f73-db59edfbbe5c",
+            "title": "How often do full-body MRIs find cancer?"
+          },
+          {
+            "id": "c977187e-a68f-4a66-99a5-1f348f192f06",
+            "title": "OpenAI should build Slack"
+          },
+          {
+            "id": "b284ebdc-c113-4de4-ad20-5301cd2dede3",
+            "title": "I love the work of the ArchWiki maintainers"
+          },
+          {
+            "id": "f6f2b5a1-af3a-47af-92d2-51fca8fe080f",
+            "title": "Guitars of the USSR and the Jolana Special in Azerbaijani Music (2012)"
+          }
+        ],
+        "batchNumber": 1,
+        "articleCount": 10,
+        "totalBatches": 4
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scoring batch 1/4: 10 articles",
+      "timestamp": "2026-02-15T14:13:11.471Z"
+    },
+    {
+      "data": {
+        "prompt": "You are a content curator for a daily digest app. Score articles based on the user's interest profile.\n\n## User's Explicit Interests\n- AI / LLMs / Local Models (weight: 1): Artificial intelligence, large language models, running models locally, GPU hardware for inference, tools like Ollama and LM Studio\n- Civic Tech / GovTech (weight: 1): Technology for government, municipal data, public service delivery, open data, civic engagement tools\n- Web Development (weight: 1): JavaScript, TypeScript, React, Next.js, Node.js, CSS, web frameworks, frontend and backend development\n- Dallas / DFW Local News (weight: 0.8): News and events in Dallas, Fort Worth, and the DFW metroplex area. Local politics, development, community events\n- General Tech Industry (weight: 0.7): Major tech company news, product launches, industry trends, startup ecosystem\n- Gaming / PC Hardware (weight: 0.6): PC gaming, GPU news, monitor tech, gaming hardware reviews and deals\n\n## User's Learned Preferences\nNo learned preferences yet.\n\n## Recent Feedback Patterns\nNo recent feedback data.\n\n## Instructions\n\nFor each article, provide:\n1. **relevance_score** (0.0 to 1.0): How relevant to the user\n2. **relevance_reason**: MUST be one of these exact formats:\n   - \"Matches: [Interest Name]\" — where [Interest Name] is one of: AI / LLMs / Local Models, Civic Tech / GovTech, Web Development, Dallas / DFW Local News, General Tech Industry, Gaming / PC Hardware\n   - \"Serendipity\" — ONLY for true serendipity items (see below)\n3. **is_serendipity** (boolean): ALMOST ALWAYS false. See strict criteria below.\n\n### relevance_reason Rules\n- If an article matches ANY stated interest, use \"Matches: [Best Matching Interest Name]\"\n- If it matches multiple interests, pick the strongest match\n- Even partial or loose matches to a stated interest should use \"Matches: ...\"\n- ONLY use \"Serendipity\" for articles that genuinely don't match ANY stated interest but are still valuable\n\n### Serendipity — Use Sparingly\nis_serendipity should be true for AT MOST 1-2 articles per batch. It means:\n- The article does NOT match any of the user's stated interests, not even loosely\n- But it's still genuinely valuable — a major world event, a cross-domain insight, etc.\n- If you can justify \"Matches: [any interest]\", it is NOT serendipity\n\n### Scoring Guidelines\n- 0.8-1.0: Directly matches primary interests, high-quality content\n- 0.6-0.8: Good match, relevant and worth reading\n- 0.4-0.6: Weak match or serendipity candidate\n- 0.0-0.4: Not relevant enough to include\n\n## Articles to Score\nID: b57c9d34-4b9b-4743-a96c-c95a15a32380\nTitle: Oat – Ultra-lightweight, semantic, zero-dependency HTML UI component library\nURL: https://oat.ink/\nContent: Article URL: https://oat.ink/\nComments URL: https://news.ycombinator.com/item?id=47021980\nPoints: 174\n# Comments: 45\n---\nID: 0a5f4838-d89d-44a6-ae72-c4ecdc966e26\nTitle: A Pokémon of a Different Color\nURL: https://matthew.verive.me/blog/color\nContent: Article URL: https://matthew.verive.me/blog/color/\nComments URL: https://news.ycombinator.com/item?id=47022704\nPoints: 12\n# Comments: 2\n---\nID: c5cc5987-c8da-4a9c-ba6f-2bb6c3aceb22\nTitle: Reversed engineered game Starflight (1986)\nURL: https://github.com/s-macke/starflight-reverse\nContent: Article URL: https://github.com/s-macke/starflight-reverse\nComments URL: https://news.ycombinator.com/item?id=47022943\nPoints: 11\n# Comments: 1\n---\nID: d784f7cf-8788-4c3f-b91a-24a7daffefb9\nTitle: Amazon, Google Unwittingly Reveal the Severity of the U.S. Surveillance State\nURL: https://greenwald.substack.com/p/amazons-ring-and-googles-nest-unwittingly\nContent: Article URL: https://greenwald.substack.com/p/amazons-ring-and-googles-nest-unwittingly\nComments URL: https://news.ycombinator.com/item?id=47023238\nPoints: 61\n# Comments: 11\n---\nID: f52f8043-5dcc-45cd-baff-e801cfdd7964\nTitle: Show HN: Perlin Noise Terminal Animation in Rust (60 FPS, Truecolor)\nURL: https://github.com/denisepattenson/perlin-terminal\nContent: Article URL: https://github.com/denisepattenson/perlin-terminal\nComments URL: https://news.ycombinator.com/item?id=47023333\nPoints: 10\n# Comments: 4\n---\nID: e0a2f650-54b2-4a6a-b8de-d5c9a0bda3d5\nTitle: Quoting Eric Meyer\nURL: https://simonwillison.net/2026/Feb/15/eric-meyer/#atom-everything\nContent: \n    <blockquote cite=\"https://mastodon.social/@Meyerweb/116065151451468199\"><p>I saw yet another “CSS is a massively bloated mess” whine and I’m like.  My dude.  My brother in Chromium.  It is trying as hard as it can to express the totality of visual presentation and layout design and typography a\n---\nID: 67890963-8817-4d43-8f73-db59edfbbe5c\nTitle: How often do full-body MRIs find cancer?\nURL: https://www.usatoday.com/story/life/health-wellness/2026/02/11/full-body-mris-cancer-aneurysm/88396037007\nContent: Article URL: https://www.usatoday.com/story/life/health-wellness/2026/02/11/full-body-mris-cancer-aneurysm/88396037007/\nComments URL: https://news.ycombinator.com/item?id=47008607\nPoints: 127\n# Comments: 170\n---\nID: c977187e-a68f-4a66-99a5-1f348f192f06\nTitle: OpenAI should build Slack\nURL: https://www.latent.space/p/ainews-why-openai-should-build-slack\nContent: Article URL: https://www.latent.space/p/ainews-why-openai-should-build-slack\nComments URL: https://news.ycombinator.com/item?id=47012553\nPoints: 189\n# Comments: 218\n---\nID: b284ebdc-c113-4de4-ad20-5301cd2dede3\nTitle: I love the work of the ArchWiki maintainers\nURL: https://k7r.eu/i-love-the-work-of-the-archwiki-maintainers\nContent: Article URL: https://k7r.eu/i-love-the-work-of-the-archwiki-maintainers/\nComments URL: https://news.ycombinator.com/item?id=47020191\nPoints: 578\n# Comments: 101\n---\nID: f6f2b5a1-af3a-47af-92d2-51fca8fe080f\nTitle: Guitars of the USSR and the Jolana Special in Azerbaijani Music (2012)\nURL: https://caucascapades.wordpress.com/2012/06/14/guitars-of-the-ussr-and-the-jolana-special-in-azerbaijani-music\nContent: Article URL: https://caucascapades.wordpress.com/2012/06/14/guitars-of-the-ussr-and-the-jolana-special-in-azerbaijani-music/\nComments URL: https://news.ycombinator.com/item?id=47020791\nPoints: 59\n# Comments: 9\n\nRespond ONLY with a JSON array (no markdown code fences):\n[\n  {\n    \"article_id\": \"...\",\n    \"relevance_score\": 0.85,\n    \"relevance_reason\": \"Matches: AI / LLMs / Local Models\",\n    \"is_serendipity\": false\n  }\n]",
+        "promptLength": 6316
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Batch 1 prompt",
+      "timestamp": "2026-02-15T14:13:11.471Z"
+    },
+    {
+      "data": {
+        "response": " [\n  {\n    \"article_id\": \"b57c9d34-4b9b-4743-a96c-c95a15a32380\",\n    \"relevance_score\": 0.85,\n    \"relevance_reason\": \"Matches: Web Development\",\n    \"is_serendipity\": false\n  },\n  {\n    \"article_id\": \"0a5f4838-d89d-44a6-ae72-c4ecdc966e26\",\n    \"relevance_score\": 0.1,\n    \"relevance_reason\": \"Matches: General Tech Industry\",\n    \"is_serendipity\": false\n  },\n  {\n    \"article_id\": \"c5cc5987-c8da-4a9c-ba6f-2bb6c3aceb22\",\n    \"relevance_score\": 0.55,\n    \"relevance_reason\": \"Matches: Gaming / PC Hardware\",\n    \"is_serendipity\": false\n  },\n  {\n    \"article_id\": \"d784f7cf-8788-4c3f-b91a-24a7daffefb9\",\n    \"relevance_score\": 0.80,\n    \"relevance_reason\": \"Matches: Civic Tech / GovTech\",\n    \"is_serendipity\": false\n  },\n  {\n    \"article_id\": \"f52f8043-5dcc-45cd-baff-e801cfdd7964\",\n    \"relevance_score\": 0.35,\n    \"relevance_reason\": \"Matches: General Tech Industry\",\n    \"is_serendipity\": false\n  },\n  {\n    \"article_id\": \"e0a2f650-54b2-4a6a-b8de-d5c9a0bda3d5\",\n    \"relevance_score\": 0.88,\n    \"relevance_reason\": \"Matches: Web Development\",\n    \"is_serendipity\": false\n  },\n  {\n    \"article_id\": \"67890963-8817-4d43-8f73-db59edfbbe5c\",\n    \"relevance_score\": 0.15,\n    \"relevance_reason\": \"Matches: General Tech Industry\",\n    \"is_serendipity\": false\n  },\n  {\n    \"article_id\": \"c977187e-a68f-4a66-99a5-1f348f192f06\",\n    \"relevance_score\": 0.82,\n    \"relevance_reason\": \"Matches: AI / LLMs / Local Models\",\n    \"is_serendipity\": false\n  },\n  {\n    \"article_id\": \"b284ebdc-c113-4de4-ad20-5301cd2dede3\",\n    \"relevance_score\": 0.45,\n    \"relevance_reason\": \"Matches: General Tech Industry\",\n    \"is_serendipity\": false\n  },\n  {\n    \"article_id\": \"f6f2b5a1-af3a-47af-92d2-51fca8fe080f\",\n    \"relevance_score\": 0.1,\n    \"relevance_reason\": \"Matches: General Tech Industry\",\n    \"is_serendipity\": false\n  }\n]",
+        "llmDurationMs": 38743,
+        "responseLength": 1810
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Batch 1 raw LLM response",
+      "timestamp": "2026-02-15T14:13:50.214Z"
+    },
+    {
+      "data": {
+        "expected": 10,
+        "received": 10,
+        "parseMethod": "direct",
+        "wasTruncated": false
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Batch 1 parsed: 10 results via direct",
+      "timestamp": "2026-02-15T14:13:50.214Z"
+    },
+    {
+      "data": {
+        "title": "Oat – Ultra-lightweight, semantic, zero-dependency HTML UI component library",
+        "articleId": "b57c9d34-4b9b-4743-a96c-c95a15a32380",
+        "isSerendipity": false,
+        "relevanceScore": 0.85,
+        "relevanceReason": "Matches: Web Development"
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored: \"Oat – Ultra-lightweight, semantic, zero-dependency HTML UI component library\"",
+      "timestamp": "2026-02-15T14:13:50.214Z"
+    },
+    {
+      "data": {
+        "title": "A Pokémon of a Different Color",
+        "articleId": "0a5f4838-d89d-44a6-ae72-c4ecdc966e26",
+        "isSerendipity": false,
+        "relevanceScore": 0.1,
+        "relevanceReason": "Matches: General Tech Industry"
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored: \"A Pokémon of a Different Color\"",
+      "timestamp": "2026-02-15T14:13:50.214Z"
+    },
+    {
+      "data": {
+        "title": "Reversed engineered game Starflight (1986)",
+        "articleId": "c5cc5987-c8da-4a9c-ba6f-2bb6c3aceb22",
+        "isSerendipity": false,
+        "relevanceScore": 0.55,
+        "relevanceReason": "Matches: Gaming / PC Hardware"
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored: \"Reversed engineered game Starflight (1986)\"",
+      "timestamp": "2026-02-15T14:13:50.214Z"
+    },
+    {
+      "data": {
+        "title": "Amazon, Google Unwittingly Reveal the Severity of the U.S. Surveillance State",
+        "articleId": "d784f7cf-8788-4c3f-b91a-24a7daffefb9",
+        "isSerendipity": false,
+        "relevanceScore": 0.8,
+        "relevanceReason": "Matches: Civic Tech / GovTech"
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored: \"Amazon, Google Unwittingly Reveal the Severity of the U.S. Surveillance State\"",
+      "timestamp": "2026-02-15T14:13:50.214Z"
+    },
+    {
+      "data": {
+        "title": "Show HN: Perlin Noise Terminal Animation in Rust (60 FPS, Truecolor)",
+        "articleId": "f52f8043-5dcc-45cd-baff-e801cfdd7964",
+        "isSerendipity": false,
+        "relevanceScore": 0.35,
+        "relevanceReason": "Matches: General Tech Industry"
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored: \"Show HN: Perlin Noise Terminal Animation in Rust (60 FPS, Truecolor)\"",
+      "timestamp": "2026-02-15T14:13:50.214Z"
+    },
+    {
+      "data": {
+        "title": "Quoting Eric Meyer",
+        "articleId": "e0a2f650-54b2-4a6a-b8de-d5c9a0bda3d5",
+        "isSerendipity": false,
+        "relevanceScore": 0.88,
+        "relevanceReason": "Matches: Web Development"
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored: \"Quoting Eric Meyer\"",
+      "timestamp": "2026-02-15T14:13:50.214Z"
+    },
+    {
+      "data": {
+        "title": "How often do full-body MRIs find cancer?",
+        "articleId": "67890963-8817-4d43-8f73-db59edfbbe5c",
+        "isSerendipity": false,
+        "relevanceScore": 0.15,
+        "relevanceReason": "Matches: General Tech Industry"
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored: \"How often do full-body MRIs find cancer?\"",
+      "timestamp": "2026-02-15T14:13:50.214Z"
+    },
+    {
+      "data": {
+        "title": "OpenAI should build Slack",
+        "articleId": "c977187e-a68f-4a66-99a5-1f348f192f06",
+        "isSerendipity": false,
+        "relevanceScore": 0.82,
+        "relevanceReason": "Matches: AI / LLMs / Local Models"
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored: \"OpenAI should build Slack\"",
+      "timestamp": "2026-02-15T14:13:50.214Z"
+    },
+    {
+      "data": {
+        "title": "I love the work of the ArchWiki maintainers",
+        "articleId": "b284ebdc-c113-4de4-ad20-5301cd2dede3",
+        "isSerendipity": false,
+        "relevanceScore": 0.45,
+        "relevanceReason": "Matches: General Tech Industry"
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored: \"I love the work of the ArchWiki maintainers\"",
+      "timestamp": "2026-02-15T14:13:50.214Z"
+    },
+    {
+      "data": {
+        "title": "Guitars of the USSR and the Jolana Special in Azerbaijani Music (2012)",
+        "articleId": "f6f2b5a1-af3a-47af-92d2-51fca8fe080f",
+        "isSerendipity": false,
+        "relevanceScore": 0.1,
+        "relevanceReason": "Matches: General Tech Industry"
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored: \"Guitars of the USSR and the Jolana Special in Azerbaijani Music (2012)\"",
+      "timestamp": "2026-02-15T14:13:50.214Z"
+    },
+    {
+      "data": {
+        "articles": [
+          {
+            "id": "f60797cd-1c82-498d-978c-3b0a02a08799",
+            "title": "Flashpoint Archive – Over 200k web games and animations preserved"
+          },
+          {
+            "id": "7347213a-82c6-4389-8da9-0dc8d5e66519",
+            "title": "Discord Distances Itself from Peter Thiel's Palantir Age Verification Firm"
+          },
+          {
+            "id": "da207447-fff1-4e02-95f7-6a4dca85df48",
+            "title": "Seeing Theory"
+          },
+          {
+            "id": "60c09b38-cbec-4709-8fc4-f7b85c126ab6",
+            "title": "DjVu and its connection to Deep Learning (2023)"
+          },
+          {
+            "id": "7862c6f6-6eb8-4aad-84b0-2bb7498826ed",
+            "title": "Two different tricks for fast LLM inference"
+          },
+          {
+            "id": "b2424b56-aba2-4d91-a693-d8900e46b5a6",
+            "title": "I Fixed Windows Native Development"
+          },
+          {
+            "id": "08192a78-98f4-44d7-b145-db6735a9c210",
+            "title": "Bitcoin Mining & The Electricity Grid: A Quiet Savior"
+          },
+          {
+            "id": "12c3eae6-8586-405f-b5c7-fc488111607b",
+            "title": "The Epstein Egregore"
+          },
+          {
+            "id": "375a8048-ecf3-4fe2-9338-8d0aa63d6eeb",
+            "title": "Which US States Are Seeing Incomes Rise The Fastest (And Slowest)"
+          },
+          {
+            "id": "0379f41b-cc25-4fd5-ac8b-b39c214db23b",
+            "title": "Lavrov Soberly Acknowledged The Challenges Posed By Trump 2.0"
+          }
+        ],
+        "batchNumber": 2,
+        "articleCount": 10,
+        "totalBatches": 4
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scoring batch 2/4: 10 articles",
+      "timestamp": "2026-02-15T14:13:50.214Z"
+    },
+    {
+      "data": {
+        "prompt": "You are a content curator for a daily digest app. Score articles based on the user's interest profile.\n\n## User's Explicit Interests\n- AI / LLMs / Local Models (weight: 1): Artificial intelligence, large language models, running models locally, GPU hardware for inference, tools like Ollama and LM Studio\n- Civic Tech / GovTech (weight: 1): Technology for government, municipal data, public service delivery, open data, civic engagement tools\n- Web Development (weight: 1): JavaScript, TypeScript, React, Next.js, Node.js, CSS, web frameworks, frontend and backend development\n- Dallas / DFW Local News (weight: 0.8): News and events in Dallas, Fort Worth, and the DFW metroplex area. Local politics, development, community events\n- General Tech Industry (weight: 0.7): Major tech company news, product launches, industry trends, startup ecosystem\n- Gaming / PC Hardware (weight: 0.6): PC gaming, GPU news, monitor tech, gaming hardware reviews and deals\n\n## User's Learned Preferences\nNo learned preferences yet.\n\n## Recent Feedback Patterns\nNo recent feedback data.\n\n## Instructions\n\nFor each article, provide:\n1. **relevance_score** (0.0 to 1.0): How relevant to the user\n2. **relevance_reason**: MUST be one of these exact formats:\n   - \"Matches: [Interest Name]\" — where [Interest Name] is one of: AI / LLMs / Local Models, Civic Tech / GovTech, Web Development, Dallas / DFW Local News, General Tech Industry, Gaming / PC Hardware\n   - \"Serendipity\" — ONLY for true serendipity items (see below)\n3. **is_serendipity** (boolean): ALMOST ALWAYS false. See strict criteria below.\n\n### relevance_reason Rules\n- If an article matches ANY stated interest, use \"Matches: [Best Matching Interest Name]\"\n- If it matches multiple interests, pick the strongest match\n- Even partial or loose matches to a stated interest should use \"Matches: ...\"\n- ONLY use \"Serendipity\" for articles that genuinely don't match ANY stated interest but are still valuable\n\n### Serendipity — Use Sparingly\nis_serendipity should be true for AT MOST 1-2 articles per batch. It means:\n- The article does NOT match any of the user's stated interests, not even loosely\n- But it's still genuinely valuable — a major world event, a cross-domain insight, etc.\n- If you can justify \"Matches: [any interest]\", it is NOT serendipity\n\n### Scoring Guidelines\n- 0.8-1.0: Directly matches primary interests, high-quality content\n- 0.6-0.8: Good match, relevant and worth reading\n- 0.4-0.6: Weak match or serendipity candidate\n- 0.0-0.4: Not relevant enough to include\n\n## Articles to Score\nID: f60797cd-1c82-498d-978c-3b0a02a08799\nTitle: Flashpoint Archive – Over 200k web games and animations preserved\nURL: https://flashpointarchive.org/\nContent: Article URL: https://flashpointarchive.org\nComments URL: https://news.ycombinator.com/item?id=47021354\nPoints: 165\n# Comments: 37\n---\nID: 7347213a-82c6-4389-8da9-0dc8d5e66519\nTitle: Discord Distances Itself from Peter Thiel's Palantir Age Verification Firm\nURL: https://kotaku.com/discord-palantir-peter-thiel-persona-age-verification-2000668951\nContent: Article URL: https://kotaku.com/discord-palantir-peter-thiel-persona-age-verification-2000668951\nComments URL: https://news.ycombinator.com/item?id=47021421\nPoints: 116\n# Comments: 59\n---\nID: da207447-fff1-4e02-95f7-6a4dca85df48\nTitle: Seeing Theory\nURL: https://seeing-theory.brown.edu/\nContent: Article URL: https://seeing-theory.brown.edu/\nComments URL: https://news.ycombinator.com/item?id=47022067\nPoints: 43\n# Comments: 1\n---\nID: 60c09b38-cbec-4709-8fc4-f7b85c126ab6\nTitle: DjVu and its connection to Deep Learning (2023)\nURL: https://scottlocklin.wordpress.com/2023/05/31/djvu-and-its-connection-to-deep-learning\nContent: Article URL: https://scottlocklin.wordpress.com/2023/05/31/djvu-and-its-connection-to-deep-learning/\nComments URL: https://news.ycombinator.com/item?id=47022213\nPoints: 3\n# Comments: 0\n---\nID: 7862c6f6-6eb8-4aad-84b0-2bb7498826ed\nTitle: Two different tricks for fast LLM inference\nURL: https://www.seangoedecke.com/fast-llm-inference\nContent: Article URL: https://www.seangoedecke.com/fast-llm-inference/\nComments URL: https://news.ycombinator.com/item?id=47022329\nPoints: 63\n# Comments: 32\n---\nID: b2424b56-aba2-4d91-a693-d8900e46b5a6\nTitle: I Fixed Windows Native Development\nURL: https://marler8997.github.io/blog/fixed-windows\nContent: Article URL: https://marler8997.github.io/blog/fixed-windows/\nComments URL: https://news.ycombinator.com/item?id=47022891\nPoints: 65\n# Comments: 15\n---\nID: 08192a78-98f4-44d7-b145-db6735a9c210\nTitle: Bitcoin Mining & The Electricity Grid: A Quiet Savior\nURL: https://www.zerohedge.com/crypto/bitcoin-mining-electricity-grid-quiet-savior\nContent: Bitcoin Mining & The Electricity Grid: A Quiet Savior\n\n            \nAuthored by Joakim Book via The Mises Institute,\nWith all eyes on the winter storm raging through America last month, a silent hero was working in the background to keep the lights on.\nAnd I don’t primarily mean the emergency worker\n---\nID: 12c3eae6-8586-405f-b5c7-fc488111607b\nTitle: The Epstein Egregore\nURL: https://www.zerohedge.com/geopolitical/epstein-egregore\nContent: The Epstein Egregore\n\n            \nAuthored by Mark Jeftovic via BombThrower.com,\nThe Politics Of Institutionalized Predation.\n“I become stronger as you become weaker, I absorb strength as yours flows into me. I become capable of this because I do not experience your pain, I don’t care about your lo\n---\nID: 375a8048-ecf3-4fe2-9338-8d0aa63d6eeb\nTitle: Which US States Are Seeing Incomes Rise The Fastest (And Slowest)\nURL: https://www.zerohedge.com/personal-finance/which-us-states-are-seeing-incomes-rise-fastest-and-slowest\nContent: Which US States Are Seeing Incomes Rise The Fastest (And Slowest)\n\n            \nSince 2019, U.S. household incomes have surged - rising from $68,700 to $83,730 nationally, a 21.9% increase in just five years.\nBut where you live matters a lot.\nWhile some states tracked close to the national average, \n---\nID: 0379f41b-cc25-4fd5-ac8b-b39c214db23b\nTitle: Lavrov Soberly Acknowledged The Challenges Posed By Trump 2.0\nURL: https://www.zerohedge.com/geopolitical/lavrov-soberly-acknowledged-challenges-posed-trump-20\nContent: Lavrov Soberly Acknowledged The Challenges Posed By Trump 2.0\n\n            \nAuthored by Andrew Korybko,\nHe calmly acknowledged that it’s now more difficult for Russia to advance its foreign policy goals due to the US’ renewed attempt to dominate the global economy through coercion and force, but he \n\nRespond ONLY with a JSON array (no markdown code fences):\n[\n  {\n    \"article_id\": \"...\",\n    \"relevance_score\": 0.85,\n    \"relevance_reason\": \"Matches: AI / LLMs / Local Models\",\n    \"is_serendipity\": false\n  }\n]",
+        "promptLength": 6696
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Batch 2 prompt",
+      "timestamp": "2026-02-15T14:13:50.214Z"
+    },
+    {
+      "data": {
+        "response": " [\n  {\n    \"article_id\": \"f60797cd-1c82-498d-978c-3b0a02a08799\",\n    \"relevance_score\": 0.75,\n    \"relevance_reason\": \"Matches: Gaming / PC Hardware\",\n    \"is_serendipity\": false\n  },\n  {\n    \"article_id\": \"7347213a-82c6-4389-8da9-0dc8d5e66519\",\n    \"relevance_score\": 0.75,\n    \"relevance_reason\": \"Matches: General Tech Industry\",\n    \"is_serendipity\": false\n  },\n  {\n    \"article_id\": \"da207447-fff1-4e02-95f7-6a4dca85df48\",\n    \"relevance_score\": 0.65,\n    \"relevance_reason\": \"Matches: Web Development\",\n    \"is_serendipity\": false\n  },\n  {\n    \"article_id\": \"60c09b38-cbec-4709-8fc4-f7b85c126ab6\",\n    \"relevance_score\": 0.85,\n    \"relevance_reason\": \"Matches: AI / LLMs / Local Models\",\n    \"is_serendipity\": false\n  },\n  {\n    \"article_id\": \"7862c6f6-6eb8-4aad-84b0-2bb7498826ed\",\n    \"relevance_score\": 0.95,\n    \"relevance_reason\": \"Matches: AI / LLMs / Local Models\",\n    \"is_serendipity\": false\n  },\n  {\n    \"article_id\": \"b2424b56-aba2-4d91-a693-d8900e46b5a6\",\n    \"relevance_score\": 0.55,\n    \"relevance_reason\": \"Matches: General Tech Industry\",\n    \"is_serendipity\": false\n  },\n  {\n    \"article_id\": \"08192a78-98f4-44d7-b145-db6735a9c210\",\n    \"relevance_score\": 0.3,\n    \"relevance_reason\": \"Matches: General Tech Industry\",\n    \"is_serendipity\": false\n  },\n  {\n    \"article_id\": \"12c3eae6-8586-405f-b5c7-fc488111607b\",\n    \"relevance_score\": 0.0,\n    \"relevance_reason\": \"Matches: General Tech Industry\",\n    \"is_serendipity\": false\n  },\n  {\n    \"article_id\": \"375a8048-ecf3-4fe2-9338-8d0aa63d6eeb\",\n    \"relevance_score\": 0.0,\n    \"relevance_reason\": \"Matches: General Tech Industry\",\n    \"is_serendipity\": false\n  },\n  {\n    \"article_id\": \"0379f41b-cc25-4fd5-ac8b-b39c214db23b\",\n    \"relevance_score\": 0.0,\n    \"relevance_reason\": \"Matches: General Tech Industry\",\n    \"is_serendipity\": false\n  }\n]",
+        "llmDurationMs": 100464,
+        "responseLength": 1818
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Batch 2 raw LLM response",
+      "timestamp": "2026-02-15T14:15:30.678Z"
+    },
+    {
+      "data": {
+        "expected": 10,
+        "received": 10,
+        "parseMethod": "direct",
+        "wasTruncated": false
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Batch 2 parsed: 10 results via direct",
+      "timestamp": "2026-02-15T14:15:30.678Z"
+    },
+    {
+      "data": {
+        "title": "Flashpoint Archive – Over 200k web games and animations preserved",
+        "articleId": "f60797cd-1c82-498d-978c-3b0a02a08799",
+        "isSerendipity": false,
+        "relevanceScore": 0.75,
+        "relevanceReason": "Matches: Gaming / PC Hardware"
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored: \"Flashpoint Archive – Over 200k web games and animations preserved\"",
+      "timestamp": "2026-02-15T14:15:30.678Z"
+    },
+    {
+      "data": {
+        "title": "Discord Distances Itself from Peter Thiel's Palantir Age Verification Firm",
+        "articleId": "7347213a-82c6-4389-8da9-0dc8d5e66519",
+        "isSerendipity": false,
+        "relevanceScore": 0.75,
+        "relevanceReason": "Matches: General Tech Industry"
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored: \"Discord Distances Itself from Peter Thiel's Palantir Age Verification Firm\"",
+      "timestamp": "2026-02-15T14:15:30.678Z"
+    },
+    {
+      "data": {
+        "title": "Seeing Theory",
+        "articleId": "da207447-fff1-4e02-95f7-6a4dca85df48",
+        "isSerendipity": false,
+        "relevanceScore": 0.65,
+        "relevanceReason": "Matches: Web Development"
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored: \"Seeing Theory\"",
+      "timestamp": "2026-02-15T14:15:30.678Z"
+    },
+    {
+      "data": {
+        "title": "DjVu and its connection to Deep Learning (2023)",
+        "articleId": "60c09b38-cbec-4709-8fc4-f7b85c126ab6",
+        "isSerendipity": false,
+        "relevanceScore": 0.85,
+        "relevanceReason": "Matches: AI / LLMs / Local Models"
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored: \"DjVu and its connection to Deep Learning (2023)\"",
+      "timestamp": "2026-02-15T14:15:30.678Z"
+    },
+    {
+      "data": {
+        "title": "Two different tricks for fast LLM inference",
+        "articleId": "7862c6f6-6eb8-4aad-84b0-2bb7498826ed",
+        "isSerendipity": false,
+        "relevanceScore": 0.95,
+        "relevanceReason": "Matches: AI / LLMs / Local Models"
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored: \"Two different tricks for fast LLM inference\"",
+      "timestamp": "2026-02-15T14:15:30.678Z"
+    },
+    {
+      "data": {
+        "title": "I Fixed Windows Native Development",
+        "articleId": "b2424b56-aba2-4d91-a693-d8900e46b5a6",
+        "isSerendipity": false,
+        "relevanceScore": 0.55,
+        "relevanceReason": "Matches: General Tech Industry"
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored: \"I Fixed Windows Native Development\"",
+      "timestamp": "2026-02-15T14:15:30.678Z"
+    },
+    {
+      "data": {
+        "title": "Bitcoin Mining & The Electricity Grid: A Quiet Savior",
+        "articleId": "08192a78-98f4-44d7-b145-db6735a9c210",
+        "isSerendipity": false,
+        "relevanceScore": 0.3,
+        "relevanceReason": "Matches: General Tech Industry"
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored: \"Bitcoin Mining & The Electricity Grid: A Quiet Savior\"",
+      "timestamp": "2026-02-15T14:15:30.678Z"
+    },
+    {
+      "data": {
+        "title": "The Epstein Egregore",
+        "articleId": "12c3eae6-8586-405f-b5c7-fc488111607b",
+        "isSerendipity": false,
+        "relevanceScore": 0,
+        "relevanceReason": "Matches: General Tech Industry"
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored: \"The Epstein Egregore\"",
+      "timestamp": "2026-02-15T14:15:30.678Z"
+    },
+    {
+      "data": {
+        "title": "Which US States Are Seeing Incomes Rise The Fastest (And Slowest)",
+        "articleId": "375a8048-ecf3-4fe2-9338-8d0aa63d6eeb",
+        "isSerendipity": false,
+        "relevanceScore": 0,
+        "relevanceReason": "Matches: General Tech Industry"
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored: \"Which US States Are Seeing Incomes Rise The Fastest (And Slowest)\"",
+      "timestamp": "2026-02-15T14:15:30.678Z"
+    },
+    {
+      "data": {
+        "title": "Lavrov Soberly Acknowledged The Challenges Posed By Trump 2.0",
+        "articleId": "0379f41b-cc25-4fd5-ac8b-b39c214db23b",
+        "isSerendipity": false,
+        "relevanceScore": 0,
+        "relevanceReason": "Matches: General Tech Industry"
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored: \"Lavrov Soberly Acknowledged The Challenges Posed By Trump 2.0\"",
+      "timestamp": "2026-02-15T14:15:30.678Z"
+    },
+    {
+      "data": {
+        "articles": [
+          {
+            "id": "f3f421f1-0c27-4a72-8535-67e3f0773fb9",
+            "title": "A Month After Mass Amnesty For Illegals, Spain Urges Brussels To Take Migrants Off Its Hands"
+          },
+          {
+            "id": "9d97f73a-9586-4aee-bd37-b27a6b4885b8",
+            "title": "From \"Don't Be Evil\" To Drone King: Eric Schmidt Warns Ukraine's \"No Man's Land\" Is Future Of War"
+          },
+          {
+            "id": "0f088d68-e8f8-468e-b5c9-a0f56593682d",
+            "title": "Germany's \"Two-Speed Europe\" Proposal Is The EU's Adaptation To Great Power Geopolitics"
+          },
+          {
+            "id": "ce2fc7dc-e945-4f93-8b8d-1ad44aabda5b",
+            "title": "Launching Interop 2026"
+          },
+          {
+            "id": "4e74544c-09d6-4ef3-962a-f9169e7d2a61",
+            "title": "How Generative and Agentic AI Shift Concern from Technical Debt to Cognitive Debt"
+          },
+          {
+            "id": "7d28950b-3c0c-4b07-8d27-a42c387461f7",
+            "title": "AI can’t make good video game worlds yet, and it might never be able to"
+          },
+          {
+            "id": "e867aaff-1e9d-4975-bdc3-cb1f4e67d851",
+            "title": "Why are Epstein’s emails full of equals signs?"
+          },
+          {
+            "id": "c9fbdb3b-4caf-4082-8be1-198aa21c696e",
+            "title": "Deadly Poison Detected in Navalny’s Body, Joint Analysis Finds"
+          },
+          {
+            "id": "13d8ab92-a233-424d-b696-fd91496e7257",
+            "title": "How the Homeland Security shutdown is impacting travel in the U.S."
+          },
+          {
+            "id": "05f546f2-9377-44da-87a6-dee3fc209f84",
+            "title": "No arrests made in Nancy Guthrie case after police swarm home near kidnapping site"
+          }
+        ],
+        "batchNumber": 3,
+        "articleCount": 10,
+        "totalBatches": 4
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scoring batch 3/4: 10 articles",
+      "timestamp": "2026-02-15T14:15:30.678Z"
+    },
+    {
+      "data": {
+        "prompt": "You are a content curator for a daily digest app. Score articles based on the user's interest profile.\n\n## User's Explicit Interests\n- AI / LLMs / Local Models (weight: 1): Artificial intelligence, large language models, running models locally, GPU hardware for inference, tools like Ollama and LM Studio\n- Civic Tech / GovTech (weight: 1): Technology for government, municipal data, public service delivery, open data, civic engagement tools\n- Web Development (weight: 1): JavaScript, TypeScript, React, Next.js, Node.js, CSS, web frameworks, frontend and backend development\n- Dallas / DFW Local News (weight: 0.8): News and events in Dallas, Fort Worth, and the DFW metroplex area. Local politics, development, community events\n- General Tech Industry (weight: 0.7): Major tech company news, product launches, industry trends, startup ecosystem\n- Gaming / PC Hardware (weight: 0.6): PC gaming, GPU news, monitor tech, gaming hardware reviews and deals\n\n## User's Learned Preferences\nNo learned preferences yet.\n\n## Recent Feedback Patterns\nNo recent feedback data.\n\n## Instructions\n\nFor each article, provide:\n1. **relevance_score** (0.0 to 1.0): How relevant to the user\n2. **relevance_reason**: MUST be one of these exact formats:\n   - \"Matches: [Interest Name]\" — where [Interest Name] is one of: AI / LLMs / Local Models, Civic Tech / GovTech, Web Development, Dallas / DFW Local News, General Tech Industry, Gaming / PC Hardware\n   - \"Serendipity\" — ONLY for true serendipity items (see below)\n3. **is_serendipity** (boolean): ALMOST ALWAYS false. See strict criteria below.\n\n### relevance_reason Rules\n- If an article matches ANY stated interest, use \"Matches: [Best Matching Interest Name]\"\n- If it matches multiple interests, pick the strongest match\n- Even partial or loose matches to a stated interest should use \"Matches: ...\"\n- ONLY use \"Serendipity\" for articles that genuinely don't match ANY stated interest but are still valuable\n\n### Serendipity — Use Sparingly\nis_serendipity should be true for AT MOST 1-2 articles per batch. It means:\n- The article does NOT match any of the user's stated interests, not even loosely\n- But it's still genuinely valuable — a major world event, a cross-domain insight, etc.\n- If you can justify \"Matches: [any interest]\", it is NOT serendipity\n\n### Scoring Guidelines\n- 0.8-1.0: Directly matches primary interests, high-quality content\n- 0.6-0.8: Good match, relevant and worth reading\n- 0.4-0.6: Weak match or serendipity candidate\n- 0.0-0.4: Not relevant enough to include\n\n## Articles to Score\nID: f3f421f1-0c27-4a72-8535-67e3f0773fb9\nTitle: A Month After Mass Amnesty For Illegals, Spain Urges Brussels To Take Migrants Off Its Hands\nURL: https://www.zerohedge.com/geopolitical/month-after-mass-amnesty-illegals-spain-urges-brussels-take-migrants-its-hands\nContent: A Month After Mass Amnesty For Illegals, Spain Urges Brussels To Take Migrants Off Its Hands\n\n            \nAuthored by Thomas Brooke via Remix News,\nThe Spanish government has asked the European Commission to help facilitate the redistribution of migrants arriving in the Canary Islands to other part\n---\nID: 9d97f73a-9586-4aee-bd37-b27a6b4885b8\nTitle: From \"Don't Be Evil\" To Drone King: Eric Schmidt Warns Ukraine's \"No Man's Land\" Is Future Of War\nURL: https://www.zerohedge.com/military/dont-be-evil-drone-king-eric-schmidt-warns-ukraines-no-mans-land-future-war\nContent: From \"Don't Be Evil\" To Drone King: Eric Schmidt Warns Ukraine's \"No Man's Land\" Is Future Of War\n\n            \nGoogle's old motto, \"Don't be evil,\" was retired for very good reasons about eight years ago.\nFormer CEO Eric Schmidt has found a new obsession and is linked to a covert drone production p\n---\nID: 0f088d68-e8f8-468e-b5c9-a0f56593682d\nTitle: Germany's \"Two-Speed Europe\" Proposal Is The EU's Adaptation To Great Power Geopolitics\nURL: https://www.zerohedge.com/political/germanys-two-speed-europe-proposal-eus-adaptation-great-power-geopolitics\nContent: Germany's \"Two-Speed Europe\" Proposal Is The EU's Adaptation To Great Power Geopolitics\n\n            \nAuthored by Andrew Korybko via Substack,\nGerman Finance Minister Lars Klingbeil recently declared that “Now is the time for a two-speed Europe. Germany, together with France and other partners, will\n---\nID: ce2fc7dc-e945-4f93-8b8d-1ad44aabda5b\nTitle: Launching Interop 2026\nURL: https://simonwillison.net/2026/Feb/15/interop-2026/#atom-everything\nContent: \n    \n<p><strong><a href=\"https://hacks.mozilla.org/2026/02/launching-interop-2026/\">Launching Interop 2026</a></strong></p>\nJake Archibald reports on Interop 2026, the initiative between Apple, Google, Igalia, Microsoft, and Mozilla to collaborate on ensuring a targeted set of web platform features\n---\nID: 4e74544c-09d6-4ef3-962a-f9169e7d2a61\nTitle: How Generative and Agentic AI Shift Concern from Technical Debt to Cognitive Debt\nURL: https://simonwillison.net/2026/Feb/15/cognitive-debt/#atom-everything\nContent: \n    \n<p><strong><a href=\"https://margaretstorey.com/blog/2026/02/09/cognitive-debt/\">How Generative and Agentic AI Shift Concern from Technical Debt to Cognitive Debt</a></strong></p>\nThis piece by Margaret-Anne Storey is the best explanation of the term <strong>cognitive debt</strong> I've seen so\n---\nID: 7d28950b-3c0c-4b07-8d27-a42c387461f7\nTitle: AI can’t make good video game worlds yet, and it might never be able to\nURL: https://www.theverge.com/column/879524/ai-video-game-worlds-project-genie\nContent: This is The Stepback, a weekly newsletter breaking down one essential story from the tech world. For more news about video game industry's pushback against generative AI, follow Jay Peters. The Stepback arrives in our subscribers' inboxes at 8AM ET. Opt in for The Stepback here.\nHow it started\nLong \n---\nID: e867aaff-1e9d-4975-bdc3-cb1f4e67d851\nTitle: Why are Epstein’s emails full of equals signs?\nURL: https://www.theverge.com/policy/879016/epstein-files-emails-text-errors-encoding\nContent: Many of the emails released by the Department of Justice from its investigation into Jeffrey Epstein are full of garbled symbols like:\nOr:\nThe scrambled text is so ubiquitous that it's spurred conspiracy theories that it could be some kind of code. But as believable as it might be that a cabal of el\n---\nID: c9fbdb3b-4caf-4082-8be1-198aa21c696e\nTitle: Deadly Poison Detected in Navalny’s Body, Joint Analysis Finds\nURL: https://www.nytimes.com/2026/02/14/world/europe/russia-navalny-poison.html\nContent: Analysis by the governments of Britain, France, Germany, Sweden and the Netherlands revealed the presence of a toxin found in the poison dart frog, a species native to South America.\n---\nID: 13d8ab92-a233-424d-b696-fd91496e7257\nTitle: How the Homeland Security shutdown is impacting travel in the U.S.\nURL: https://www.pbs.org/newshour/nation/how-the-homeland-security-shutdown-is-impacting-travel-in-the-u-s\nContent: Transportation Security Administration officers are expected to work without pay while lawmakers remain without an agreement on DHS' annual funding.\n---\nID: 05f546f2-9377-44da-87a6-dee3fc209f84\nTitle: No arrests made in Nancy Guthrie case after police swarm home near kidnapping site\nURL: https://turnto10.com/news/nation-world/no-arrests-made-in-nancy-guthrie-case-after-police-swarm-home-near-kidnapping-site-abduction-investigation-disappearance-tucson-arizona-home-search-dna-evidence-true-crime\nContent: As of Saturday evening, no arrests were made in connection with the Nancy Guthrie case after police swarmed a home about two miles from the kidnapping site.\n\nRespond ONLY with a JSON array (no markdown code fences):\n[\n  {\n    \"article_id\": \"...\",\n    \"relevance_score\": 0.85,\n    \"relevance_reason\": \"Matches: AI / LLMs / Local Models\",\n    \"is_serendipity\": false\n  }\n]",
+        "promptLength": 7752
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Batch 3 prompt",
+      "timestamp": "2026-02-15T14:15:30.678Z"
+    },
+    {
+      "data": {
+        "response": " [\n  {\n    \"article_id\": \"f3f421f1-0c27-4a72-8535-67e3f0773fb9\",\n    \"relevance_score\": 0.1,\n    \"relevance_reason\": \"Matches: Civic Tech / GovTech\",\n    \"is_serendipity\": false\n  },\n  {\n    \"article_id\": \"9d97f73a-9586-4aee-bd37-b27a6b4885b8\",\n    \"relevance_score\": 0.65,\n    \"relevance_reason\": \"Matches: General Tech Industry\",\n    \"is_serendipity\": false\n  },\n  {\n    \"article_id\": \"0f088d68-e8f8-468e-b5c9-a0f56593682d\",\n    \"relevance_score\": 0.1,\n    \"relevance_reason\": \"Matches: General Tech Industry\",\n    \"is_serendipity\": false\n  },\n  {\n    \"article_id\": \"ce2fc7dc-e945-4f93-8b8d-1ad44aabda5b\",\n    \"relevance_score\": 0.95,\n    \"relevance_reason\": \"Matches: Web Development\",\n    \"is_serendipity\": false\n  },\n  {\n    \"article_id\": \"4e74544c-09d6-4ef3-962a-f9169e7d2a61\",\n    \"relevance_score\": 0.95,\n    \"relevance_reason\": \"Matches: AI / LLMs / Local Models\",\n    \"is_serendipity\": false\n  },\n  {\n    \"article_id\": \"7d28950b-3c0c-4b07-8d27-a42c387461f7\",\n    \"relevance_score\": 0.85,\n    \"relevance_reason\": \"Matches: AI / LLMs / Local Models\",\n    \"is_serendipity\": false\n  },\n  {\n    \"article_id\": \"e867aaff-1e9d-4975-bdc3-cb1f4e67d851\",\n    \"relevance_score\": 0.45,\n    \"relevance_reason\": \"Matches: General Tech Industry\",\n    \"is_serendipity\": false\n  },\n  {\n    \"article_id\": \"c9fbdb3b-4caf-4082-8be1-198aa21c696e\",\n    \"relevance_score\": 0.4,\n    \"relevance_reason\": \"Serendipity\",\n    \"is_serendipity\": true\n  },\n  {\n    \"article_id\": \"13d8ab92-a233-424d-b696-fd91496e7257\",\n    \"relevance_score\": 0.6,\n    \"relevance_reason\": \"Matches: Civic Tech / GovTech\",\n    \"is_serendipity\": false\n  },\n  {\n    \"article_id\": \"05f546f2-9377-44da-87a6-dee3fc209f84\",\n    \"relevance_score\": 0.05,\n    \"relevance_reason\": \"Matches: General Tech Industry\",\n    \"is_serendipity\": false\n  }\n]",
+        "llmDurationMs": 250344,
+        "responseLength": 1797
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Batch 3 raw LLM response",
+      "timestamp": "2026-02-15T14:19:41.022Z"
+    },
+    {
+      "data": {
+        "expected": 10,
+        "received": 10,
+        "parseMethod": "direct",
+        "wasTruncated": false
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Batch 3 parsed: 10 results via direct",
+      "timestamp": "2026-02-15T14:19:41.022Z"
+    },
+    {
+      "data": {
+        "title": "A Month After Mass Amnesty For Illegals, Spain Urges Brussels To Take Migrants Off Its Hands",
+        "articleId": "f3f421f1-0c27-4a72-8535-67e3f0773fb9",
+        "isSerendipity": false,
+        "relevanceScore": 0.1,
+        "relevanceReason": "Matches: Civic Tech / GovTech"
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored: \"A Month After Mass Amnesty For Illegals, Spain Urges Brussels To Take Migrants Off Its Hands\"",
+      "timestamp": "2026-02-15T14:19:41.022Z"
+    },
+    {
+      "data": {
+        "title": "From \"Don't Be Evil\" To Drone King: Eric Schmidt Warns Ukraine's \"No Man's Land\" Is Future Of War",
+        "articleId": "9d97f73a-9586-4aee-bd37-b27a6b4885b8",
+        "isSerendipity": false,
+        "relevanceScore": 0.65,
+        "relevanceReason": "Matches: General Tech Industry"
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored: \"From \"Don't Be Evil\" To Drone King: Eric Schmidt Warns Ukraine's \"No Man's Land\" Is Future Of War\"",
+      "timestamp": "2026-02-15T14:19:41.022Z"
+    },
+    {
+      "data": {
+        "title": "Germany's \"Two-Speed Europe\" Proposal Is The EU's Adaptation To Great Power Geopolitics",
+        "articleId": "0f088d68-e8f8-468e-b5c9-a0f56593682d",
+        "isSerendipity": false,
+        "relevanceScore": 0.1,
+        "relevanceReason": "Matches: General Tech Industry"
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored: \"Germany's \"Two-Speed Europe\" Proposal Is The EU's Adaptation To Great Power Geopolitics\"",
+      "timestamp": "2026-02-15T14:19:41.022Z"
+    },
+    {
+      "data": {
+        "title": "Launching Interop 2026",
+        "articleId": "ce2fc7dc-e945-4f93-8b8d-1ad44aabda5b",
+        "isSerendipity": false,
+        "relevanceScore": 0.95,
+        "relevanceReason": "Matches: Web Development"
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored: \"Launching Interop 2026\"",
+      "timestamp": "2026-02-15T14:19:41.022Z"
+    },
+    {
+      "data": {
+        "title": "How Generative and Agentic AI Shift Concern from Technical Debt to Cognitive Debt",
+        "articleId": "4e74544c-09d6-4ef3-962a-f9169e7d2a61",
+        "isSerendipity": false,
+        "relevanceScore": 0.95,
+        "relevanceReason": "Matches: AI / LLMs / Local Models"
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored: \"How Generative and Agentic AI Shift Concern from Technical Debt to Cognitive Debt\"",
+      "timestamp": "2026-02-15T14:19:41.022Z"
+    },
+    {
+      "data": {
+        "title": "AI can’t make good video game worlds yet, and it might never be able to",
+        "articleId": "7d28950b-3c0c-4b07-8d27-a42c387461f7",
+        "isSerendipity": false,
+        "relevanceScore": 0.85,
+        "relevanceReason": "Matches: AI / LLMs / Local Models"
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored: \"AI can’t make good video game worlds yet, and it might never be able to\"",
+      "timestamp": "2026-02-15T14:19:41.022Z"
+    },
+    {
+      "data": {
+        "title": "Why are Epstein’s emails full of equals signs?",
+        "articleId": "e867aaff-1e9d-4975-bdc3-cb1f4e67d851",
+        "isSerendipity": false,
+        "relevanceScore": 0.45,
+        "relevanceReason": "Matches: General Tech Industry"
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored: \"Why are Epstein’s emails full of equals signs?\"",
+      "timestamp": "2026-02-15T14:19:41.022Z"
+    },
+    {
+      "data": {
+        "title": "Deadly Poison Detected in Navalny’s Body, Joint Analysis Finds",
+        "articleId": "c9fbdb3b-4caf-4082-8be1-198aa21c696e",
+        "isSerendipity": true,
+        "relevanceScore": 0.4,
+        "relevanceReason": "Serendipity"
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored: \"Deadly Poison Detected in Navalny’s Body, Joint Analysis Finds\"",
+      "timestamp": "2026-02-15T14:19:41.022Z"
+    },
+    {
+      "data": {
+        "title": "How the Homeland Security shutdown is impacting travel in the U.S.",
+        "articleId": "13d8ab92-a233-424d-b696-fd91496e7257",
+        "isSerendipity": false,
+        "relevanceScore": 0.6,
+        "relevanceReason": "Matches: Civic Tech / GovTech"
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored: \"How the Homeland Security shutdown is impacting travel in the U.S.\"",
+      "timestamp": "2026-02-15T14:19:41.022Z"
+    },
+    {
+      "data": {
+        "title": "No arrests made in Nancy Guthrie case after police swarm home near kidnapping site",
+        "articleId": "05f546f2-9377-44da-87a6-dee3fc209f84",
+        "isSerendipity": false,
+        "relevanceScore": 0.05,
+        "relevanceReason": "Matches: General Tech Industry"
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored: \"No arrests made in Nancy Guthrie case after police swarm home near kidnapping site\"",
+      "timestamp": "2026-02-15T14:19:41.022Z"
+    },
+    {
+      "data": {
+        "articles": [
+          {
+            "id": "96eedaaf-b8e4-400d-868d-482201b8726e",
+            "title": "Obama pushes back on White House rhetoric, ape video: Decorum has ‘been lost’"
+          },
+          {
+            "id": "4445e2c0-3d16-4865-b502-6a923582e5a2",
+            "title": "Epstein files fallout takes down elite figures in Europe, while U.S. reckoning is muted"
+          },
+          {
+            "id": "afd22bc4-0ad1-4237-980d-5c8c897340ba",
+            "title": "Unicorn Jelly"
+          },
+          {
+            "id": "791f77b3-1a1c-417d-9735-145e98a0fdb7",
+            "title": "Elon Demands Investigation Into Reid Hoffman’s \"Ice Cream For The Girls\" Epstein Ties"
+          }
+        ],
+        "batchNumber": 4,
+        "articleCount": 4,
+        "totalBatches": 4
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scoring batch 4/4: 4 articles",
+      "timestamp": "2026-02-15T14:19:41.022Z"
+    },
+    {
+      "data": {
+        "prompt": "You are a content curator for a daily digest app. Score articles based on the user's interest profile.\n\n## User's Explicit Interests\n- AI / LLMs / Local Models (weight: 1): Artificial intelligence, large language models, running models locally, GPU hardware for inference, tools like Ollama and LM Studio\n- Civic Tech / GovTech (weight: 1): Technology for government, municipal data, public service delivery, open data, civic engagement tools\n- Web Development (weight: 1): JavaScript, TypeScript, React, Next.js, Node.js, CSS, web frameworks, frontend and backend development\n- Dallas / DFW Local News (weight: 0.8): News and events in Dallas, Fort Worth, and the DFW metroplex area. Local politics, development, community events\n- General Tech Industry (weight: 0.7): Major tech company news, product launches, industry trends, startup ecosystem\n- Gaming / PC Hardware (weight: 0.6): PC gaming, GPU news, monitor tech, gaming hardware reviews and deals\n\n## User's Learned Preferences\nNo learned preferences yet.\n\n## Recent Feedback Patterns\nNo recent feedback data.\n\n## Instructions\n\nFor each article, provide:\n1. **relevance_score** (0.0 to 1.0): How relevant to the user\n2. **relevance_reason**: MUST be one of these exact formats:\n   - \"Matches: [Interest Name]\" — where [Interest Name] is one of: AI / LLMs / Local Models, Civic Tech / GovTech, Web Development, Dallas / DFW Local News, General Tech Industry, Gaming / PC Hardware\n   - \"Serendipity\" — ONLY for true serendipity items (see below)\n3. **is_serendipity** (boolean): ALMOST ALWAYS false. See strict criteria below.\n\n### relevance_reason Rules\n- If an article matches ANY stated interest, use \"Matches: [Best Matching Interest Name]\"\n- If it matches multiple interests, pick the strongest match\n- Even partial or loose matches to a stated interest should use \"Matches: ...\"\n- ONLY use \"Serendipity\" for articles that genuinely don't match ANY stated interest but are still valuable\n\n### Serendipity — Use Sparingly\nis_serendipity should be true for AT MOST 1-2 articles per batch. It means:\n- The article does NOT match any of the user's stated interests, not even loosely\n- But it's still genuinely valuable — a major world event, a cross-domain insight, etc.\n- If you can justify \"Matches: [any interest]\", it is NOT serendipity\n\n### Scoring Guidelines\n- 0.8-1.0: Directly matches primary interests, high-quality content\n- 0.6-0.8: Good match, relevant and worth reading\n- 0.4-0.6: Weak match or serendipity candidate\n- 0.0-0.4: Not relevant enough to include\n\n## Articles to Score\nID: 96eedaaf-b8e4-400d-868d-482201b8726e\nTitle: Obama pushes back on White House rhetoric, ape video: Decorum has ‘been lost’\nURL: https://thehill.com/homenews/administration/5739198-obama-trump-administration-rhetoric\nContent: Former President Obama argued in an interview published Saturday that American politics has become a “clown show” under the second Trump administration, suggesting that many Americans dislike the r…\n---\nID: 4445e2c0-3d16-4865-b502-6a923582e5a2\nTitle: Epstein files fallout takes down elite figures in Europe, while U.S. reckoning is muted\nURL: https://www.npr.org/2026/02/14/nx-s1-5714609/epstein-europe-fallout\nContent: Unlike in Europe, officials in the U.S. with ties to Epstein have largely held their positions of power.\n---\nID: afd22bc4-0ad1-4237-980d-5c8c897340ba\nTitle: Unicorn Jelly\nURL: https://unicornjelly.com/\nContent: Article URL: https://unicornjelly.com/\nComments URL: https://news.ycombinator.com/item?id=47014260\nPoints: 34\n# Comments: 9\n---\nID: 791f77b3-1a1c-417d-9735-145e98a0fdb7\nTitle: Elon Demands Investigation Into Reid Hoffman’s \"Ice Cream For The Girls\" Epstein Ties\nURL: https://www.zerohedge.com/political/elon-demands-investigation-reid-hoffmans-ice-cream-girls-epstein-ties\nContent: Elon Demands Investigation Into Reid Hoffman’s \"Ice Cream For The Girls\" Epstein Ties\n\n            \nAuthored by Steve Watson via modernity.news,\nElon Musk has ramped up his assault on LinkedIn co-founder Reid Hoffman, demanding a full investigation into the Democrat mega-donor’s disturbing Epstein c\n\nRespond ONLY with a JSON array (no markdown code fences):\n[\n  {\n    \"article_id\": \"...\",\n    \"relevance_score\": 0.85,\n    \"relevance_reason\": \"Matches: AI / LLMs / Local Models\",\n    \"is_serendipity\": false\n  }\n]",
+        "promptLength": 4307
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Batch 4 prompt",
+      "timestamp": "2026-02-15T14:19:41.022Z"
+    },
+    {
+      "data": {
+        "response": " [\n  {\n    \"article_id\": \"96eedaaf-b8e4-400d-868d-482201b8726e\",\n    \"relevance_score\": 0.1,\n    \"relevance_reason\": \"Serendipity\",\n    \"is_serendipity\": false\n  },\n  {\n    \"article_id\": \"4445e2c0-3d16-4865-b502-6a923582e5a2\",\n    \"relevance_score\": 0.1,\n    \"relevance_reason\": \"Serendipity\",\n    \"is_serendipity\": false\n  },\n  {\n    \"article_id\": \"afd22bc4-0ad1-4237-980d-5c8c897340ba\",\n    \"relevance_score\": 0.2,\n    \"relevance_reason\": \"Serendipity\",\n    \"is_serendipity\": false\n  },\n  {\n    \"article_id\": \"791f77b3-1a1c-417d-9735-145e98a0fdb7\",\n    \"relevance_score\": 0.5,\n    \"relevance_reason\": \"Matches: General Tech Industry\",\n    \"is_serendipity\": false\n  }\n]",
+        "llmDurationMs": 161584,
+        "responseLength": 670
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Batch 4 raw LLM response",
+      "timestamp": "2026-02-15T14:22:22.606Z"
+    },
+    {
+      "data": {
+        "expected": 4,
+        "received": 4,
+        "parseMethod": "direct",
+        "wasTruncated": false
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Batch 4 parsed: 4 results via direct",
+      "timestamp": "2026-02-15T14:22:22.606Z"
+    },
+    {
+      "data": {
+        "title": "Obama pushes back on White House rhetoric, ape video: Decorum has ‘been lost’",
+        "articleId": "96eedaaf-b8e4-400d-868d-482201b8726e",
+        "isSerendipity": false,
+        "relevanceScore": 0.1,
+        "relevanceReason": "Serendipity"
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored: \"Obama pushes back on White House rhetoric, ape video: Decorum has ‘been lost’\"",
+      "timestamp": "2026-02-15T14:22:22.606Z"
+    },
+    {
+      "data": {
+        "title": "Epstein files fallout takes down elite figures in Europe, while U.S. reckoning is muted",
+        "articleId": "4445e2c0-3d16-4865-b502-6a923582e5a2",
+        "isSerendipity": false,
+        "relevanceScore": 0.1,
+        "relevanceReason": "Serendipity"
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored: \"Epstein files fallout takes down elite figures in Europe, while U.S. reckoning is muted\"",
+      "timestamp": "2026-02-15T14:22:22.606Z"
+    },
+    {
+      "data": {
+        "title": "Unicorn Jelly",
+        "articleId": "afd22bc4-0ad1-4237-980d-5c8c897340ba",
+        "isSerendipity": false,
+        "relevanceScore": 0.2,
+        "relevanceReason": "Serendipity"
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored: \"Unicorn Jelly\"",
+      "timestamp": "2026-02-15T14:22:22.606Z"
+    },
+    {
+      "data": {
+        "title": "Elon Demands Investigation Into Reid Hoffman’s \"Ice Cream For The Girls\" Epstein Ties",
+        "articleId": "791f77b3-1a1c-417d-9735-145e98a0fdb7",
+        "isSerendipity": false,
+        "relevanceScore": 0.5,
+        "relevanceReason": "Matches: General Tech Industry"
+      },
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored: \"Elon Demands Investigation Into Reid Hoffman’s \"Ice Cream For The Girls\" Epstein Ties\"",
+      "timestamp": "2026-02-15T14:22:22.606Z"
+    },
+    {
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scoring complete: 34 articles scored",
+      "timestamp": "2026-02-15T14:22:22.606Z"
+    },
+    {
+      "data": {
+        "minRelevanceScore": 0.5,
+        "scoredUnassignedCount": 94
+      },
+      "level": "info",
+      "phase": "digest",
+      "message": "Digest selection starting",
+      "timestamp": "2026-02-15T14:22:25.914Z"
+    },
+    {
+      "data": {
+        "count": 1,
+        "articles": [
+          {
+            "id": "c9fbdb3b-4caf-4082-8be1-198aa21c696e",
+            "score": 0.4,
+            "title": "Deadly Poison Detected in Navalny’s Body, Joint Analysis Finds"
+          }
+        ]
+      },
+      "level": "info",
+      "phase": "digest",
+      "message": "Serendipity candidates",
+      "timestamp": "2026-02-15T14:22:25.914Z"
+    },
+    {
+      "data": {
+        "count": 59,
+        "articles": [
+          {
+            "id": "c202b967-c63a-4e12-a8be-93401e08810d",
+            "score": 0.45,
+            "title": "Returning stolen artifacts becomes a thrilling heist in Relooted",
+            "reason": "Matches: Gaming / PC Hardware"
+          },
+          {
+            "id": "1a6fc445-7bec-47cc-9419-408cae79043b",
+            "score": 0.45,
+            "title": "NewPipe: YouTube client without vertical videos and algorithmic feed",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "d0bdbf3c-fcba-47cc-9591-75527fdfa683",
+            "score": 0.45,
+            "title": "Cogram (YC W22) – Hiring former technical founders",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "39012c76-bda6-485c-888f-9e949dbd3a7c",
+            "score": 0.45,
+            "title": "NASA has a new problem to fix before the next Artemis II countdown test",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "e867aaff-1e9d-4975-bdc3-cb1f4e67d851",
+            "score": 0.45,
+            "title": "Why are Epstein’s emails full of equals signs?",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "b284ebdc-c113-4de4-ad20-5301cd2dede3",
+            "score": 0.45,
+            "title": "I love the work of the ArchWiki maintainers",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "ab8d0b41-a528-489f-bb31-8c257da53b73",
+            "score": 0.4,
+            "title": "The State Of Love In America: It's Not Looking Good",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "f127da89-9d64-45b5-bebe-51e3deef302b",
+            "score": 0.4,
+            "title": "Rocket Report: Say cheerio to Orbex; China is getting good at booster landings",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "e8ca9b8b-42a6-4d76-bee2-ee28bf31120d",
+            "score": 0.4,
+            "title": "Anker’s USB-C cable that lets you charge two gadgets at once is 20 percent off",
+            "reason": "Matches: Gaming / PC Hardware"
+          },
+          {
+            "id": "439ae7c6-c13d-47d0-a583-d64d080c1fcc",
+            "score": 0.4,
+            "title": "A review of M Disc archival capability with long term testing results (2016)",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "613a7e25-5475-409d-b124-af7142f42998",
+            "score": 0.4,
+            "title": "Trump official overruled FDA scientists to reject Moderna's flu shot",
+            "reason": "Matches: Civic Tech / GovTech"
+          },
+          {
+            "id": "c9fbdb3b-4caf-4082-8be1-198aa21c696e",
+            "score": 0.4,
+            "title": "Deadly Poison Detected in Navalny’s Body, Joint Analysis Finds",
+            "reason": "Serendipity"
+          },
+          {
+            "id": "7d40fe83-5d84-4a34-995c-8fdb4c7a9898",
+            "score": 0.35,
+            "title": "Tiny, 45 base long RNA can make copies of itself",
+            "reason": "Serendipity"
+          },
+          {
+            "id": "37d3d654-f91e-41fe-8cba-04ea03d3c761",
+            "score": 0.35,
+            "title": "WHO slams US-funded newborn vaccine trial as \"unethical\"",
+            "reason": "Serendipity"
+          },
+          {
+            "id": "f52f8043-5dcc-45cd-baff-e801cfdd7964",
+            "score": 0.35,
+            "title": "Show HN: Perlin Noise Terminal Animation in Rust (60 FPS, Truecolor)",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "08192a78-98f4-44d7-b145-db6735a9c210",
+            "score": 0.3,
+            "title": "Bitcoin Mining & The Electricity Grid: A Quiet Savior",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "0666866b-e986-47b5-b854-be5e64c0b65d",
+            "score": 0.25,
+            "title": "Spider-Noir teaser comes in colorized \"True Hue\" and black and white",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "72e71cd8-864d-4210-8de4-5a2eb9283641",
+            "score": 0.25,
+            "title": "FAA Mandates Airlines To Affirm Merit Hiring For Pilots",
+            "reason": "Matches: Civic Tech / GovTech"
+          },
+          {
+            "id": "160235e3-ee76-41a6-9a0c-9653e9f2bd49",
+            "score": 0.25,
+            "title": "Russia killed Alexei Navalny with frog toxin, UK and allies say",
+            "reason": "Serendipity"
+          },
+          {
+            "id": "661bf182-9291-4228-b0bc-b291a43790a4",
+            "score": 0.2,
+            "title": "Indian Scrapyards Welcome Growing Number Of Dark Fleet Tankers",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "afd22bc4-0ad1-4237-980d-5c8c897340ba",
+            "score": 0.2,
+            "title": "Unicorn Jelly",
+            "reason": "Serendipity"
+          },
+          {
+            "id": "67890963-8817-4d43-8f73-db59edfbbe5c",
+            "score": 0.15,
+            "title": "How often do full-body MRIs find cancer?",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "77bf5a85-e058-4e13-a808-b5a2bf51be10",
+            "score": 0.15,
+            "title": "In Latest Blow To Free Speech, German Courts Could Issue \"Speaking Ban\" Against Top AfD Politician",
+            "reason": "Matches: Civic Tech / GovTech"
+          },
+          {
+            "id": "c723a032-bb60-4778-b947-c639acf00bc1",
+            "score": 0.15,
+            "title": "Newsom Tells Europe \"Trump Is Temporary,\" Doubles Down On Failing Green Agenda",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "5f39d748-ef4b-49c1-a025-1db169914848",
+            "score": 0.15,
+            "title": "Vast Majority Of Americans Want Voter ID And Democrats Don't Care",
+            "reason": "Matches: Civic Tech / GovTech"
+          },
+          {
+            "id": "500b9578-2644-4e05-848b-a83587b5df6c",
+            "score": 0.15,
+            "title": "Judge Weighs Whether To Block Vaccines Changes From CDC, RFK Jr.",
+            "reason": "Matches: Civic Tech / GovTech"
+          },
+          {
+            "id": "ae19dcd3-6fac-4af4-b1fe-12ebe4d30541",
+            "score": 0.15,
+            "title": "Rubio Says US & Europe \"Belong Together\", Urges Alignment With Trump's Vision For Western Revival",
+            "reason": "Matches: Civic Tech / GovTech"
+          },
+          {
+            "id": "e2571a37-d052-43ae-8a27-2d56e1e7abfb",
+            "score": 0.15,
+            "title": "$1.8 million MST3K Kickstarter brings in (almost) everyone from the old show",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "74863da2-4cb1-4629-beac-dd0247a4b076",
+            "score": 0.15,
+            "title": "Astronomers are filling in the blanks of the Kuiper Belt",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "5a609714-118c-4625-8277-074440cce286",
+            "score": 0.15,
+            "title": "Iran Regime Change Would Be 'Best Thing', Trump Signals",
+            "reason": "Matches: Civic Tech / GovTech"
+          },
+          {
+            "id": "8df3441e-ca92-4fcc-b7be-fcb834ab6b77",
+            "score": 0.15,
+            "title": "Trump Promises Voter ID \"Whether Congress Approves Or Not\"",
+            "reason": "Matches: Civic Tech / GovTech"
+          },
+          {
+            "id": "8b031957-21ee-49de-99df-2c55898c7fd4",
+            "score": 0.15,
+            "title": "Eat The Rich: California Democrats Trigger Reverse Gold Rush With Wealth Tax",
+            "reason": "Matches: Civic Tech / GovTech"
+          },
+          {
+            "id": "8ba3afe5-7172-49a4-8443-420a7fbf783f",
+            "score": 0.1,
+            "title": "Stolen Land At The Grammys: How Hollywood Groupthink Threatens Democracy",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "788456af-5792-4d4d-bd89-eb3032edbaf5",
+            "score": 0.1,
+            "title": "Venezuela Oil Revenue Projected To Hit $5 Billion Under U.S. Control",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "0a5f4838-d89d-44a6-ae72-c4ecdc966e26",
+            "score": 0.1,
+            "title": "A Pokémon of a Different Color",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "1144d8bf-bfb6-472b-98b7-66cdfddb7a26",
+            "score": 0.1,
+            "title": "Kākāpō mug by Karen James",
+            "reason": "Matches: Web Development"
+          },
+          {
+            "id": "f3f421f1-0c27-4a72-8535-67e3f0773fb9",
+            "score": 0.1,
+            "title": "A Month After Mass Amnesty For Illegals, Spain Urges Brussels To Take Migrants Off Its Hands",
+            "reason": "Matches: Civic Tech / GovTech"
+          },
+          {
+            "id": "534a5b77-7ff7-4f9b-9e45-96165582c33a",
+            "score": 0.1,
+            "title": "Demented: Councillor Pushes Kids To Send Valentine's Cards To Illegal Male Migrants",
+            "reason": "Matches: Civic Tech / GovTech"
+          },
+          {
+            "id": "4445e2c0-3d16-4865-b502-6a923582e5a2",
+            "score": 0.1,
+            "title": "Epstein files fallout takes down elite figures in Europe, while U.S. reckoning is muted",
+            "reason": "Serendipity"
+          },
+          {
+            "id": "f6f2b5a1-af3a-47af-92d2-51fca8fe080f",
+            "score": 0.1,
+            "title": "Guitars of the USSR and the Jolana Special in Azerbaijani Music (2012)",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "42c7235b-76fd-4df4-932e-9b2e216f173b",
+            "score": 0.1,
+            "title": "UK's Insane New Trans Guidance Says School Kids As Young As Four Can 'Change Gender'",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "e85765d3-b561-463d-bbba-24308cecff72",
+            "score": 0.1,
+            "title": "Germany, France Hold Secret Talks On Continental Nuclear Shield In Pivot From US",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "198d77ea-c3e9-4d71-b130-81db71602b41",
+            "score": 0.1,
+            "title": "'Miss America' Org Dethrones Winner For Daring To Say 'A Woman Is A Woman'",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "0f088d68-e8f8-468e-b5c9-a0f56593682d",
+            "score": 0.1,
+            "title": "Germany's \"Two-Speed Europe\" Proposal Is The EU's Adaptation To Great Power Geopolitics",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "28d2be6e-7120-4525-af0e-a1e01c42e0a1",
+            "score": 0.1,
+            "title": "The Unsettling Truths The Epstein Files Reveal About Power And Privilege",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "96eedaaf-b8e4-400d-868d-482201b8726e",
+            "score": 0.1,
+            "title": "Obama pushes back on White House rhetoric, ape video: Decorum has ‘been lost’",
+            "reason": "Serendipity"
+          },
+          {
+            "id": "556a2c47-5ddd-421a-9f15-4d8a92f4dbc6",
+            "score": 0.1,
+            "title": "3 Detained, 1 Rumored Suicide As SWAT Team Swarms Home Near Guthrie's House",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "05f546f2-9377-44da-87a6-dee3fc209f84",
+            "score": 0.05,
+            "title": "No arrests made in Nancy Guthrie case after police swarm home near kidnapping site",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "fd87cf70-05a2-4c1f-9574-f88191c07072",
+            "score": 0.05,
+            "title": "A Valentine's Day homage to Crouching Tiger, Hidden Dragon",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "ff6d1784-4d11-4c91-bdbd-8f4713f24a4e",
+            "score": 0.05,
+            "title": "Russian opposition leader Alexei Navalny was poisoned by deadly 'dart frog' toxin, Europeans say",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "6bd88091-9aac-4798-95b2-fd5be9c36d57",
+            "score": 0.05,
+            "title": "EU leaders welcome US tone shift in Rubio's Munich speech",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "0b79792e-118c-4aed-974f-f47ccc890925",
+            "score": 0.05,
+            "title": "5 European nations say Alexei Navalny was poisoned and blame the Kremlin",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "6e2838ae-9bd0-41ec-997e-dde7204bf7e6",
+            "score": 0.05,
+            "title": "Russia killed opposition leader Alexei Navalny using toxin from dart frog, UK says",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "56d93a8d-e797-4c25-827f-da6756685436",
+            "score": 0.02,
+            "title": "A $10 Walmart gun holster could help identify suspect in Nancy Guthrie case",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "965cca27-b82a-4894-9417-183dd7ea2432",
+            "score": 0,
+            "title": "Nancy Guthrie kidnapping investigation draws scrutiny as case drags on",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "0379f41b-cc25-4fd5-ac8b-b39c214db23b",
+            "score": 0,
+            "title": "Lavrov Soberly Acknowledged The Challenges Posed By Trump 2.0",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "375a8048-ecf3-4fe2-9338-8d0aa63d6eeb",
+            "score": 0,
+            "title": "Which US States Are Seeing Incomes Rise The Fastest (And Slowest)",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "12c3eae6-8586-405f-b5c7-fc488111607b",
+            "score": 0,
+            "title": "The Epstein Egregore",
+            "reason": "Matches: General Tech Industry"
+          },
+          {
+            "id": "c9339979-95fe-4fba-98a4-220fc792b36e",
+            "score": 0,
+            "title": "Police seal off road near Arizona home of Today show host Samantha Guthrie’s missing mother",
+            "reason": "Matches: General Tech Industry"
+          }
+        ]
+      },
+      "level": "info",
+      "phase": "digest",
+      "message": "Articles below threshold (rejected)",
+      "timestamp": "2026-02-15T14:22:25.914Z"
+    },
+    {
+      "data": {
+        "count": 36,
+        "articles": [
+          {
+            "id": "7862c6f6-6eb8-4aad-84b0-2bb7498826ed",
+            "score": 0.95,
+            "title": "Two different tricks for fast LLM inference",
+            "reason": "Matches: AI / LLMs / Local Models",
+            "isSerendipity": false
+          },
+          {
+            "id": "ce2fc7dc-e945-4f93-8b8d-1ad44aabda5b",
+            "score": 0.95,
+            "title": "Launching Interop 2026",
+            "reason": "Matches: Web Development",
+            "isSerendipity": false
+          },
+          {
+            "id": "4e74544c-09d6-4ef3-962a-f9169e7d2a61",
+            "score": 0.95,
+            "title": "How Generative and Agentic AI Shift Concern from Technical Debt to Cognitive Debt",
+            "reason": "Matches: AI / LLMs / Local Models",
+            "isSerendipity": false
+          },
+          {
+            "id": "e0a2f650-54b2-4a6a-b8de-d5c9a0bda3d5",
+            "score": 0.88,
+            "title": "Quoting Eric Meyer",
+            "reason": "Matches: Web Development",
+            "isSerendipity": false
+          },
+          {
+            "id": "7d28950b-3c0c-4b07-8d27-a42c387461f7",
+            "score": 0.85,
+            "title": "AI can’t make good video game worlds yet, and it might never be able to",
+            "reason": "Matches: AI / LLMs / Local Models",
+            "isSerendipity": false
+          },
+          {
+            "id": "60c09b38-cbec-4709-8fc4-f7b85c126ab6",
+            "score": 0.85,
+            "title": "DjVu and its connection to Deep Learning (2023)",
+            "reason": "Matches: AI / LLMs / Local Models",
+            "isSerendipity": false
+          },
+          {
+            "id": "b57c9d34-4b9b-4743-a96c-c95a15a32380",
+            "score": 0.85,
+            "title": "Oat – Ultra-lightweight, semantic, zero-dependency HTML UI component library",
+            "reason": "Matches: Web Development",
+            "isSerendipity": false
+          },
+          {
+            "id": "c977187e-a68f-4a66-99a5-1f348f192f06",
+            "score": 0.82,
+            "title": "OpenAI should build Slack",
+            "reason": "Matches: AI / LLMs / Local Models",
+            "isSerendipity": false
+          },
+          {
+            "id": "d784f7cf-8788-4c3f-b91a-24a7daffefb9",
+            "score": 0.8,
+            "title": "Amazon, Google Unwittingly Reveal the Severity of the U.S. Surveillance State",
+            "reason": "Matches: Civic Tech / GovTech",
+            "isSerendipity": false
+          },
+          {
+            "id": "f60797cd-1c82-498d-978c-3b0a02a08799",
+            "score": 0.75,
+            "title": "Flashpoint Archive – Over 200k web games and animations preserved",
+            "reason": "Matches: Gaming / PC Hardware",
+            "isSerendipity": false
+          },
+          {
+            "id": "7347213a-82c6-4389-8da9-0dc8d5e66519",
+            "score": 0.75,
+            "title": "Discord Distances Itself from Peter Thiel's Palantir Age Verification Firm",
+            "reason": "Matches: General Tech Industry",
+            "isSerendipity": false
+          },
+          {
+            "id": "da207447-fff1-4e02-95f7-6a4dca85df48",
+            "score": 0.65,
+            "title": "Seeing Theory",
+            "reason": "Matches: Web Development",
+            "isSerendipity": false
+          },
+          {
+            "id": "9d97f73a-9586-4aee-bd37-b27a6b4885b8",
+            "score": 0.65,
+            "title": "From \"Don't Be Evil\" To Drone King: Eric Schmidt Warns Ukraine's \"No Man's Land\" Is Future Of War",
+            "reason": "Matches: General Tech Industry",
+            "isSerendipity": false
+          },
+          {
+            "id": "13d8ab92-a233-424d-b696-fd91496e7257",
+            "score": 0.6,
+            "title": "How the Homeland Security shutdown is impacting travel in the U.S.",
+            "reason": "Matches: Civic Tech / GovTech",
+            "isSerendipity": false
+          },
+          {
+            "id": "b6c681a6-18ab-4994-ba44-cd49d9699e24",
+            "score": 0.55,
+            "title": "Why is Bezos trolling Musk on X with turtle pics? Because he has a new Moon plan.",
+            "reason": "Matches: General Tech Industry",
+            "isSerendipity": false
+          },
+          {
+            "id": "0596653e-670b-40a8-8369-f7b601b4491a",
+            "score": 0.55,
+            "title": "Jikipedia turns Epstein’s emails into an encyclopedia of his powerful friends",
+            "reason": "Matches: Web Development",
+            "isSerendipity": false
+          },
+          {
+            "id": "b2424b56-aba2-4d91-a693-d8900e46b5a6",
+            "score": 0.55,
+            "title": "I Fixed Windows Native Development",
+            "reason": "Matches: General Tech Industry",
+            "isSerendipity": false
+          },
+          {
+            "id": "0e3bad3d-3726-4602-8d2f-ad7b47ad377c",
+            "score": 0.55,
+            "title": "European Official Warns That Americans Can Be Silenced By EU Online Speech Laws",
+            "reason": "Matches: Civic Tech / GovTech",
+            "isSerendipity": false
+          },
+          {
+            "id": "c5cc5987-c8da-4a9c-ba6f-2bb6c3aceb22",
+            "score": 0.55,
+            "title": "Reversed engineered game Starflight (1986)",
+            "reason": "Matches: Gaming / PC Hardware",
+            "isSerendipity": false
+          },
+          {
+            "id": "3127ea27-9475-437c-97d8-bc74e832a6b0",
+            "score": 0.5,
+            "title": "Georgia Tech announced the finalists in its wild musical instrument competition",
+            "reason": "Matches: General Tech Industry",
+            "isSerendipity": false
+          },
+          {
+            "id": "791f77b3-1a1c-417d-9735-145e98a0fdb7",
+            "score": 0.5,
+            "title": "Elon Demands Investigation Into Reid Hoffman’s \"Ice Cream For The Girls\" Epstein Ties",
+            "reason": "Matches: General Tech Industry",
+            "isSerendipity": false
+          },
+          {
+            "id": "9158303a-dee1-4b45-b7d0-37d62de54c8a",
+            "score": 0.5,
+            "title": "What if riders don't close a robotaxi door after a ride? Try DoorDash.",
+            "reason": "Matches: General Tech Industry",
+            "isSerendipity": false
+          },
+          {
+            "id": "9b9fd23a-b91e-4b85-b73e-25af4d81d576",
+            "score": 0.5,
+            "title": "My smart sleep mask broadcasts users' brainwaves to an open MQTT broker",
+            "reason": "Matches: General Tech Industry",
+            "isSerendipity": false
+          },
+          {
+            "id": "54bfcd95-9ffb-4175-84be-581928a61a82",
+            "score": 0.5,
+            "title": "Amsterdam Compiler Kit",
+            "reason": "Matches: General Tech Industry",
+            "isSerendipity": false
+          },
+          {
+            "id": "142649c8-c8ab-4cb0-b5a8-da2ff2746c1e",
+            "score": 0.5,
+            "title": "Ooh.directory: a place to find good blogs that interest you",
+            "reason": "Matches: General Tech Industry",
+            "isSerendipity": false
+          },
+          {
+            "id": "017e1828-39ea-4b17-bb31-eab480e98b2c",
+            "score": 0.5,
+            "title": "Munich security conference live: Marco Rubio to address European leaders rattled by Trump",
+            "reason": "Default score (scoring error)",
+            "isSerendipity": false
+          },
+          {
+            "id": "53858eae-ecee-4ae3-a5a3-242bca1afa0e",
+            "score": 0.5,
+            "title": "Alexei Navalny died after being 'poisoned with dart frog toxin'",
+            "reason": "Default score (scoring error)",
+            "isSerendipity": false
+          },
+          {
+            "id": "6737360d-ad28-45f7-809f-0ea756da1286",
+            "score": 0.5,
+            "title": "Rubio reassures trans-Atlantic ties with Europe at Munich Security Conference",
+            "reason": "Default score (scoring error)",
+            "isSerendipity": false
+          },
+          {
+            "id": "3d7f0831-39d3-4bd5-aa5b-a8ed4c0ed353",
+            "score": 0.5,
+            "title": "T.S.A. Workers Brace for Another Shutdown They Didn’t Cause",
+            "reason": "Default score (scoring error)",
+            "isSerendipity": false
+          },
+          {
+            "id": "a9e8c613-860e-4a54-aac3-7dd3a01d64b9",
+            "score": 0.5,
+            "title": "Inside the Debacle That Led to the Closure of El Paso’s Airspace",
+            "reason": "Default score (scoring error)",
+            "isSerendipity": false
+          },
+          {
+            "id": "47baa2a0-5c72-49bf-aafc-ded5321601a8",
+            "score": 0.5,
+            "title": "How ICE Failed to Justify the Shooting of Julio Sosa-Celis in Minneapolis",
+            "reason": "Default score (scoring error)",
+            "isSerendipity": false
+          },
+          {
+            "id": "8dac1a5f-dfef-4222-8b4e-4b4f76758910",
+            "score": 0.5,
+            "title": "Marco Rubio speech signals US-Europe relations are bruised but still friendly",
+            "reason": "Default score (scoring error)",
+            "isSerendipity": false
+          },
+          {
+            "id": "53614652-4e6d-4076-a4d9-bb6fb65ef9be",
+            "score": 0.5,
+            "title": "TSA agents are working without pay at U.S. airports due to another shutdown",
+            "reason": "Default score (scoring error)",
+            "isSerendipity": false
+          },
+          {
+            "id": "f5314efc-f0cb-4b1b-9f85-6e8824ff1496",
+            "score": 0.5,
+            "title": "5 European nations say Russian opposition leader Navalny was poisoned and blame Kremlin",
+            "reason": "Default score (scoring error)",
+            "isSerendipity": false
+          },
+          {
+            "id": "21bbf204-eddd-4813-91db-06228d7057a8",
+            "score": 0.5,
+            "title": "Rubio expresses desire to maintain trans-Atlantic relations despite increasing rift",
+            "reason": "Default score (scoring error)",
+            "isSerendipity": false
+          },
+          {
+            "id": "c9fbdb3b-4caf-4082-8be1-198aa21c696e",
+            "score": 0.4,
+            "title": "Deadly Poison Detected in Navalny’s Body, Joint Analysis Finds",
+            "reason": "Serendipity",
+            "isSerendipity": true
+          }
+        ]
+      },
+      "level": "info",
+      "phase": "digest",
+      "message": "Articles selected for digest",
+      "timestamp": "2026-02-15T14:22:25.914Z"
+    },
+    {
+      "data": {
+        "digestId": "81b4c308-89fc-4b12-ae17-5442153e8546",
+        "minScore": 0.5,
+        "articleCount": 36,
+        "serendipityIncluded": 1
+      },
+      "level": "info",
+      "phase": "digest",
+      "message": "Digest created",
+      "timestamp": "2026-02-15T14:22:28.016Z"
+    },
+    {
+      "data": {
+        "digestId": "81b4c308-89fc-4b12-ae17-5442153e8546",
+        "duplicates": 119,
+        "errorCount": 0,
+        "newArticles": 6,
+        "totalFetched": 125,
+        "articlesScored": 34,
+        "digestArticleCount": 36
+      },
+      "level": "info",
+      "phase": "complete",
+      "message": "Pipeline finished",
+      "timestamp": "2026-02-15T14:22:28.016Z"
+    }
+  ],
+  "error": null
+}

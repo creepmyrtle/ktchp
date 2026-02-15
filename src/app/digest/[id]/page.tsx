@@ -44,6 +44,9 @@ export default async function DigestByIdPage({ params }: { params: Promise<{ id:
             <Link href="/digest" className="text-sm text-accent hover:opacity-80 transition-opacity">
               Latest
             </Link>
+            <Link href="/digest/bookmarks" className="text-sm text-muted hover:text-foreground transition-colors">
+              Bookmarks
+            </Link>
             <Link href="/settings" className="text-sm text-muted hover:text-foreground transition-colors">
               Settings
             </Link>

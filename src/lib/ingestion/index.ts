@@ -32,38 +32,16 @@ export async function runIngestion(userId: string, provider: string, logger?: In
     errors: [],
   };
 
-  logger?.log('fetch', `Starting ingestion for ${sources.length} sources`, {
-    sourceCount: sources.length,
-    sources: sources.map(s => ({ id: s.id, name: s.name, type: s.type, url: s.config.url })),
-  });
+  logger?.log('fetch', `Fetching from ${sources.length} sources`);
 
   // Fetch all sources in parallel
-  const fetchStart = Date.now();
   const fetchResults = await Promise.allSettled(
     sources.map(async (source) => {
       const existingIds = await getRecentArticleExternalIds(source.id, provider);
-
-      logger?.log('fetch', `Fetching source: ${source.name} (${source.type})`, {
-        sourceId: source.id,
-        url: source.config.url as string,
-        existingArticleCount: existingIds.size,
-      });
-
-      const sourceStart = Date.now();
       const rawArticles = await fetchFromSource(source);
-      const fetchDurationMs = Date.now() - sourceStart;
-
-      logger?.log('fetch', `RSS fetched: ${source.name}`, {
-        fetchDurationMs,
-        itemCount: rawArticles.length,
-      });
-
       return { source, rawArticles, existingIds };
     })
   );
-  const totalFetchDurationMs = Date.now() - fetchStart;
-
-  logger?.log('fetch', `All sources fetched in ${totalFetchDurationMs}ms`);
 
   // Process results sequentially (DB writes)
   for (const fetchResult of fetchResults) {
@@ -71,7 +49,7 @@ export async function runIngestion(userId: string, provider: string, logger?: In
       const msg = `Source fetch error: ${fetchResult.reason}`;
       console.error(msg);
       result.errors.push(msg);
-      logger?.error('fetch', 'Source error', { error: String(fetchResult.reason) });
+      logger?.error('fetch', `Source error: ${fetchResult.reason}`);
       continue;
     }
 
@@ -85,11 +63,6 @@ export async function runIngestion(userId: string, provider: string, logger?: In
       if (raw.external_id && existingIds.has(raw.external_id)) {
         result.duplicates++;
         sourceDupes++;
-        logger?.log('fetch', `Duplicate skipped: "${raw.title}"`, {
-          title: raw.title,
-          url: raw.url,
-          externalId: raw.external_id,
-        });
         continue;
       }
 
@@ -97,37 +70,16 @@ export async function runIngestion(userId: string, provider: string, logger?: In
       if (article) {
         result.newArticles++;
         sourceNew++;
-        logger?.log('fetch', `New article: "${raw.title}"`, {
-          articleId: article.id,
-          title: raw.title,
-          url: raw.url,
-          externalId: raw.external_id,
-          publishedAt: raw.published_at,
-        });
       } else {
         result.duplicates++;
         sourceDupes++;
-        logger?.log('fetch', `DB duplicate: "${raw.title}"`, {
-          title: raw.title,
-          url: raw.url,
-          externalId: raw.external_id,
-        });
       }
     }
 
-    logger?.log('fetch', `Source complete: ${source.name}`, {
-      articlesFetched: rawArticles.length,
-      new: sourceNew,
-      duplicates: sourceDupes,
-    });
+    logger?.log('fetch', `${source.name}: ${sourceNew} new, ${sourceDupes} dupes (${rawArticles.length} fetched)`);
   }
 
-  logger?.log('fetch', 'Ingestion complete', {
-    totalFetched: result.totalFetched,
-    newArticles: result.newArticles,
-    duplicates: result.duplicates,
-    errorCount: result.errors.length,
-  });
+  logger?.log('fetch', `Ingestion done: ${result.newArticles} new, ${result.duplicates} dupes, ${result.errors.length} errors`);
 
   return result;
 }

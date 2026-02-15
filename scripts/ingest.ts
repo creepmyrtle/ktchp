@@ -15,7 +15,6 @@ import { runIngestion } from '@/lib/ingestion';
 import { runRelevanceEngine } from '@/lib/relevance';
 import { getActiveProvider } from '@/lib/llm';
 import { IngestionLogger } from '@/lib/ingestion/logger';
-import { config } from '@/lib/config';
 
 async function main() {
   // Ensure DB is seeded (idempotent)
@@ -35,16 +34,7 @@ async function main() {
   const logger = new IngestionLogger(user.id, provider, 'cron');
   await logger.init();
 
-  logger.log('setup', 'Ingestion started (GitHub Actions)', {
-    trigger: 'cron',
-    userId: user.id,
-    provider,
-    model: provider === 'synthetic' ? config.syntheticModel : config.claudeModel,
-    config: {
-      batchSize: config.batchSize,
-      minRelevanceScore: config.minRelevanceScore,
-    },
-  });
+  logger.log('setup', `Ingestion started (provider: ${provider})`);
 
   try {
     const ingestionResult = await runIngestion(user.id, provider, logger);

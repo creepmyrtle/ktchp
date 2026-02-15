@@ -138,27 +138,13 @@ export async function scoreArticles(
     const batch = articles.slice(i, i + config.batchSize);
     const prompt = buildScoringPrompt(batch, interests, preferences, recentFeedback);
 
-    logger?.log('scoring', `Scoring batch ${batchNum}/${totalBatches}: ${batch.length} articles`, {
-      batchNumber: batchNum,
-      totalBatches,
-      articleCount: batch.length,
-      articles: batch.map(a => ({ id: a.id, title: a.title })),
-    });
-
-    logger?.log('scoring', `Batch ${batchNum} prompt`, {
-      prompt,
-      promptLength: prompt.length,
-    });
+    logger?.log('scoring', `Batch ${batchNum}/${totalBatches}: ${batch.length} articles`);
 
     try {
-      const llmStart = Date.now();
       const response = await llmComplete(prompt, 16384);
-      const llmDurationMs = Date.now() - llmStart;
 
       if (!response) {
-        logger?.warn('scoring', `Batch ${batchNum}: API unavailable, using fallback scores`, {
-          llmDurationMs,
-        });
+        logger?.warn('scoring', `Batch ${batchNum}: API unavailable, using fallback scores`);
         for (const a of batch) {
           results.push({
             article_id: a.id,
@@ -170,42 +156,16 @@ export async function scoreArticles(
         continue;
       }
 
-      logger?.log('scoring', `Batch ${batchNum} raw LLM response`, {
-        llmDurationMs,
-        responseLength: response.text.length,
-        response: response.text,
-      });
-
       const { results: parsed, method } = parseJsonResponse(response.text);
-      const wasTruncated = method === 'salvage';
 
-      logger?.log('scoring', `Batch ${batchNum} parsed: ${parsed.length} results via ${method}`, {
-        parseMethod: method,
-        wasTruncated,
-        salvaged: wasTruncated ? parsed.length : undefined,
-        expected: batch.length,
-        received: parsed.length,
-      });
-
-      // Log each article's scoring result
-      for (const score of parsed) {
-        const article = batch.find(a => a.id === score.article_id);
-        logger?.log('scoring', `Scored: "${article?.title || score.article_id}"`, {
-          articleId: score.article_id,
-          title: article?.title,
-          relevanceScore: score.relevance_score,
-          relevanceReason: score.relevance_reason,
-          isSerendipity: score.is_serendipity,
-        });
+      if (method !== 'direct') {
+        logger?.warn('scoring', `Batch ${batchNum}: parsed via ${method} (${parsed.length}/${batch.length} articles)`);
       }
 
       results.push(...parsed);
     } catch (error) {
       console.error('LLM scoring error:', error);
-      logger?.error('scoring', `Batch ${batchNum} scoring error`, {
-        error: String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-      });
+      logger?.error('scoring', `Batch ${batchNum} failed: ${error}`);
       for (const a of batch) {
         results.push({
           article_id: a.id,

@@ -42,6 +42,9 @@ export default async function DigestPage() {
         <div className="flex items-center justify-between">
           <h1 className="text-lg font-light tracking-tight">ktchp</h1>
           <div className="flex gap-3 sm:gap-4 items-center">
+            <Link href="/digest/bookmarks" className="text-sm text-muted hover:text-foreground transition-colors">
+              Bookmarks
+            </Link>
             <Link href="/settings" className="text-sm text-muted hover:text-foreground transition-colors">
               Settings
             </Link>

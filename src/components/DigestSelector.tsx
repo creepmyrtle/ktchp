@@ -1,5 +1,7 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
+
 interface DigestOption {
   id: string;
   generated_at: string | Date;
@@ -37,28 +39,27 @@ function formatTime(dateVal: string | Date): string {
 }
 
 export default function DigestSelector({ digests, currentId }: DigestSelectorProps) {
+  const router = useRouter();
+
   if (digests.length === 0) return null;
 
   return (
-    <div className="flex gap-2 overflow-x-auto scrollbar-none -mx-4 px-4 pb-2 mt-4">
-      {digests.map((digest, i) => {
-        const isActive = digest.id === currentId;
-        return (
-          <a
-            key={digest.id}
-            href={i === 0 ? '/digest' : `/digest/${digest.id}`}
-            className={`shrink-0 px-3 py-1.5 rounded-full text-sm transition-colors border ${
-              isActive
-                ? 'bg-accent text-white border-accent'
-                : 'bg-card border-card-border text-muted hover:text-foreground hover:border-foreground/20'
-            }`}
-          >
-            <span className="font-medium">{formatDate(digest.generated_at)}</span>
-            <span className="ml-1.5 opacity-70 text-xs">{formatTime(digest.generated_at)}</span>
-            <span className="ml-1.5 opacity-60 text-xs">({digest.article_count})</span>
-          </a>
-        );
-      })}
+    <div className="mt-4">
+      <select
+        value={currentId}
+        onChange={(e) => {
+          const selectedId = e.target.value;
+          const idx = digests.findIndex((d) => d.id === selectedId);
+          router.push(idx === 0 ? '/digest' : `/digest/${selectedId}`);
+        }}
+        className="w-full sm:w-auto px-3 py-2 rounded-lg text-sm bg-card border border-card-border text-foreground appearance-none cursor-pointer focus:outline-none focus:border-accent"
+      >
+        {digests.map((digest) => (
+          <option key={digest.id} value={digest.id}>
+            {formatDate(digest.generated_at)} — {formatTime(digest.generated_at)} ({digest.article_count} articles)
+          </option>
+        ))}
+      </select>
     </div>
   );
 }

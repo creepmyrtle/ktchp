@@ -49,6 +49,18 @@ export async function getRecentFeedbackWithArticles(userId: string, limit: numbe
   return rows;
 }
 
+export async function getBookmarkedArticles(userId: string) {
+  const { rows } = await sql`
+    SELECT a.*, s.name as source_name, s.type as source_type
+    FROM feedback f
+    JOIN articles a ON f.article_id = a.id
+    JOIN sources s ON a.source_id = s.id
+    WHERE f.user_id = ${userId} AND f.action = 'bookmark'
+    ORDER BY f.created_at DESC
+  `;
+  return rows;
+}
+
 export async function deleteFeedback(userId: string, articleId: string, action: FeedbackAction): Promise<boolean> {
   const { rowCount } = await sql`
     DELETE FROM feedback WHERE user_id = ${userId} AND article_id = ${articleId} AND action = ${action}
