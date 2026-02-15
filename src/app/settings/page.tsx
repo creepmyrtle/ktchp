@@ -7,8 +7,9 @@ import SourceManager from '@/components/SourceManager';
 import ManualUrlInput from '@/components/ManualUrlInput';
 import PreferenceViewer from '@/components/PreferenceViewer';
 import ScheduleManager from '@/components/ScheduleManager';
+import IngestionLogs from '@/components/IngestionLogs';
 
-const TABS = ['Interests', 'Sources', 'Schedule', 'Manual URL', 'Preferences'] as const;
+const TABS = ['Interests', 'Sources', 'Schedule', 'Manual URL', 'Preferences', 'Logs'] as const;
 type Tab = (typeof TABS)[number];
 
 export default function SettingsPage() {
@@ -47,6 +48,7 @@ export default function SettingsPage() {
         {activeTab === 'Schedule' && <ScheduleManager />}
         {activeTab === 'Manual URL' && <ManualUrlInput />}
         {activeTab === 'Preferences' && <PreferenceViewer />}
+        {activeTab === 'Logs' && <IngestionLogs />}
       </main>
     </div>
   );

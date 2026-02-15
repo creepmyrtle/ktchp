@@ -40,7 +40,7 @@ export default async function DigestPage() {
   return (
     <div className="min-h-screen">
       <nav className="border-b border-card-border px-4 py-3 flex items-center justify-between max-w-5xl mx-auto">
-        <h1 className="text-lg font-light tracking-tight">Daily Digest</h1>
+        <h1 className="text-lg font-light tracking-tight">ktchp</h1>
         <div className="flex gap-4 items-center">
           <ProviderToggle />
           <Link href="/settings" className="text-sm text-muted hover:text-foreground transition-colors">

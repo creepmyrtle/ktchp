@@ -102,4 +102,20 @@ export async function ensureSchema(): Promise<void> {
       expires_at BIGINT NOT NULL
     )
   `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS ingestion_logs (
+      id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+      user_id TEXT NOT NULL REFERENCES users(id),
+      provider TEXT NOT NULL,
+      trigger TEXT NOT NULL CHECK (trigger IN ('cron', 'manual')),
+      status TEXT NOT NULL DEFAULT 'running' CHECK (status IN ('running', 'success', 'error')),
+      started_at TIMESTAMPTZ DEFAULT NOW(),
+      finished_at TIMESTAMPTZ,
+      duration_ms INTEGER,
+      summary JSONB DEFAULT '{}',
+      events JSONB DEFAULT '[]',
+      error TEXT
+    )
+  `;
 }

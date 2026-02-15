@@ -38,7 +38,7 @@ export default function LoginPage() {
     <main className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-light tracking-tight mb-2">Daily Digest</h1>
+          <h1 className="text-3xl font-light tracking-tight mb-2">ktchp</h1>
           <p className="text-muted text-sm">Your calm, curated content feed</p>
         </div>
 

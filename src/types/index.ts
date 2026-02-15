@@ -95,6 +95,30 @@ export interface ScoringResult {
   is_serendipity: boolean;
 }
 
+// Ingestion log event
+export interface LogEvent {
+  timestamp: string;
+  phase: string;
+  level: 'info' | 'warn' | 'error';
+  message: string;
+  data?: Record<string, unknown>;
+}
+
+// Ingestion log
+export interface IngestionLog {
+  id: string;
+  user_id: string;
+  provider: string;
+  trigger: 'cron' | 'manual';
+  status: 'running' | 'success' | 'error';
+  started_at: string;
+  finished_at: string | null;
+  duration_ms: number | null;
+  summary: Record<string, unknown>;
+  events: LogEvent[];
+  error: string | null;
+}
+
 // Raw article before storage
 export interface RawArticle {
   title: string;
