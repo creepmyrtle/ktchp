@@ -90,7 +90,6 @@ export interface LearnedPreference {
 export interface ScoringResult {
   article_id: string;
   relevance_score: number;
-  summary: string;
   relevance_reason: string;
   is_serendipity: boolean;
 }

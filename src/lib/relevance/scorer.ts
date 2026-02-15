@@ -23,7 +23,7 @@ function buildScoringPrompt(
     .map(a => `ID: ${a.id}\nTitle: ${a.title}\nURL: ${a.url}\nContent: ${(a.raw_content || '').slice(0, 300)}`)
     .join('\n---\n');
 
-  return `You are a content curator for a daily digest app. Score and summarize articles based on the user's interest profile.
+  return `You are a content curator for a daily digest app. Score articles based on the user's interest profile.
 
 ## User's Explicit Interests
 ${interestList}
@@ -38,11 +38,10 @@ ${recentFeedback || 'No recent feedback data.'}
 
 For each article, provide:
 1. **relevance_score** (0.0 to 1.0): How relevant to the user
-2. **summary** (2-3 sentences): Concise, informative summary
-3. **relevance_reason**: MUST be one of these exact formats:
+2. **relevance_reason**: MUST be one of these exact formats:
    - "Matches: [Interest Name]" — where [Interest Name] is one of: ${interestNames.join(', ')}
    - "Serendipity" — ONLY for true serendipity items (see below)
-4. **is_serendipity** (boolean): ALMOST ALWAYS false. See strict criteria below.
+3. **is_serendipity** (boolean): ALMOST ALWAYS false. See strict criteria below.
 
 ### relevance_reason Rules
 - If an article matches ANY stated interest, use "Matches: [Best Matching Interest Name]"
@@ -70,7 +69,6 @@ Respond ONLY with a JSON array (no markdown code fences):
   {
     "article_id": "...",
     "relevance_score": 0.85,
-    "summary": "...",
     "relevance_reason": "Matches: AI / LLMs / Local Models",
     "is_serendipity": false
   }
@@ -165,7 +163,6 @@ export async function scoreArticles(
           results.push({
             article_id: a.id,
             relevance_score: 0.5,
-            summary: a.raw_content?.slice(0, 200) || a.title,
             relevance_reason: 'Default score (API unavailable)',
             is_serendipity: false,
           });
@@ -199,7 +196,6 @@ export async function scoreArticles(
           relevanceScore: score.relevance_score,
           relevanceReason: score.relevance_reason,
           isSerendipity: score.is_serendipity,
-          summary: score.summary,
         });
       }
 
@@ -214,7 +210,6 @@ export async function scoreArticles(
         results.push({
           article_id: a.id,
           relevance_score: 0.5,
-          summary: a.raw_content?.slice(0, 200) || a.title,
           relevance_reason: 'Default score (scoring error)',
           is_serendipity: false,
         });

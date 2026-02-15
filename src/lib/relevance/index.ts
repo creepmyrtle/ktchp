@@ -86,7 +86,7 @@ export async function runRelevanceEngine(userId: string, provider: string, logge
     await updateArticleScoring(
       score.article_id,
       score.relevance_score,
-      score.summary,
+      '',
       score.relevance_reason,
       score.is_serendipity
     );

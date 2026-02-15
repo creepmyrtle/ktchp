@@ -72,12 +72,6 @@ export default function ArticleCard({ article, initialFeedback }: ArticleCardPro
         {article.title}
       </a>
 
-      {article.summary && (
-        <p className="text-sm text-muted leading-relaxed mb-3">
-          {article.summary}
-        </p>
-      )}
-
       <div className="flex items-center justify-between">
         <span className="text-xs text-muted">
           {timeAgo(article.published_at)}
