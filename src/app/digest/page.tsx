@@ -57,7 +57,7 @@ export default async function DigestPage() {
         </div>
       </nav>
 
-      <main className="max-w-5xl mx-auto px-4 py-8">
+      <main className="max-w-5xl mx-auto px-4 py-8 animate-fade-up">
         {latestDigest ? (
           <>
             <DigestHeader

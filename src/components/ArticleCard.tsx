@@ -36,9 +36,9 @@ export default function ArticleCard({ article, initialFeedback }: ArticleCardPro
 
   return (
     <div
-      className={`rounded-lg border p-4 bg-card transition-all ${
+      className={`rounded-lg border p-4 bg-card card-hover ${
         isSerendipity
-          ? 'border-serendipity/40 shadow-sm'
+          ? 'border-serendipity/40 card-hover-serendipity'
           : 'border-card-border'
       }`}
     >

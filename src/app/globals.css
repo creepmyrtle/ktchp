@@ -1,17 +1,18 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fafaf9;
-  --foreground: #292524;
-  --card: #ffffff;
-  --card-border: #e7e5e4;
-  --muted: #78716c;
-  --accent: #5b8a72;
-  --accent-light: #e8f0ec;
-  --serendipity: #d97706;
-  --serendipity-light: #fef3c7;
-  --success: #16a34a;
-  --danger: #dc2626;
+  --background: #0c0b0f;
+  --foreground: #e8e6f0;
+  --card: #16151b;
+  --card-border: #2a2933;
+  --border-hover: #3d3c48;
+  --muted: #8b89a0;
+  --accent: #f07c6c;
+  --accent-light: rgba(240,124,108,0.12);
+  --serendipity: #e0b44a;
+  --serendipity-light: rgba(224,180,74,0.1);
+  --success: #5cc9b5;
+  --danger: #ef4444;
 }
 
 @theme inline {
@@ -19,6 +20,7 @@
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-border: var(--card-border);
+  --color-border-hover: var(--border-hover);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
   --color-accent-light: var(--accent-light);
@@ -26,30 +28,74 @@
   --color-serendipity-light: var(--serendipity-light);
   --color-success: var(--success);
   --color-danger: var(--danger);
-  --font-sans: var(--font-inter);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #1c1917;
-    --foreground: #e7e5e4;
-    --card: #292524;
-    --card-border: #44403c;
-    --muted: #a8a29e;
-    --accent: #6db88a;
-    --accent-light: #1a2e22;
-    --serendipity: #f59e0b;
-    --serendipity-light: #422006;
-    --success: #22c55e;
-    --danger: #ef4444;
-  }
+  --font-sans: var(--font-dm-sans);
+  --font-mono: var(--font-jetbrains-mono);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+  line-height: 1.6;
 }
 
+/* Noise texture overlay */
+.noise-overlay {
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 50;
+}
+
+/* Card with hover lift + top accent line */
+.card-hover {
+  transition: border-color 0.3s ease, transform 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.card-hover::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.card-hover:hover {
+  border-color: var(--border-hover);
+  transform: translateY(-2px);
+}
+
+.card-hover:hover::before {
+  opacity: 1;
+}
+
+/* Serendipity cards get gold accent line */
+.card-hover-serendipity::before {
+  background: var(--serendipity);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--background); }
+::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 3px; }
+
+/* Fade-up entrance animation */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.4s ease-out;
+}
+
+/* Scrollbar-hiding utility */
 .scrollbar-none {
   -ms-overflow-style: none;
   scrollbar-width: none;

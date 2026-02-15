@@ -43,7 +43,7 @@ export default async function BookmarksPage() {
         </div>
       </nav>
 
-      <main className="max-w-5xl mx-auto px-4 py-8">
+      <main className="max-w-5xl mx-auto px-4 py-8 animate-fade-up">
         <h2 className="text-2xl font-light tracking-tight mb-6">Bookmarks</h2>
 
         {bookmarkedArticles.length > 0 ? (

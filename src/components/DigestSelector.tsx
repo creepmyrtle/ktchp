@@ -52,7 +52,7 @@ export default function DigestSelector({ digests, currentId }: DigestSelectorPro
           const idx = digests.findIndex((d) => d.id === selectedId);
           router.push(idx === 0 ? '/digest' : `/digest/${selectedId}`);
         }}
-        className="w-full sm:w-auto px-3 py-2 rounded-lg text-sm bg-card border border-card-border text-foreground appearance-none cursor-pointer focus:outline-none focus:border-accent"
+        className="w-full sm:w-auto px-3 py-2 rounded-lg text-sm bg-card border border-card-border text-foreground cursor-pointer focus:outline-none focus:border-accent"
       >
         {digests.map((digest) => (
           <option key={digest.id} value={digest.id}>

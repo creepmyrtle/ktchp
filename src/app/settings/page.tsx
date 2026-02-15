@@ -34,8 +34,8 @@ export default function SettingsPage() {
               onClick={() => setActiveTab(tab)}
               className={`px-3 py-1.5 text-sm rounded-full transition-colors border ${
                 activeTab === tab
-                  ? 'bg-accent text-white border-accent'
-                  : 'bg-card border-card-border text-muted hover:text-foreground'
+                  ? 'bg-accent-light text-accent border-accent'
+                  : 'border-card-border text-muted hover:text-foreground hover:border-border-hover'
               }`}
             >
               {tab}

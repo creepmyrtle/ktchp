@@ -36,7 +36,7 @@ export default function ProviderToggle() {
           onClick={() => toggle('anthropic')}
           className={`px-2.5 py-1 text-xs transition-colors ${
             provider === 'anthropic'
-              ? 'bg-accent text-white'
+              ? 'bg-accent-light text-accent'
               : 'bg-card text-muted hover:text-foreground'
           }`}
         >
@@ -46,7 +46,7 @@ export default function ProviderToggle() {
           onClick={() => toggle('synthetic')}
           className={`px-2.5 py-1 text-xs transition-colors ${
             provider === 'synthetic'
-              ? 'bg-accent text-white'
+              ? 'bg-accent-light text-accent'
               : 'bg-card text-muted hover:text-foreground'
           }`}
         >

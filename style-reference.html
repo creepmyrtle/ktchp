@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brooke's Lessons — Technical Architecture</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0c0b0f;
+  --surface: #16151b;
+  --surface-2: #1e1d25;
+  --border: #2a2933;
+  --border-hover: #3d3c48;
+  --text: #e8e6f0;
+  --text-dim: #8b89a0;
+  --text-muted: #5c5a6e;
+  --accent-coral: #f07c6c;
+  --accent-coral-dim: rgba(240,124,108,0.12);
+  --accent-gold: #e0b44a;
+  --accent-gold-dim: rgba(224,180,74,0.1);
+  --accent-teal: #5cc9b5;
+  --accent-teal-dim: rgba(92,201,181,0.1);
+  --accent-blue: #6ba3f7;
+  --accent-blue-dim: rgba(107,163,247,0.1);
+  --accent-purple: #b08df0;
+  --accent-purple-dim: rgba(176,141,240,0.1);
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.noise {
+  position: fixed;
+  top:0;left:0;right:0;bottom:0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 999;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 48px 24px 80px;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  margin-bottom: 56px;
+  animation: fadeUp 0.6s ease-out;
+}
+
+.header-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--accent-coral);
+  margin-bottom: 16px;
+  display: block;
+}
+
+.header h1 {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(28px, 5vw, 44px);
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, var(--text) 0%, var(--text-dim) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.header p {
+  color: var(--text-dim);
+  font-size: 16px;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+/* Phase navigation */
+.phase-nav {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 48px;
+  flex-wrap: wrap;
+  animation: fadeUp 0.6s ease-out 0.1s both;
+}
+
+.phase-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  padding: 8px 16px;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+}
+
+.phase-btn:hover {
+  border-color: var(--border-hover);
+  color: var(--text);
+}
+
+.phase-btn.active {
+  background: var(--accent-coral-dim);
+  border-color: var(--accent-coral);
+  color: var(--accent-coral);
+}
+
+/* Section */
+.section {
+  display: none;
+  animation: fadeUp 0.4s ease-out;
+}
+
+.section.active { display: block; }
+
+.section-title {
+  font-family: 'Fraunces', serif;
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.section-desc {
+  color: var(--text-dim);
+  font-size: 14px;
+  margin-bottom: 32px;
+  max-width: 700px;
+}
+
+/* Architecture diagram */
+.arch-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.arch-grid.three { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.arch-grid.two { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--card-accent, var(--accent-coral));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.card:hover {
+  border-color: var(--border-hover);
+  transform: translateY(-2px);
+}
+
+.card:hover::before { opacity: 1; }
+
+.card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  margin-bottom: 14px;
+  background: var(--card-accent-dim, var(--accent-coral-dim));
+  color: var(--card-accent, var(--accent-coral));
+}
+
+.card-title {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+
+.card-subtitle {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  letter-spacing: 0.5px;
+}
+
+.card-body {
+  font-size: 13.5px;
+  color: var(--text-dim);
+  line-height: 1.65;
+}
+
+.card-body ul {
+  list-style: none;
+  padding: 0;
+}
+
+.card-body li {
+  padding: 3px 0;
+  padding-left: 16px;
+  position: relative;
+}
+
+.card-body li::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: var(--card-accent, var(--accent-coral));
+  font-size: 12px;
+}
+
+/* Tech badge */
+.tech-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+}
+
+/* Flow diagram */
+.flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 32px 0;
+  flex-wrap: wrap;
+}
+
+.flow-node {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 18px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--text-dim);
+  text-align: center;
+  min-width: 100px;
+}
+
+.flow-arrow {
+  color: var(--text-muted);
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+/* Cost table */
+.cost-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+}
+
+.cost-table th, .cost-table td {
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13.5px;
+}
+
+.cost-table th {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.cost-table td { color: var(--text-dim); }
+
+.cost-table .cost-val {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--accent-teal);
+}
+
+.cost-table .cost-total td {
+  border-top: 2px solid var(--border-hover);
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Connector lines between sections */
+.connector {
+  display: flex;
+  justify-content: center;
+  margin: 24px 0;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 1px;
+  gap: 8px;
+  align-items: center;
+}
+
+.connector-line {
+  width: 40px;
+  height: 1px;
+  background: var(--border);
+}
+
+/* File tree */
+.file-tree {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  line-height: 1.9;
+  color: var(--text-dim);
+  overflow-x: auto;
+}
+
+.file-tree .dir { color: var(--accent-blue); }
+.file-tree .file { color: var(--text-dim); }
+.file-tree .comment { color: var(--text-muted); font-style: italic; }
+
+/* Timeline */
+.timeline {
+  position: relative;
+  padding-left: 28px;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 4px;
+  bottom: 4px;
+  width: 1px;
+  background: var(--border);
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 28px;
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -24px;
+  top: 6px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--accent-coral);
+  background: var(--bg);
+}
+
+.timeline-item.done::before {
+  background: var(--accent-coral);
+}
+
+.timeline-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--accent-coral);
+  margin-bottom: 4px;
+}
+
+.timeline-title {
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+
+.timeline-desc {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+/* Subsection headings */
+.sub-heading {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  margin-top: 40px;
+}
+
+.sub-heading:first-child { margin-top: 0; }
+
+/* Animations */
+@keyframes fadeUp {
+  from { opacity:0; transform: translateY(12px); }
+  to { opacity:1; transform: translateY(0); }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* Responsive */
+@media (max-width: 600px) {
+  .container { padding: 32px 16px 64px; }
+  .card { padding: 18px; }
+  .flow { gap: 8px; }
+  .flow-node { min-width: 80px; padding: 8px 12px; font-size: 11px; }
+}
+</style>
+</head>
+<body>
+<div class="noise"></div>
+<div class="container">
+
+  <div class="header">
+    <span class="header-label">Technical Architecture</span>
+    <h1>Brooke's Lessons — Hybrid Rebuild</h1>
+    <p>Custom marketing site + embedded SaaS for scheduling/payments + custom feature modules built incrementally</p>
+  </div>
+
+  <nav class="phase-nav" id="phaseNav">
+    <button class="phase-btn active" data-target="overview">Overview</button>
+    <button class="phase-btn" data-target="stack">Tech Stack</button>
+    <button class="phase-btn" data-target="structure">Site Structure</button>
+    <button class="phase-btn" data-target="integrations">Integrations</button>
+    <button class="phase-btn" data-target="custom">Custom Features</button>
+    <button class="phase-btn" data-target="infra">Infrastructure</button>
+    <button class="phase-btn" data-target="timeline">Rollout Plan</button>
+  </nav>
+
+  <!-- OVERVIEW -->
+  <div class="section active" id="overview">
+    <div class="section-title">System Overview</div>
+    <div class="section-desc">Three layers working together — a custom frontend you fully control, SaaS integrations for reliability-critical flows, and custom modules for differentiation.</div>
+
+    <div class="flow">
+      <div class="flow-node">Visitor</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color:var(--accent-coral);color:var(--accent-coral)">Custom Site<br><small style="font-size:10px;color:var(--text-muted)">Astro + Tailwind</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color:var(--accent-gold);color:var(--accent-gold)">SaaS Layer<br><small style="font-size:10px;color:var(--text-muted)">Calendly + Stripe</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color:var(--accent-teal);color:var(--accent-teal)">Student</div>
+    </div>
+
+    <div class="arch-grid three">
+      <div class="card" style="--card-accent:var(--accent-coral);--card-accent-dim:var(--accent-coral-dim)">
+        <div class="card-icon">🎨</div>
+        <div class="card-title">Layer 1: Custom Marketing Site</div>
+        <div class="card-subtitle">Built with Claude Code</div>
+        <div class="card-body">
+          <ul>
+            <li>Static site with Astro framework</li>
+            <li>Full design control, fast page loads</li>
+            <li>SEO-optimized pages for local search</li>
+            <li>Blog/content with Markdown files</li>
+            <li>Taylor Swift course landing page</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card" style="--card-accent:var(--accent-gold);--card-accent-dim:var(--accent-gold-dim)">
+        <div class="card-icon">⚡</div>
+        <div class="card-title">Layer 2: SaaS Integrations</div>
+        <div class="card-subtitle">Embedded, not built</div>
+        <div class="card-body">
+          <ul>
+            <li>Calendly or Cal.com for scheduling</li>
+            <li>Stripe for payments & subscriptions</li>
+            <li>Resend or Mailchimp for email</li>
+            <li>Google Reviews widget for social proof</li>
+            <li>Embeds styled to match the site</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card" style="--card-accent:var(--accent-teal);--card-accent-dim:var(--accent-teal-dim)">
+        <div class="card-icon">🧩</div>
+        <div class="card-title">Layer 3: Custom Modules</div>
+        <div class="card-subtitle">Phased, as needed</div>
+        <div class="card-body">
+          <ul>
+            <li>Taylor Swift video course portal</li>
+            <li>Student progress dashboard</li>
+            <li>Song request / voting system</li>
+            <li>Admin panel for Brooke</li>
+            <li>Built as interactive Astro islands</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TECH STACK -->
+  <div class="section" id="stack">
+    <div class="section-title">Tech Stack</div>
+    <div class="section-desc">Chosen for speed of development with Claude Code, minimal ops burden, and the ability to progressively add dynamic features without rewriting.</div>
+
+    <div class="arch-grid two">
+      <div class="card" style="--card-accent:var(--accent-coral);--card-accent-dim:var(--accent-coral-dim)">
+        <div class="card-icon">🖥</div>
+        <div class="card-title">Frontend Framework</div>
+        <div class="card-subtitle">Astro</div>
+        <div class="card-body">
+          Astro is the ideal choice here. It ships zero JS by default (fast for SEO), supports Markdown for blog posts Brooke can edit, and uses "islands architecture" — meaning you can drop in React or Svelte components only where you need interactivity (booking widget, course portal) while the rest stays static.
+          <div class="tech-badges">
+            <span class="badge">astro</span>
+            <span class="badge">tailwindcss</span>
+            <span class="badge">typescript</span>
+            <span class="badge">mdx</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="--card-accent:var(--accent-blue);--card-accent-dim:var(--accent-blue-dim)">
+        <div class="card-icon">🗄</div>
+        <div class="card-title">Database (Phase 2+)</div>
+        <div class="card-subtitle">Supabase</div>
+        <div class="card-body">
+          Only needed when you build custom features like the course portal or student tracker. Supabase gives you Postgres + auth + real-time + file storage in one service. Free tier covers a small business comfortably. Row-level security means students only see their own data.
+          <div class="tech-badges">
+            <span class="badge">supabase</span>
+            <span class="badge">postgresql</span>
+            <span class="badge">row-level-security</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="--card-accent:var(--accent-teal);--card-accent-dim:var(--accent-teal-dim)">
+        <div class="card-icon">🚀</div>
+        <div class="card-title">Hosting</div>
+        <div class="card-subtitle">Vercel or Netlify</div>
+        <div class="card-body">
+          Both offer generous free tiers perfect for this scale. Automatic deploys from a GitHub repo — push code, site updates in ~30 seconds. Built-in CDN for fast load times everywhere. Vercel has slight edge if you later need serverless API routes.
+          <div class="tech-badges">
+            <span class="badge">vercel</span>
+            <span class="badge">github</span>
+            <span class="badge">cdn</span>
+            <span class="badge">ssl</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="--card-accent:var(--accent-purple);--card-accent-dim:var(--accent-purple-dim)">
+        <div class="card-icon">📧</div>
+        <div class="card-title">Email & Notifications</div>
+        <div class="card-subtitle">Resend + React Email</div>
+        <div class="card-body">
+          Transactional emails (booking confirmations, reminders) via Resend. Beautiful templates with React Email that match the site brand. Free tier is 3,000 emails/month — more than enough. For marketing newsletters, Buttondown or Mailchimp free tier.
+          <div class="tech-badges">
+            <span class="badge">resend</span>
+            <span class="badge">react-email</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector">
+      <span class="connector-line"></span>
+      WHY ASTRO OVER NEXT.JS
+      <span class="connector-line"></span>
+    </div>
+
+    <div class="card" style="--card-accent:var(--accent-gold);--card-accent-dim:var(--accent-gold-dim)">
+      <div class="card-body">
+        Next.js is great but overkill here. The site is 90% static content — Astro renders it all at build time with no client JS, giving perfect Lighthouse scores out of the box. When you need interactivity (booking embed, course player, admin panel), Astro's island architecture lets you hydrate just those components. You also avoid the complexity of Next.js server components, caching quirks, and heavier deployment requirements. Claude Code generates clean Astro code very effectively since the component model is straightforward.
+      </div>
+    </div>
+  </div>
+
+  <!-- SITE STRUCTURE -->
+  <div class="section" id="structure">
+    <div class="section-title">Site Structure</div>
+    <div class="section-desc">Clean file organization designed for easy editing by Brooke (Markdown content) and easy extension by you (component islands).</div>
+
+    <div class="file-tree">
+<span class="dir">brookes-lessons/</span>
+├── <span class="dir">src/</span>
+│   ├── <span class="dir">pages/</span>
+│   │   ├── <span class="file">index.astro</span>            <span class="comment"># Homepage — hero, value prop, testimonials, pricing, CTA</span>
+│   │   ├── <span class="file">about.astro</span>            <span class="comment"># Brooke's story, philosophy, credentials</span>
+│   │   ├── <span class="file">lessons.astro</span>          <span class="comment"># Guitar / Ukulele / Voice breakdown, kids vs adults</span>
+│   │   ├── <span class="file">taylor-swift.astro</span>     <span class="comment"># ⭐ Dedicated landing page for the TS course</span>
+│   │   ├── <span class="file">book.astro</span>             <span class="comment"># Embedded Calendly/Cal.com scheduling</span>
+│   │   ├── <span class="file">reviews.astro</span>          <span class="comment"># Testimonials + embedded Google reviews</span>
+│   │   ├── <span class="file">gift-cards.astro</span>       <span class="comment"># Stripe payment link for gift certificates</span>
+│   │   ├── <span class="file">policies.astro</span>         <span class="comment"># Cancellation, makeup, payment policies</span>
+│   │   ├── <span class="dir">blog/</span>
+│   │   │   ├── <span class="file">index.astro</span>        <span class="comment"># Blog listing page</span>
+│   │   │   └── <span class="file">[...slug].astro</span>    <span class="comment"># Dynamic blog post route</span>
+│   │   └── <span class="dir">course/</span>                 <span class="comment"># Phase 2: protected course pages</span>
+│   │       ├── <span class="file">index.astro</span>        <span class="comment"># Course dashboard (Supabase auth)</span>
+│   │       └── <span class="file">[lesson].astro</span>     <span class="comment"># Individual video lesson page</span>
+│   ├── <span class="dir">components/</span>
+│   │   ├── <span class="file">Header.astro</span>           <span class="comment"># Site nav</span>
+│   │   ├── <span class="file">Footer.astro</span>           <span class="comment"># Footer with links, socials</span>
+│   │   ├── <span class="file">Hero.astro</span>             <span class="comment"># Homepage hero section</span>
+│   │   ├── <span class="file">Pricing.astro</span>          <span class="comment"># Pricing cards</span>
+│   │   ├── <span class="file">Testimonials.astro</span>     <span class="comment"># Review carousel</span>
+│   │   ├── <span class="file">BookingWidget.tsx</span>      <span class="comment"># ⚡ React island — Calendly embed</span>
+│   │   ├── <span class="file">CoursePlayer.tsx</span>       <span class="comment"># ⚡ React island — Phase 2 video player</span>
+│   │   └── <span class="file">ContactForm.tsx</span>        <span class="comment"># ⚡ React island — form with validation</span>
+│   ├── <span class="dir">content/</span>
+│   │   └── <span class="dir">blog/</span>
+│   │       ├── <span class="file">easy-taylor-swift-songs.md</span>
+│   │       └── <span class="file">guitar-tips-for-kids.md</span>  <span class="comment"># Brooke writes Markdown, site rebuilds</span>
+│   ├── <span class="dir">layouts/</span>
+│   │   └── <span class="file">Base.astro</span>             <span class="comment"># Shared layout, meta tags, analytics</span>
+│   └── <span class="dir">styles/</span>
+│       └── <span class="file">global.css</span>             <span class="comment"># Tailwind + custom brand tokens</span>
+├── <span class="dir">public/</span>
+│   ├── <span class="dir">images/</span>                     <span class="comment"># Optimized photos of Brooke, students, etc.</span>
+│   ├── <span class="file">favicon.svg</span>
+│   └── <span class="file">robots.txt</span>
+├── <span class="file">astro.config.mjs</span>
+├── <span class="file">tailwind.config.mjs</span>
+└── <span class="file">package.json</span>
+    </div>
+
+    <div class="connector">
+      <span class="connector-line"></span>
+      KEY DESIGN DECISIONS
+      <span class="connector-line"></span>
+    </div>
+
+    <div class="arch-grid two">
+      <div class="card" style="--card-accent:var(--accent-coral);--card-accent-dim:var(--accent-coral-dim)">
+        <div class="card-title">Content lives in Markdown</div>
+        <div class="card-body" style="margin-top:8px">Blog posts are <code>.md</code> files in <code>src/content/blog/</code>. Brooke can write in any text editor, or you can set up a simple headless CMS like Tina or Decap (both free, Git-based) that gives her a visual editor. No database needed for content.</div>
+      </div>
+      <div class="card" style="--card-accent:var(--accent-teal);--card-accent-dim:var(--accent-teal-dim)">
+        <div class="card-title">Interactive parts are React islands</div>
+        <div class="card-body" style="margin-top:8px">Only the booking widget, contact form, and course player ship JavaScript to the browser. Everything else is pure HTML/CSS. This means the site loads fast even on slow connections — great for mobile users Googling "guitar lessons near me."</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INTEGRATIONS -->
+  <div class="section" id="integrations">
+    <div class="section-title">SaaS Integrations</div>
+    <div class="section-desc">These handle the reliability-critical stuff — scheduling conflicts, payment processing, email deliverability — so you don't have to.</div>
+
+    <div class="arch-grid two">
+      <div class="card" style="--card-accent:var(--accent-gold);--card-accent-dim:var(--accent-gold-dim)">
+        <div class="card-icon">📅</div>
+        <div class="card-title">Scheduling: Cal.com (recommended)</div>
+        <div class="card-subtitle">Free self-hosted or $0–$12/mo hosted</div>
+        <div class="card-body">
+          <ul>
+            <li>Open-source — self-host for free or use hosted version</li>
+            <li>Embed directly into your /book page with iframe</li>
+            <li>Custom styling to match site brand</li>
+            <li>Handles recurring lessons, buffer time, timezone conversion</li>
+            <li>Google Calendar + Zoom integration</li>
+            <li>Automated email/SMS reminders</li>
+            <li>Stripe integration for paid bookings</li>
+          </ul>
+          <div class="tech-badges">
+            <span class="badge">cal.com</span>
+            <span class="badge">embed-api</span>
+            <span class="badge">webhooks</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="--card-accent:var(--accent-teal);--card-accent-dim:var(--accent-teal-dim)">
+        <div class="card-icon">💳</div>
+        <div class="card-title">Payments: Stripe</div>
+        <div class="card-subtitle">2.9% + $0.30 per transaction</div>
+        <div class="card-body">
+          <ul>
+            <li>Payment Links for gift certificates (no code needed)</li>
+            <li>Stripe Checkout for course purchases</li>
+            <li>Subscriptions for monthly lesson packages</li>
+            <li>Customer portal — students manage their own billing</li>
+            <li>Invoicing for custom arrangements</li>
+            <li>Webhooks to trigger course access on payment</li>
+          </ul>
+          <div class="tech-badges">
+            <span class="badge">stripe-checkout</span>
+            <span class="badge">subscriptions</span>
+            <span class="badge">payment-links</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="--card-accent:var(--accent-blue);--card-accent-dim:var(--accent-blue-dim)">
+        <div class="card-icon">📊</div>
+        <div class="card-title">Analytics & SEO</div>
+        <div class="card-subtitle">Free tier tools</div>
+        <div class="card-body">
+          <ul>
+            <li>Plausible or Fathom for privacy-friendly analytics</li>
+            <li>Google Search Console for SEO monitoring</li>
+            <li>Google Business Profile optimization</li>
+            <li>Structured data (JSON-LD) for local business + course markup</li>
+            <li>Open Graph meta tags for social sharing</li>
+          </ul>
+          <div class="tech-badges">
+            <span class="badge">plausible</span>
+            <span class="badge">search-console</span>
+            <span class="badge">json-ld</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="--card-accent:var(--accent-purple);--card-accent-dim:var(--accent-purple-dim)">
+        <div class="card-icon">🔗</div>
+        <div class="card-title">Glue: Webhooks + Serverless</div>
+        <div class="card-subtitle">Vercel API routes or Zapier</div>
+        <div class="card-body">
+          <ul>
+            <li>Stripe webhook → grant Supabase course access</li>
+            <li>Cal.com webhook → send custom welcome email</li>
+            <li>Contact form → send notification to Brooke</li>
+            <li>Zapier as no-code fallback for any integration</li>
+          </ul>
+          <div class="tech-badges">
+            <span class="badge">vercel-functions</span>
+            <span class="badge">webhooks</span>
+            <span class="badge">zapier</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector">
+      <span class="connector-line"></span>
+      DATA FLOW
+      <span class="connector-line"></span>
+    </div>
+
+    <div class="flow">
+      <div class="flow-node">Student books on Cal.com</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">Stripe charges card</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">Webhook fires</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">Resend sends confirmation</div>
+    </div>
+    <div class="flow">
+      <div class="flow-node">Student buys course</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">Stripe Checkout</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">Webhook → Supabase</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">Course access granted</div>
+    </div>
+  </div>
+
+  <!-- CUSTOM FEATURES -->
+  <div class="section" id="custom">
+    <div class="section-title">Custom Feature Modules</div>
+    <div class="section-desc">These are the differentiators — features no off-the-shelf platform provides. Build them incrementally as Brooke's needs evolve.</div>
+
+    <div class="sub-heading">Priority 1 — Taylor Swift Course Portal</div>
+    <div class="card" style="--card-accent:var(--accent-coral);--card-accent-dim:var(--accent-coral-dim);margin-bottom:16px">
+      <div class="card-title">Self-paced video course with gated access</div>
+      <div class="card-body" style="margin-top:8px">
+        <ul>
+          <li>Supabase Auth for student login (email magic link — no passwords to manage)</li>
+          <li>Video hosting on Bunny.net or Mux (~$1/month at this scale) or unlisted YouTube</li>
+          <li>Lesson progress tracking saved per-student</li>
+          <li>Chord charts and tabs as downloadable PDFs per lesson</li>
+          <li>Stripe webhook grants access on purchase</li>
+          <li>Brooke adds new song lessons by uploading video + creating a Markdown file</li>
+        </ul>
+        <div class="tech-badges">
+          <span class="badge">supabase-auth</span>
+          <span class="badge">bunny-stream</span>
+          <span class="badge">stripe-webhooks</span>
+          <span class="badge">react</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub-heading">Priority 2 — Student Dashboard</div>
+    <div class="card" style="--card-accent:var(--accent-blue);--card-accent-dim:var(--accent-blue-dim);margin-bottom:16px">
+      <div class="card-title">Simple portal for active lesson students</div>
+      <div class="card-body" style="margin-top:8px">
+        <ul>
+          <li>View upcoming lessons (pulled from Cal.com API)</li>
+          <li>Lesson notes from Brooke (stored in Supabase)</li>
+          <li>Songs learned — a running list that builds over time</li>
+          <li>Practice resources and links shared per-lesson</li>
+          <li>Reschedule/cancel link (routes to Cal.com)</li>
+        </ul>
+        <div class="tech-badges">
+          <span class="badge">supabase</span>
+          <span class="badge">cal-api</span>
+          <span class="badge">react-island</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub-heading">Priority 3 — Admin Panel for Brooke</div>
+    <div class="card" style="--card-accent:var(--accent-gold);--card-accent-dim:var(--accent-gold-dim)">
+      <div class="card-title">Lightweight CMS so Brooke doesn't need you for everything</div>
+      <div class="card-body" style="margin-top:8px">
+        <ul>
+          <li>Add/edit blog posts (Tina CMS or Decap — visual Git-based editors)</li>
+          <li>Update pricing (edits a config file, triggers rebuild)</li>
+          <li>Add testimonials</li>
+          <li>Post lesson notes for students</li>
+          <li>View student roster and payment status (Stripe dashboard link)</li>
+        </ul>
+        <div class="tech-badges">
+          <span class="badge">tina-cms</span>
+          <span class="badge">supabase-dashboard</span>
+          <span class="badge">github-actions</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INFRASTRUCTURE -->
+  <div class="section" id="infra">
+    <div class="section-title">Infrastructure & Costs</div>
+    <div class="section-desc">Designed to stay within free tiers for a solo music teacher's scale. Total monthly cost: roughly the price of one lesson.</div>
+
+    <div class="sub-heading">Monthly Cost Breakdown</div>
+    <table class="cost-table">
+      <thead>
+        <tr><th>Service</th><th>Tier</th><th>Monthly Cost</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Vercel hosting</td><td>Hobby (free)</td><td class="cost-val">$0</td></tr>
+        <tr><td>Domain (brookeslessons.com)</td><td>Annual renewal</td><td class="cost-val">~$1.50</td></tr>
+        <tr><td>Cal.com scheduling</td><td>Free tier or self-hosted</td><td class="cost-val">$0</td></tr>
+        <tr><td>Stripe payments</td><td>Per-transaction only</td><td class="cost-val">2.9% + $0.30/txn</td></tr>
+        <tr><td>Supabase</td><td>Free tier (500MB, 50K auth users)</td><td class="cost-val">$0</td></tr>
+        <tr><td>Resend email</td><td>Free tier (3K emails/month)</td><td class="cost-val">$0</td></tr>
+        <tr><td>Plausible analytics</td><td>Self-hosted or paid</td><td class="cost-val">$0–$9</td></tr>
+        <tr><td>Video hosting (Phase 2)</td><td>Bunny.net Stream</td><td class="cost-val">~$1–3</td></tr>
+        <tr class="cost-total"><td colspan="2">Estimated total</td><td class="cost-val">$3–15/month</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub-heading" style="margin-top:36px">DevOps Setup</div>
+    <div class="arch-grid two">
+      <div class="card" style="--card-accent:var(--accent-teal);--card-accent-dim:var(--accent-teal-dim)">
+        <div class="card-title">Deployment Pipeline</div>
+        <div class="card-body" style="margin-top:8px">
+          <ul>
+            <li>GitHub repo → Vercel auto-deploy on push</li>
+            <li>Preview deployments for every PR</li>
+            <li>Environment variables for API keys</li>
+            <li>No CI/CD config needed — Vercel handles it</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card" style="--card-accent:var(--accent-purple);--card-accent-dim:var(--accent-purple-dim)">
+        <div class="card-title">Maintenance Model</div>
+        <div class="card-body" style="margin-top:8px">
+          <ul>
+            <li>Dependabot for automated dependency updates</li>
+            <li>Vercel handles SSL, CDN, and uptime</li>
+            <li>Supabase handles database backups</li>
+            <li>You handle: feature work, content support, bug fixes</li>
+            <li>Brooke handles: blog posts, testimonials via CMS</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TIMELINE -->
+  <div class="section" id="timeline">
+    <div class="section-title">Rollout Plan</div>
+    <div class="section-desc">Ship the core site fast, then layer on features. Brooke shouldn't wait months for a perfect site — she should have a dramatically better one in 1–2 weeks.</div>
+
+    <div class="timeline">
+      <div class="timeline-item done">
+        <div class="timeline-label">Week 1</div>
+        <div class="timeline-title">Core Site Launch</div>
+        <div class="timeline-desc">Scaffold with Claude Code: homepage, about, lessons, policies, reviews, gift cards. Tailwind styling, responsive design, SEO meta tags. Deploy to Vercel. Transfer domain DNS.</div>
+      </div>
+      <div class="timeline-item done">
+        <div class="timeline-label">Week 2</div>
+        <div class="timeline-title">Scheduling & Payments</div>
+        <div class="timeline-desc">Set up Cal.com with Brooke's availability. Embed booking widget. Configure Stripe for lesson packages and gift certificates. Set up confirmation emails via Resend.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-label">Week 3</div>
+        <div class="timeline-title">Taylor Swift Landing Page + Blog</div>
+        <div class="timeline-desc">Design the TS course page with strong conversion focus. Migrate existing blog posts to Markdown. Set up content CMS for Brooke. Write 2–3 SEO-targeted posts.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-label">Week 4–5</div>
+        <div class="timeline-title">Taylor Swift Course Portal (Phase 2)</div>
+        <div class="timeline-desc">Supabase auth setup. Video hosting. Course player component. Stripe checkout for course purchase. Webhook for access provisioning. Progress tracking.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-label">Week 6+</div>
+        <div class="timeline-title">Student Dashboard & Admin Panel</div>
+        <div class="timeline-desc">Student-facing lesson history and notes. Admin panel for Brooke to manage content without your help. Iterate based on feedback from actual students.</div>
+      </div>
+    </div>
+
+    <div class="connector">
+      <span class="connector-line"></span>
+      THE KEY PRINCIPLE
+      <span class="connector-line"></span>
+    </div>
+
+    <div class="card" style="--card-accent:var(--accent-gold);--card-accent-dim:var(--accent-gold-dim)">
+      <div class="card-body">
+        <strong style="color:var(--text)">Ship week 1–2, then iterate.</strong> The current Weebly site is actively losing potential students. A clean, fast, well-designed site with embedded scheduling is a massive upgrade that doesn't require any custom backend work. The course portal, student dashboard, and admin panel are valuable but not urgent — build them when Brooke is ready to use them. Claude Code makes it easy to add features incrementally because Astro's architecture is designed for exactly this pattern.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const btns = document.querySelectorAll('.phase-btn');
+  const sections = document.querySelectorAll('.section');
+
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.target;
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      sections.forEach(s => {
+        s.classList.remove('active');
+        if (s.id === target) s.classList.add('active');
+      });
+      window.scrollTo({ top: document.querySelector('.phase-nav').offsetTop - 20, behavior: 'smooth' });
+    });
+  });
+});
+</script>
+</body>
+</html>
