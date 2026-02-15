@@ -5,9 +5,7 @@ import { getDefaultUser } from '@/lib/db/users';
 import { getLatestDigest, getRecentDigests } from '@/lib/db/digests';
 import { getArticlesByDigestId, getDigestCompletionStats } from '@/lib/db/articles';
 import { getActiveProvider } from '@/lib/llm';
-import DigestHeader from '@/components/DigestHeader';
-import ArticleCard from '@/components/ArticleCard';
-import CaughtUpMessage from '@/components/CaughtUpMessage';
+import DigestContent from '@/components/DigestContent';
 import IngestButton from '@/components/IngestButton';
 import DigestSelector from '@/components/DigestSelector';
 import Link from 'next/link';
@@ -62,32 +60,13 @@ export default async function DigestPage() {
       <main className="max-w-5xl mx-auto px-4 py-8 animate-fade-up">
         {latestDigest ? (
           <>
-            <DigestHeader
+            <DigestContent
               date={latestDigest.generated_at}
-              articleCount={articles.length}
-              archivedCount={stats?.archived_count}
-              totalCount={stats?.total_article_count}
-            />
-
-            <DigestSelector digests={enrichedDigests} currentId={latestDigest.id} />
-
-            <div className="flex flex-col gap-4 mt-6">
-              {articles.map(article => (
-                <ArticleCard
-                  key={article.id}
-                  article={article}
-                />
-              ))}
-            </div>
-
-            <CaughtUpMessage
-              isComplete={stats ? stats.remaining_count === 0 && stats.total_article_count > 0 : false}
-              totalCount={stats?.total_article_count}
-              likedCount={stats?.liked_count}
-              neutralCount={stats?.neutral_count}
-              dislikedCount={stats?.disliked_count}
-              bookmarkedCount={stats?.bookmarked_count}
-            />
+              articles={articles}
+              stats={stats || { total_article_count: 0, archived_count: 0, remaining_count: 0, liked_count: 0, neutral_count: 0, disliked_count: 0, bookmarked_count: 0 }}
+            >
+              <DigestSelector digests={enrichedDigests} currentId={latestDigest.id} />
+            </DigestContent>
 
             <IngestButton />
           </>

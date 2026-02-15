@@ -4,9 +4,7 @@ import { seedDatabase } from '@/lib/db/seed';
 import { getDefaultUser } from '@/lib/db/users';
 import { getDigestById, getRecentDigests } from '@/lib/db/digests';
 import { getArticlesByDigestId, getDigestCompletionStats } from '@/lib/db/articles';
-import DigestHeader from '@/components/DigestHeader';
-import ArticleCard from '@/components/ArticleCard';
-import CaughtUpMessage from '@/components/CaughtUpMessage';
+import DigestContent from '@/components/DigestContent';
 import DigestSelector from '@/components/DigestSelector';
 import Link from 'next/link';
 
@@ -57,32 +55,13 @@ export default async function DigestByIdPage({ params }: { params: Promise<{ id:
       </nav>
 
       <main className="max-w-5xl mx-auto px-4 py-8 animate-fade-up">
-        <DigestHeader
+        <DigestContent
           date={digest.generated_at}
-          articleCount={articles.length}
-          archivedCount={stats.archived_count}
-          totalCount={stats.total_article_count}
-        />
-
-        <DigestSelector digests={enrichedDigests} currentId={digest.id} />
-
-        <div className="flex flex-col gap-4 mt-6">
-          {articles.map(article => (
-            <ArticleCard
-              key={article.id}
-              article={article}
-            />
-          ))}
-        </div>
-
-        <CaughtUpMessage
-          isComplete={stats.remaining_count === 0 && stats.total_article_count > 0}
-          totalCount={stats.total_article_count}
-          likedCount={stats.liked_count}
-          neutralCount={stats.neutral_count}
-          dislikedCount={stats.disliked_count}
-          bookmarkedCount={stats.bookmarked_count}
-        />
+          articles={articles}
+          stats={stats}
+        >
+          <DigestSelector digests={enrichedDigests} currentId={digest.id} />
+        </DigestContent>
       </main>
     </div>
   );

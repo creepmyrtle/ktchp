@@ -8,9 +8,10 @@ import { useSwipeToArchive } from '@/hooks/useSwipeToArchive';
 interface ArticleCardProps {
   article: ArticleWithSource;
   swipeDirection?: 'right' | 'left';
+  onArchived?: () => void;
 }
 
-export default function ArticleCard({ article, swipeDirection = 'right' }: ArticleCardProps) {
+export default function ArticleCard({ article, swipeDirection = 'right', onArchived }: ArticleCardProps) {
   const [archiving, setArchiving] = useState(false);
   const [archived, setArchived] = useState(false);
   const [sentiment, setSentiment] = useState<Sentiment | null>(article.sentiment);
@@ -19,9 +20,18 @@ export default function ArticleCard({ article, swipeDirection = 'right' }: Artic
   const isSerendipity = !!article.is_serendipity;
 
   function handleArchive() {
+    // Persist to DB
+    fetch('/api/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ articleId: article.id, action: 'archived' }),
+    });
     setArchiving(true);
     // After animation, fully remove
-    setTimeout(() => setArchived(true), 400);
+    setTimeout(() => {
+      setArchived(true);
+      onArchived?.();
+    }, 400);
   }
 
   function handleSwipeBlocked() {

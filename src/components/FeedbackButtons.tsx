@@ -61,7 +61,6 @@ export default function ActionBar({
       showToast('Rate this article first', 'error');
       return;
     }
-    sendAction('archived');
     onArchive();
   }
 
