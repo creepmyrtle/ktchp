@@ -7,16 +7,7 @@ import { getSetting } from './db/settings';
 export type LlmProvider = 'anthropic' | 'synthetic';
 
 export async function getActiveProvider(): Promise<LlmProvider> {
-  try {
-    const user = await getDefaultUser();
-    if (user) {
-      const saved = await getSetting(user.id, 'llm_provider');
-      if (saved === 'anthropic' || saved === 'synthetic') return saved;
-    }
-  } catch {
-    // DB not ready yet
-  }
-  return 'anthropic';
+  return 'synthetic';
 }
 
 interface LlmResponse {

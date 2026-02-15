@@ -123,22 +123,22 @@ export default function IngestionLogs() {
               onClick={() => toggleExpand(log.id)}
               className="w-full px-4 py-3 text-left hover:bg-background/50 transition-colors"
             >
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${badge.className}`}>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded shrink-0 ${badge.className}`}>
                     {badge.label}
                   </span>
                   <span className="text-sm text-foreground truncate">
                     {formatTime(log.started_at)}
                   </span>
-                  <span className="text-xs text-muted capitalize">{log.trigger}</span>
+                  <span className="text-xs text-muted capitalize hidden sm:inline">{log.trigger}</span>
                 </div>
-                <div className="flex items-center gap-4 shrink-0 text-xs text-muted">
+                <div className="flex items-center gap-2 sm:gap-4 shrink-0 text-xs text-muted">
                   {summary.newArticles !== undefined && (
-                    <span>{String(summary.newArticles)} new</span>
+                    <span className="hidden sm:inline">{String(summary.newArticles)} new</span>
                   )}
                   {summary.digestArticleCount !== undefined && Number(summary.digestArticleCount) > 0 && (
-                    <span>{String(summary.digestArticleCount)} in digest</span>
+                    <span className="hidden sm:inline">{String(summary.digestArticleCount)} in digest</span>
                   )}
                   <span>{formatDuration(log.duration_ms)}</span>
                   <span className="text-[10px]">{isExpanded ? '\u25B2' : '\u25BC'}</span>

@@ -50,13 +50,13 @@ export default function IngestButton() {
 
   return (
     <div className="mt-6 flex flex-col items-center gap-3">
-      <div className="flex gap-3">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
         <button
           onClick={triggerIngest}
           disabled={status === 'loading'}
           className="px-6 py-2.5 rounded-lg bg-accent text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
         >
-          {status === 'loading' ? 'Ingesting... (this may take a minute)' : 'Ingest Now'}
+          {status === 'loading' ? 'Ingesting...' : 'Ingest Now'}
         </button>
         <button
           onClick={clearDigest}

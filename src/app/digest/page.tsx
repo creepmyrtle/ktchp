@@ -10,8 +10,7 @@ import DigestHeader from '@/components/DigestHeader';
 import ArticleCard from '@/components/ArticleCard';
 import CaughtUpMessage from '@/components/CaughtUpMessage';
 import IngestButton from '@/components/IngestButton';
-import PreviousDigests from '@/components/PreviousDigests';
-import ProviderToggle from '@/components/ProviderToggle';
+import DigestSelector from '@/components/DigestSelector';
 import Link from 'next/link';
 
 export default async function DigestPage() {
@@ -24,7 +23,7 @@ export default async function DigestPage() {
 
   const provider = await getActiveProvider();
   const latestDigest = await getLatestDigest(user.id, provider);
-  const recentDigests = await getRecentDigests(user.id, 5, provider);
+  const recentDigests = await getRecentDigests(user.id, 14, provider);
   const articles = latestDigest ? await getArticlesByDigestId(latestDigest.id) : [];
   const userFeedback = await getFeedbackByUserId(user.id, 200);
 
@@ -39,18 +38,19 @@ export default async function DigestPage() {
 
   return (
     <div className="min-h-screen">
-      <nav className="border-b border-card-border px-4 py-3 flex items-center justify-between max-w-5xl mx-auto">
-        <h1 className="text-lg font-light tracking-tight">ktchp</h1>
-        <div className="flex gap-4 items-center">
-          <ProviderToggle />
-          <Link href="/settings" className="text-sm text-muted hover:text-foreground transition-colors">
-            Settings
-          </Link>
-          <form action="/api/auth/logout" method="POST">
-            <button type="submit" className="text-sm text-muted hover:text-foreground transition-colors">
-              Sign out
-            </button>
-          </form>
+      <nav className="border-b border-card-border px-4 py-3 max-w-5xl mx-auto">
+        <div className="flex items-center justify-between">
+          <h1 className="text-lg font-light tracking-tight">ktchp</h1>
+          <div className="flex gap-3 sm:gap-4 items-center">
+            <Link href="/settings" className="text-sm text-muted hover:text-foreground transition-colors">
+              Settings
+            </Link>
+            <form action="/api/auth/logout" method="POST">
+              <button type="submit" className="text-sm text-muted hover:text-foreground transition-colors">
+                Sign out
+              </button>
+            </form>
+          </div>
         </div>
       </nav>
 
@@ -61,6 +61,8 @@ export default async function DigestPage() {
               date={latestDigest.generated_at}
               articleCount={articles.length}
             />
+
+            <DigestSelector digests={recentDigests} currentId={latestDigest.id} />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
               {articles.map(article => (
@@ -75,8 +77,6 @@ export default async function DigestPage() {
             <CaughtUpMessage />
 
             <IngestButton />
-
-            <PreviousDigests digests={recentDigests.slice(1)} />
           </>
         ) : (
           <div className="text-center py-20">

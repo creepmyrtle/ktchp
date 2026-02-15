@@ -42,10 +42,10 @@ export default function ArticleCard({ article, initialFeedback }: ArticleCardPro
           : 'border-card-border'
       }`}
     >
-      <div className="flex items-start justify-between gap-2 mb-2">
+      <div className="flex items-start justify-between gap-2 mb-2 flex-wrap">
         <span className="text-xs text-muted">{article.source_name}</span>
         <span
-          className={`text-xs px-2 py-0.5 rounded-full ${
+          className={`text-xs px-2 py-0.5 rounded-full leading-tight ${
             isSerendipity
               ? 'bg-serendipity-light text-serendipity'
               : 'bg-accent-light text-accent'

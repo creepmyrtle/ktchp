@@ -18,7 +18,7 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen">
       <nav className="border-b border-card-border px-4 py-3 flex items-center justify-between max-w-5xl mx-auto">
-        <h1 className="text-lg font-light tracking-tight">Daily Digest</h1>
+        <h1 className="text-lg font-light tracking-tight">ktchp</h1>
         <Link href="/digest" className="text-sm text-accent hover:opacity-80 transition-opacity">
           Back to digest
         </Link>
@@ -27,15 +27,15 @@ export default function SettingsPage() {
       <main className="max-w-3xl mx-auto px-4 py-8">
         <h2 className="text-2xl font-light tracking-tight mb-6">Settings</h2>
 
-        <div className="flex gap-1 mb-6 border-b border-card-border">
+        <div className="flex flex-wrap gap-1.5 mb-6">
           {TABS.map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 text-sm transition-colors border-b-2 -mb-px ${
+              className={`px-3 py-1.5 text-sm rounded-full transition-colors border ${
                 activeTab === tab
-                  ? 'border-accent text-accent'
-                  : 'border-transparent text-muted hover:text-foreground'
+                  ? 'bg-accent text-white border-accent'
+                  : 'bg-card border-card-border text-muted hover:text-foreground'
               }`}
             >
               {tab}

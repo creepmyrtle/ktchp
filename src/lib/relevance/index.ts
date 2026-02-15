@@ -76,7 +76,6 @@ async function generateDigest(userId: string, provider: string, logger?: Ingesti
   }
 
   const minScore = config.minRelevanceScore;
-  const maxArticles = config.maxArticlesPerDigest;
 
   let selected = scored.filter(a => (a.relevance_score || 0) >= minScore);
 
@@ -88,8 +87,6 @@ async function generateDigest(userId: string, provider: string, logger?: Ingesti
       selected.push(item);
     }
   }
-
-  selected = selected.slice(0, maxArticles);
 
   if (selected.length === 0) {
     logger?.warn('digest', 'No articles met the relevance threshold', {
