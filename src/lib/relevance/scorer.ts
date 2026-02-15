@@ -1,6 +1,7 @@
 import { config } from '../config';
 import { llmComplete } from '../llm';
 import type { Article, Interest, LearnedPreference, ScoringResult } from '@/types';
+import type { IngestionLogger } from '../ingestion/logger';
 
 function buildScoringPrompt(
   articles: Article[],
@@ -76,28 +77,23 @@ Respond ONLY with a JSON array (no markdown code fences):
 ]`;
 }
 
-function salvateTruncatedJson(text: string): ScoringResult[] | null {
-  // Find the start of the JSON array
+function salvateTruncatedJson(text: string): { results: ScoringResult[]; method: string } | null {
   const startIdx = text.indexOf('[');
   if (startIdx === -1) return null;
 
   let json = text.slice(startIdx);
 
-  // Try to find complete objects by matching closing braces before truncation
   const lastComplete = json.lastIndexOf('}');
   if (lastComplete === -1) return null;
 
-  // Trim to last complete object and close the array
   json = json.slice(0, lastComplete + 1);
-  // Remove any trailing comma
   json = json.replace(/,\s*$/, '');
   json += ']';
 
   try {
     const parsed = JSON.parse(json);
     if (Array.isArray(parsed) && parsed.length > 0) {
-      console.warn(`Salvaged ${parsed.length} article(s) from truncated LLM response`);
-      return parsed;
+      return { results: parsed, method: 'salvage' };
     }
   } catch {
     // Salvage failed
@@ -105,20 +101,20 @@ function salvateTruncatedJson(text: string): ScoringResult[] | null {
   return null;
 }
 
-function parseJsonResponse(text: string): ScoringResult[] {
+function parseJsonResponse(text: string): { results: ScoringResult[]; method: string } {
   // Try direct parse first
   try {
-    return JSON.parse(text);
+    return { results: JSON.parse(text), method: 'direct' };
   } catch {
     // Try extracting JSON from markdown code fences
     const fenceMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
     if (fenceMatch) {
-      return JSON.parse(fenceMatch[1]);
+      return { results: JSON.parse(fenceMatch[1]), method: 'code_fence' };
     }
     // Try finding a JSON array anywhere in the response
     const arrayMatch = text.match(/\[[\s\S]*\]/);
     if (arrayMatch) {
-      return JSON.parse(arrayMatch[0]);
+      return { results: JSON.parse(arrayMatch[0]), method: 'array_extraction' };
     }
     // Try salvaging complete objects from truncated response
     const salvaged = salvateTruncatedJson(text);
@@ -133,19 +129,38 @@ export async function scoreArticles(
   articles: Article[],
   interests: Interest[],
   preferences: LearnedPreference[],
-  recentFeedback: string = ''
+  recentFeedback: string = '',
+  logger?: IngestionLogger
 ): Promise<ScoringResult[]> {
   const results: ScoringResult[] = [];
+  const totalBatches = Math.ceil(articles.length / config.batchSize);
 
   for (let i = 0; i < articles.length; i += config.batchSize) {
+    const batchNum = Math.floor(i / config.batchSize) + 1;
     const batch = articles.slice(i, i + config.batchSize);
     const prompt = buildScoringPrompt(batch, interests, preferences, recentFeedback);
 
+    logger?.log('scoring', `Scoring batch ${batchNum}/${totalBatches}: ${batch.length} articles`, {
+      batchNumber: batchNum,
+      totalBatches,
+      articleCount: batch.length,
+      articles: batch.map(a => ({ id: a.id, title: a.title })),
+    });
+
+    logger?.log('scoring', `Batch ${batchNum} prompt`, {
+      prompt,
+      promptLength: prompt.length,
+    });
+
     try {
+      const llmStart = Date.now();
       const response = await llmComplete(prompt, 16384);
+      const llmDurationMs = Date.now() - llmStart;
 
       if (!response) {
-        // No API available — fallback
+        logger?.warn('scoring', `Batch ${batchNum}: API unavailable, using fallback scores`, {
+          llmDurationMs,
+        });
         for (const a of batch) {
           results.push({
             article_id: a.id,
@@ -158,10 +173,43 @@ export async function scoreArticles(
         continue;
       }
 
-      const parsed = parseJsonResponse(response.text);
+      logger?.log('scoring', `Batch ${batchNum} raw LLM response`, {
+        llmDurationMs,
+        responseLength: response.text.length,
+        response: response.text,
+      });
+
+      const { results: parsed, method } = parseJsonResponse(response.text);
+      const wasTruncated = method === 'salvage';
+
+      logger?.log('scoring', `Batch ${batchNum} parsed: ${parsed.length} results via ${method}`, {
+        parseMethod: method,
+        wasTruncated,
+        salvaged: wasTruncated ? parsed.length : undefined,
+        expected: batch.length,
+        received: parsed.length,
+      });
+
+      // Log each article's scoring result
+      for (const score of parsed) {
+        const article = batch.find(a => a.id === score.article_id);
+        logger?.log('scoring', `Scored: "${article?.title || score.article_id}"`, {
+          articleId: score.article_id,
+          title: article?.title,
+          relevanceScore: score.relevance_score,
+          relevanceReason: score.relevance_reason,
+          isSerendipity: score.is_serendipity,
+          summary: score.summary,
+        });
+      }
+
       results.push(...parsed);
     } catch (error) {
       console.error('LLM scoring error:', error);
+      logger?.error('scoring', `Batch ${batchNum} scoring error`, {
+        error: String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      });
       for (const a of batch) {
         results.push({
           article_id: a.id,

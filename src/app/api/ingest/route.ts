@@ -6,6 +6,7 @@ import { runIngestion } from '@/lib/ingestion';
 import { runRelevanceEngine } from '@/lib/relevance';
 import { getActiveProvider } from '@/lib/llm';
 import { IngestionLogger } from '@/lib/ingestion/logger';
+import { config } from '@/lib/config';
 
 export const maxDuration = 300; // 5 minute timeout
 
@@ -40,6 +41,18 @@ export async function POST(request: Request) {
     logger = new IngestionLogger(user.id, provider, trigger);
     await logger.init();
 
+    // Log setup/config
+    logger.log('setup', 'Ingestion started', {
+      trigger,
+      userId: user.id,
+      provider,
+      model: provider === 'synthetic' ? config.syntheticModel : config.claudeModel,
+      config: {
+        batchSize: config.batchSize,
+        minRelevanceScore: config.minRelevanceScore,
+      },
+    });
+
     // Run ingestion
     const ingestionResult = await runIngestion(user.id, provider, logger);
 
@@ -47,10 +60,11 @@ export async function POST(request: Request) {
     let digestResult = null;
     if (ingestionResult.newArticles > 0) {
       digestResult = await runRelevanceEngine(user.id, provider, logger);
+    } else {
+      logger.log('relevance', 'Skipping relevance engine: no new articles');
     }
 
-    // Persist success log
-    await logger.persist('success', {
+    const summary = {
       totalFetched: ingestionResult.totalFetched,
       newArticles: ingestionResult.newArticles,
       duplicates: ingestionResult.duplicates,
@@ -58,7 +72,13 @@ export async function POST(request: Request) {
       articlesScored: digestResult?.articlesScored ?? 0,
       digestId: digestResult?.digestId ?? null,
       digestArticleCount: digestResult?.digestArticleCount ?? 0,
-    });
+    };
+
+    // Log final summary
+    logger.log('complete', 'Pipeline finished', summary);
+
+    // Persist success log
+    await logger.persist('success', summary);
 
     return NextResponse.json({
       success: true,
@@ -69,8 +89,12 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Ingestion error:', error);
 
-    // Persist error log
+    // Persist error log with stack trace
     if (logger) {
+      logger.error('pipeline', 'Pipeline failed', {
+        error: String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      });
       await logger.persist('error', {}, String(error));
     }
 
