@@ -42,7 +42,7 @@ export default async function DigestPage() {
     <div className="min-h-screen">
       <nav className="border-b border-card-border px-4 py-3 max-w-5xl mx-auto">
         <div className="flex items-center justify-between">
-          <h1 className="text-lg font-light tracking-tight">ktchp</h1>
+          <Link href="/digest" className="text-lg font-light tracking-tight hover:opacity-80 transition-opacity">ktchp</Link>
           <div className="flex gap-3 sm:gap-4 items-center">
             <Link href="/digest/bookmarks" className="text-sm text-muted hover:text-foreground transition-colors">
               Bookmarks
