@@ -59,7 +59,7 @@ export default async function DigestByIdPage({ params }: { params: Promise<{ id:
 
         <DigestSelector digests={recentDigests} currentId={digest.id} />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+        <div className="flex flex-col gap-4 mt-6">
           {articles.map(article => (
             <ArticleCard
               key={article.id}

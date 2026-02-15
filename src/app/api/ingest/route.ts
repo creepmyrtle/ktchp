@@ -10,7 +10,15 @@ import { config } from '@/lib/config';
 
 export const maxDuration = 300; // 5 minute timeout
 
+export async function GET(request: Request) {
+  return handleIngest(request);
+}
+
 export async function POST(request: Request) {
+  return handleIngest(request);
+}
+
+async function handleIngest(request: Request) {
   let logger: IngestionLogger | undefined;
 
   try {
