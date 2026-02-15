@@ -124,17 +124,46 @@ export async function ensureSchema(): Promise<void> {
     )
   `;
 
-  // Run migration for existing databases
-  await migrateEngagementColumns();
+  // Run one-time migration for existing databases
+  await migrateEngagementColumnsOnce();
 }
 
 /**
- * Adds engagement columns to existing articles table and migrates
- * existing feedback data. Safe to run multiple times (idempotent).
+ * Wrapper that ensures migrateEngagementColumns only runs once,
+ * tracked via a settings row. The migration re-applies old feedback
+ * data to article columns, so running it repeatedly would overwrite
+ * user-initiated state changes (e.g., unbookmarking).
  */
-async function migrateEngagementColumns(): Promise<void> {
-  // Add new columns if they don't exist (ALTER TABLE IF NOT EXISTS isn't standard,
-  // so we catch the "already exists" error)
+async function migrateEngagementColumnsOnce(): Promise<void> {
+  // Always add columns (idempotent) — but only migrate data once
+  await addEngagementColumns();
+
+  try {
+    const { rows } = await sql`
+      SELECT value FROM settings WHERE user_id = 'system' AND key = 'engagement_migrated'
+    `;
+    if (rows.length > 0) return; // Already migrated
+  } catch {
+    // settings table might not exist yet — proceed with migration
+  }
+
+  await migrateEngagementData();
+
+  // Mark migration as complete
+  try {
+    await sql`
+      INSERT INTO settings (user_id, key, value) VALUES ('system', 'engagement_migrated', 'true')
+      ON CONFLICT (user_id, key) DO NOTHING
+    `;
+  } catch {
+    // Best effort — if this fails, migration will run again (safe, just redundant)
+  }
+}
+
+/**
+ * Adds engagement columns to the articles table. Safe to run repeatedly.
+ */
+async function addEngagementColumns(): Promise<void> {
   const columns = [
     { name: 'sentiment', def: "TEXT CHECK (sentiment IN ('liked', 'neutral', 'disliked'))" },
     { name: 'is_read', def: 'BOOLEAN DEFAULT FALSE' },
@@ -148,68 +177,61 @@ async function migrateEngagementColumns(): Promise<void> {
       await sql.query(`ALTER TABLE articles ADD COLUMN ${col.name} ${col.def}`);
     } catch (e: unknown) {
       if (e instanceof Error && e.message.includes('already exists')) continue;
-      // Column already exists, skip
       if (e instanceof Error && e.message.includes('duplicate')) continue;
       throw e;
     }
   }
 
-  // Migrate existing feedback data to article columns
-  // thumbs_up → sentiment = 'liked'
-  await sql`
-    UPDATE articles SET sentiment = 'liked'
-    WHERE sentiment IS NULL AND id IN (
-      SELECT article_id FROM feedback WHERE action = 'thumbs_up'
-    )
-  `;
-  // thumbs_down → sentiment = 'disliked'
-  await sql`
-    UPDATE articles SET sentiment = 'disliked'
-    WHERE sentiment IS NULL AND id IN (
-      SELECT article_id FROM feedback WHERE action = 'thumbs_down'
-    )
-  `;
-  // bookmark → is_bookmarked = true
-  await sql`
-    UPDATE articles SET is_bookmarked = TRUE
-    WHERE is_bookmarked = FALSE AND id IN (
-      SELECT article_id FROM feedback WHERE action = 'bookmark'
-    )
-  `;
-  // dismiss → is_archived = true
-  await sql`
-    UPDATE articles SET is_archived = TRUE
-    WHERE is_archived = FALSE AND id IN (
-      SELECT article_id FROM feedback WHERE action = 'dismiss'
-    )
-  `;
-  // click → is_read = true
-  await sql`
-    UPDATE articles SET is_read = TRUE
-    WHERE is_read = FALSE AND id IN (
-      SELECT article_id FROM feedback WHERE action = 'click'
-    )
-  `;
-
-  // Drop the old UNIQUE constraint on feedback if it exists
+  // Drop old constraints on feedback so new action types work
   try {
     await sql`ALTER TABLE feedback DROP CONSTRAINT IF EXISTS feedback_user_id_article_id_action_key`;
-  } catch {
-    // Constraint may not exist or have a different name
-  }
-
-  // Drop the old CHECK constraint on feedback.action if it exists, so new action types work
+  } catch { /* may not exist */ }
   try {
     await sql`ALTER TABLE feedback DROP CONSTRAINT IF EXISTS feedback_action_check`;
-  } catch {
-    // Constraint may not exist
-  }
+  } catch { /* may not exist */ }
 
-  // Add indexes for performance
+  // Add indexes
   try {
     await sql`CREATE INDEX IF NOT EXISTS idx_articles_digest_archived ON articles(digest_id, is_archived)`;
   } catch { /* already exists */ }
   try {
     await sql`CREATE INDEX IF NOT EXISTS idx_articles_bookmarked ON articles(is_bookmarked) WHERE is_bookmarked = true`;
   } catch { /* already exists */ }
+}
+
+/**
+ * One-time data migration: copies old feedback rows into article columns.
+ * Must only run once — running repeatedly would overwrite user changes.
+ */
+async function migrateEngagementData(): Promise<void> {
+  await sql`
+    UPDATE articles SET sentiment = 'liked'
+    WHERE sentiment IS NULL AND id IN (
+      SELECT article_id FROM feedback WHERE action = 'thumbs_up'
+    )
+  `;
+  await sql`
+    UPDATE articles SET sentiment = 'disliked'
+    WHERE sentiment IS NULL AND id IN (
+      SELECT article_id FROM feedback WHERE action = 'thumbs_down'
+    )
+  `;
+  await sql`
+    UPDATE articles SET is_bookmarked = TRUE
+    WHERE is_bookmarked = FALSE AND id IN (
+      SELECT article_id FROM feedback WHERE action = 'bookmark'
+    )
+  `;
+  await sql`
+    UPDATE articles SET is_archived = TRUE
+    WHERE is_archived = FALSE AND id IN (
+      SELECT article_id FROM feedback WHERE action = 'dismiss'
+    )
+  `;
+  await sql`
+    UPDATE articles SET is_read = TRUE
+    WHERE is_read = FALSE AND id IN (
+      SELECT article_id FROM feedback WHERE action = 'click'
+    )
+  `;
 }

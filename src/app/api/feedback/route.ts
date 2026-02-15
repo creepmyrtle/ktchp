@@ -13,6 +13,15 @@ import type { FeedbackAction, Sentiment } from '@/types';
 const VALID_ACTIONS: FeedbackAction[] = ['liked', 'neutral', 'disliked', 'read', 'bookmark', 'unbookmark', 'archived'];
 const SENTIMENTS: Sentiment[] = ['liked', 'neutral', 'disliked'];
 
+/** Best-effort event log — never throw */
+async function logEvent(userId: string, articleId: string, action: FeedbackAction) {
+  try {
+    await logFeedbackEvent(userId, articleId, action);
+  } catch (e) {
+    console.warn('Failed to log feedback event:', e);
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const userId = await getSessionFromCookies();
@@ -34,31 +43,30 @@ export async function POST(request: Request) {
     // Handle sentiment (liked / neutral / disliked) — three-way toggle
     if (SENTIMENTS.includes(action as Sentiment)) {
       const sentiment = action as Sentiment;
-      // If already set to this sentiment, clear it (toggle off)
       const newSentiment = article.sentiment === sentiment ? null : sentiment;
       const state = await updateArticleSentiment(articleId, newSentiment);
-      await logFeedbackEvent(userId, articleId, action);
+      await logEvent(userId, articleId, action);
       return NextResponse.json({ success: true, ...state });
     }
 
     // Handle read toggle
     if (action === 'read') {
       const state = await updateArticleRead(articleId, !article.is_read);
-      await logFeedbackEvent(userId, articleId, action);
+      await logEvent(userId, articleId, action);
       return NextResponse.json({ success: true, ...state });
     }
 
     // Handle bookmark
     if (action === 'bookmark') {
       const state = await updateArticleBookmark(articleId, true);
-      await logFeedbackEvent(userId, articleId, action);
+      await logEvent(userId, articleId, action);
       return NextResponse.json({ success: true, ...state });
     }
 
     // Handle unbookmark
     if (action === 'unbookmark') {
       const state = await updateArticleBookmark(articleId, false);
-      await logFeedbackEvent(userId, articleId, action);
+      await logEvent(userId, articleId, action);
       return NextResponse.json({ success: true, ...state });
     }
 
@@ -74,7 +82,7 @@ export async function POST(request: Request) {
       if (!state) {
         return NextResponse.json({ error: 'Failed to archive' }, { status: 500 });
       }
-      await logFeedbackEvent(userId, articleId, action);
+      await logEvent(userId, articleId, action);
       return NextResponse.json({ success: true, ...state });
     }
 
