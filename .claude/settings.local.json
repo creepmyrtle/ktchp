@@ -15,7 +15,8 @@
       "Bash(npx next dev:*)",
       "Bash(git init:*)",
       "Bash(git add:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(node -e:*)"
     ]
   }
 }
