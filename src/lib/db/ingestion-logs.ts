@@ -51,6 +51,21 @@ export async function getIngestionLogs(
   return rows as Omit<IngestionLog, 'events'>[];
 }
 
+export async function getAllIngestionLogs(
+  limit: number = 20
+): Promise<Omit<IngestionLog, 'events'>[]> {
+  const { rows } = await sql`
+    SELECT il.id, il.user_id, il.provider, il.trigger, il.status, il.started_at,
+           il.finished_at, il.duration_ms, il.summary, il.error,
+           u.username, u.display_name
+    FROM ingestion_logs il
+    LEFT JOIN users u ON u.id = il.user_id
+    ORDER BY il.started_at DESC
+    LIMIT ${limit}
+  `;
+  return rows as Omit<IngestionLog, 'events'>[];
+}
+
 export async function markStaleLogsAsTimedOut(): Promise<number> {
   const { rowCount } = await sql`
     UPDATE ingestion_logs

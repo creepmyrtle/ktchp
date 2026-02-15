@@ -1,12 +1,10 @@
 import { redirect } from 'next/navigation';
 import { getSessionFromCookies } from '@/lib/auth';
-import { seedDatabase } from '@/lib/db/seed';
-import { getDefaultUser } from '@/lib/db/users';
 import { getLatestDigest, getRecentDigests } from '@/lib/db/digests';
-import { getArticlesByDigestId, getDigestCompletionStats } from '@/lib/db/articles';
+import { getUserArticlesByDigestId, getDigestCompletionStats } from '@/lib/db/user-articles';
 import { getActiveProvider } from '@/lib/llm';
+import { getUserById } from '@/lib/db/users';
 import DigestContent from '@/components/DigestContent';
-import IngestButton from '@/components/IngestButton';
 import DigestSelector from '@/components/DigestSelector';
 import Link from 'next/link';
 
@@ -14,20 +12,19 @@ export default async function DigestPage() {
   const userId = await getSessionFromCookies();
   if (!userId) redirect('/');
 
-  await seedDatabase();
-  const user = await getDefaultUser();
+  const user = await getUserById(userId);
   if (!user) redirect('/');
 
   const provider = await getActiveProvider();
-  const latestDigest = await getLatestDigest(user.id, provider);
-  const recentDigests = await getRecentDigests(user.id, 14, provider);
-  const articles = latestDigest ? await getArticlesByDigestId(latestDigest.id) : [];
-  const stats = latestDigest ? await getDigestCompletionStats(latestDigest.id) : null;
+  const latestDigest = await getLatestDigest(userId, provider);
+  const recentDigests = await getRecentDigests(userId, 14, provider);
+  const articles = latestDigest ? await getUserArticlesByDigestId(userId, latestDigest.id) : [];
+  const stats = latestDigest ? await getDigestCompletionStats(userId, latestDigest.id) : null;
 
   // Enrich recent digests with completion info
   const enrichedDigests = await Promise.all(
     recentDigests.map(async (d) => {
-      const s = await getDigestCompletionStats(d.id);
+      const s = await getDigestCompletionStats(userId, d.id);
       return {
         ...d,
         remaining_count: s.remaining_count,
@@ -42,6 +39,9 @@ export default async function DigestPage() {
         <div className="flex items-center justify-between">
           <Link href="/digest" className="text-lg font-light tracking-tight hover:opacity-80 transition-opacity">ktchp</Link>
           <div className="flex gap-3 sm:gap-4 items-center">
+            {user.display_name && (
+              <span className="text-sm text-muted hidden sm:inline">{user.display_name}</span>
+            )}
             <Link href="/digest/bookmarks" className="text-sm text-muted hover:text-foreground transition-colors">
               Bookmarks
             </Link>
@@ -61,22 +61,20 @@ export default async function DigestPage() {
         {latestDigest ? (
           <>
             <DigestContent
+              digestId={latestDigest.id}
               date={latestDigest.generated_at}
               articles={articles}
               stats={stats || { total_article_count: 0, archived_count: 0, remaining_count: 0, liked_count: 0, neutral_count: 0, disliked_count: 0, bookmarked_count: 0 }}
             >
               <DigestSelector digests={enrichedDigests} currentId={latestDigest.id} />
             </DigestContent>
-
-            <IngestButton />
           </>
         ) : (
           <div className="text-center py-20">
             <p className="text-muted text-lg mb-4">No digests yet</p>
             <p className="text-muted text-sm">
-              Fetch articles from your sources and generate your first digest.
+              Your first digest is on its way! Check back soon, or customize your interests and sources in Settings.
             </p>
-            <IngestButton />
           </div>
         )}
       </main>

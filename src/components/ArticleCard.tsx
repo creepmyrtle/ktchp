@@ -1,12 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import type { ArticleWithSource, Sentiment } from '@/types';
+import type { UserArticleWithSource, Sentiment } from '@/types';
 import ActionBar from './FeedbackButtons';
 import { useSwipeToArchive } from '@/hooks/useSwipeToArchive';
 
 interface ArticleCardProps {
-  article: ArticleWithSource;
+  article: UserArticleWithSource;
   swipeDirection?: 'right' | 'left';
   onArchived?: () => void;
 }
@@ -24,7 +24,7 @@ export default function ArticleCard({ article, swipeDirection = 'right', onArchi
     fetch('/api/feedback', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ articleId: article.id, action: 'archived' }),
+      body: JSON.stringify({ articleId: article.article_id, action: 'archived' }),
     });
     setArchiving(true);
     // After animation, fully remove
@@ -52,7 +52,7 @@ export default function ArticleCard({ article, swipeDirection = 'right', onArchi
     fetch('/api/feedback', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ articleId: article.id, action: 'read' }),
+      body: JSON.stringify({ articleId: article.article_id, action: 'read' }),
     });
   }
 
@@ -136,7 +136,7 @@ export default function ArticleCard({ article, swipeDirection = 'right', onArchi
             {timeAgo(article.published_at)}
           </span>
           <ActionBar
-            articleId={article.id}
+            articleId={article.article_id}
             articleUrl={article.url}
             initialSentiment={article.sentiment}
             initialIsBookmarked={article.is_bookmarked}

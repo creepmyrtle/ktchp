@@ -1,6 +1,11 @@
 import { llmComplete } from '../llm';
 import { getFeedbackCount, getRecentFeedbackWithArticles } from '../db/feedback';
 import { getPreferencesByUserId, createPreference, clearPreferences } from '../db/preferences';
+import { getSetting, setSetting } from '../db/settings';
+
+const FEEDBACK_WINDOW = 200;
+const MIN_FEEDBACK = 10;
+const RELEARN_INTERVAL = 50;
 
 interface PreferenceResult {
   preference_text: string;
@@ -8,12 +13,22 @@ interface PreferenceResult {
   derived_from_count: number;
 }
 
+export async function shouldRunLearning(userId: string): Promise<boolean> {
+  const feedbackCount = await getFeedbackCount(userId);
+  if (feedbackCount < MIN_FEEDBACK) return false;
+
+  const lastCountStr = await getSetting(userId, 'last_learning_feedback_count');
+  const lastCount = lastCountStr ? parseInt(lastCountStr, 10) : 0;
+
+  return feedbackCount - lastCount >= RELEARN_INTERVAL;
+}
+
 export async function runPreferenceLearning(userId: string): Promise<boolean> {
   const feedbackCount = await getFeedbackCount(userId);
-  if (feedbackCount < 10) return false;
+  if (feedbackCount < MIN_FEEDBACK) return false;
 
-  const recentFeedback = await getRecentFeedbackWithArticles(userId, 50);
-  if (recentFeedback.length < 10) return false;
+  const recentFeedback = await getRecentFeedbackWithArticles(userId, FEEDBACK_WINDOW);
+  if (recentFeedback.length < MIN_FEEDBACK) return false;
 
   const existingPrefs = await getPreferencesByUserId(userId);
 
@@ -69,6 +84,9 @@ Return ONLY a JSON array (no markdown code fences):
     for (const pref of parsed) {
       await createPreference(userId, pref.preference_text, pref.derived_from_count, pref.confidence);
     }
+
+    // Record the feedback count so we know when to re-learn
+    await setSetting(userId, 'last_learning_feedback_count', String(feedbackCount));
 
     return true;
   } catch (error) {

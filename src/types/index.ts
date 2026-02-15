@@ -12,6 +12,9 @@ export interface User {
   id: string;
   username: string;
   password_hash: string;
+  is_admin: boolean;
+  display_name: string | null;
+  is_active: boolean;
   created_at: string;
 }
 
@@ -23,10 +26,13 @@ export interface Source {
   type: SourceType;
   config: Record<string, unknown>;
   enabled: boolean;
+  is_default: boolean;
+  created_by: string | null;
+  max_items: number;
   created_at: string;
 }
 
-// Ingested Article
+// Ingested Article (shared content only — no per-user scoring/engagement)
 export interface Article {
   id: string;
   source_id: string;
@@ -35,22 +41,38 @@ export interface Article {
   url: string;
   raw_content: string | null;
   summary: string | null;
+  provider: string;
+  published_at: string | null;
+  ingested_at: string;
+}
+
+// Per-user article state (scoring, engagement, digest assignment)
+export interface UserArticle {
+  id: string;
+  user_id: string;
+  article_id: string;
+  digest_id: string | null;
   relevance_score: number | null;
   relevance_reason: string | null;
   is_serendipity: boolean;
-  provider: string;
-  digest_id: string | null;
-  published_at: string | null;
-  ingested_at: string;
   sentiment: Sentiment | null;
   is_read: boolean;
   is_bookmarked: boolean;
   is_archived: boolean;
   archived_at: string | null;
+  scored_at: string | null;
 }
 
-// Article with source info for display
-export interface ArticleWithSource extends Article {
+// User article joined with article content and source info (replaces ArticleWithSource)
+export interface UserArticleWithSource extends UserArticle {
+  title: string;
+  url: string;
+  raw_content: string | null;
+  summary: string | null;
+  provider: string;
+  published_at: string | null;
+  ingested_at: string;
+  source_id: string;
   source_name: string;
   source_type: SourceType;
 }
@@ -151,4 +173,22 @@ export interface RawArticle {
   external_id: string;
   published_at: string | null;
   source_id: string;
+}
+
+// Invite code
+export interface InviteCode {
+  id: string;
+  code: string;
+  created_by: string;
+  used_by: string | null;
+  used_at: string | null;
+  expires_at: string | null;
+  created_at: string;
+}
+
+// User source setting (enable/disable default sources per user)
+export interface UserSourceSetting {
+  user_id: string;
+  source_id: string;
+  enabled: boolean;
 }

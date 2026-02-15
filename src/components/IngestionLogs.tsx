@@ -13,6 +13,8 @@ interface LogSummary {
   duration_ms: number | null;
   summary: Record<string, unknown>;
   error: string | null;
+  display_name?: string | null;
+  username?: string | null;
 }
 
 interface LogDetail extends LogSummary {
@@ -132,6 +134,9 @@ export default function IngestionLogs() {
                     {formatTime(log.started_at)}
                   </span>
                   <span className="text-xs text-muted capitalize hidden sm:inline">{log.trigger}</span>
+                  {log.display_name && (
+                    <span className="text-xs text-muted hidden sm:inline">by {log.display_name}</span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2 sm:gap-4 shrink-0 text-xs text-muted">
                   {summary.newArticles !== undefined && (

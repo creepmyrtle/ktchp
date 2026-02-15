@@ -1,13 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function LoginPage() {
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -18,14 +18,14 @@ export default function LoginPage() {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ username, password }),
       });
 
       if (res.ok) {
         window.location.href = '/digest';
         return;
       } else {
-        setError('Invalid password');
+        setError('Invalid credentials');
       }
     } catch {
       setError('Something went wrong');
@@ -45,12 +45,23 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <input
+              type="text"
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              placeholder="Username"
+              className="w-full px-4 py-3 rounded-lg border border-card-border bg-card text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent"
+              autoFocus
+              autoComplete="username"
+            />
+          </div>
+          <div>
+            <input
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              placeholder="Enter password"
+              placeholder="Password"
               className="w-full px-4 py-3 rounded-lg border border-card-border bg-card text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent"
-              autoFocus
+              autoComplete="current-password"
             />
           </div>
 
@@ -60,12 +71,19 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            disabled={loading || !password}
+            disabled={loading || !username || !password}
             className="w-full py-3 rounded-lg bg-accent text-white font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             {loading ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
+
+        <p className="text-center text-sm text-muted mt-4">
+          Have an invite code?{' '}
+          <Link href="/register" className="text-accent hover:opacity-80">
+            Register
+          </Link>
+        </p>
       </div>
     </main>
   );

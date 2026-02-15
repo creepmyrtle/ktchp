@@ -3,6 +3,7 @@ import { getDb } from './index';
 import { createUser, getDefaultUser } from './users';
 import { createSource, getSourcesByUserId } from './sources';
 import { createInterest, getInterestsByUserId } from './interests';
+import { sql } from '@vercel/postgres';
 
 const SEED_INTERESTS = [
   { category: 'AI / LLMs / Local Models', description: 'Artificial intelligence, large language models, running models locally, GPU hardware for inference, tools like Ollama and LM Studio', weight: 1.0 },
@@ -27,6 +28,8 @@ export async function seedDatabase(): Promise<void> {
   if (!user) {
     const hash = bcrypt.hashSync('changeme', 10);
     user = await createUser('admin', hash);
+    // Mark as admin
+    await sql`UPDATE users SET is_admin = TRUE, is_active = TRUE, display_name = 'Admin' WHERE id = ${user.id}`;
     console.log('Created default user: admin');
   }
 
@@ -41,7 +44,7 @@ export async function seedDatabase(): Promise<void> {
   const existingSources = await getSourcesByUserId(user.id);
   if (existingSources.length === 0) {
     for (const source of SEED_SOURCES) {
-      await createSource(user.id, source.name, source.type, source.config);
+      await createSource(user.id, source.name, source.type, source.config, true, true);
     }
     console.log(`Seeded ${SEED_SOURCES.length} sources`);
   }

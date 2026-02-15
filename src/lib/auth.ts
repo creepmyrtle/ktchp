@@ -1,21 +1,22 @@
 import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
-import { getDefaultUser } from './db/users';
+import { getUserById, getUserByUsername } from './db/users';
 import { sql } from '@vercel/postgres';
 import { getDb } from './db/index';
 
 const SESSION_COOKIE = 'digest_session';
 const SESSION_SECRET = process.env.CRON_SECRET || 'default-secret';
 
-export async function validatePassword(password: string): Promise<boolean> {
-  const envPassword = process.env.DIGEST_PASSWORD;
-  if (!envPassword) return false;
+export async function authenticateUser(username: string, password: string): Promise<string | null> {
+  await getDb();
+  const user = await getUserByUsername(username);
+  if (!user || !user.is_active) return null;
 
-  if (envPassword.startsWith('$2')) {
-    return bcrypt.compare(password, envPassword);
-  }
-  return password === envPassword;
+  const valid = await bcrypt.compare(password, user.password_hash);
+  if (!valid) return null;
+
+  return user.id;
 }
 
 export async function createSession(userId: string): Promise<string> {
@@ -87,11 +88,16 @@ export async function requireAuth(): Promise<string> {
   return userId;
 }
 
-export async function requireCronOrAuth(request: Request): Promise<string | null> {
+// For cron triggers: returns 'all_users' marker. For session auth: returns null (caller should use getSessionFromCookies).
+export async function requireCronOrAuth(request: Request): Promise<'all_users' | null> {
   const authHeader = request.headers.get('authorization');
   if (authHeader === `Bearer ${process.env.CRON_SECRET}`) {
-    const user = await getDefaultUser();
-    return user?.id || null;
+    return 'all_users';
   }
   return null;
+}
+
+export async function requireAdmin(userId: string): Promise<boolean> {
+  const user = await getUserById(userId);
+  return user?.is_admin === true;
 }

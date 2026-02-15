@@ -6,6 +6,9 @@ export async function ensureSchema(): Promise<void> {
       id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
       username TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
+      is_admin BOOLEAN DEFAULT FALSE,
+      display_name TEXT,
+      is_active BOOLEAN DEFAULT TRUE,
       created_at TIMESTAMPTZ DEFAULT NOW()
     )
   `;
@@ -18,6 +21,9 @@ export async function ensureSchema(): Promise<void> {
       type TEXT NOT NULL CHECK (type IN ('rss', 'manual_url')),
       config JSONB NOT NULL DEFAULT '{}',
       enabled BOOLEAN DEFAULT TRUE,
+      is_default BOOLEAN DEFAULT FALSE,
+      created_by TEXT,
+      max_items INTEGER DEFAULT 25,
       created_at TIMESTAMPTZ DEFAULT NOW()
     )
   `;
@@ -41,19 +47,44 @@ export async function ensureSchema(): Promise<void> {
       url TEXT NOT NULL,
       raw_content TEXT,
       summary TEXT,
+      provider TEXT DEFAULT 'anthropic',
+      published_at TIMESTAMPTZ,
+      ingested_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(source_id, external_id, provider)
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS user_articles (
+      id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+      user_id TEXT NOT NULL REFERENCES users(id),
+      article_id TEXT NOT NULL REFERENCES articles(id) ON DELETE CASCADE,
+      digest_id TEXT REFERENCES digests(id),
       relevance_score REAL,
       relevance_reason TEXT,
       is_serendipity BOOLEAN DEFAULT FALSE,
-      provider TEXT DEFAULT 'anthropic',
-      digest_id TEXT REFERENCES digests(id),
-      published_at TIMESTAMPTZ,
-      ingested_at TIMESTAMPTZ DEFAULT NOW(),
       sentiment TEXT CHECK (sentiment IN ('liked', 'neutral', 'disliked')),
       is_read BOOLEAN DEFAULT FALSE,
       is_bookmarked BOOLEAN DEFAULT FALSE,
       is_archived BOOLEAN DEFAULT FALSE,
       archived_at TIMESTAMPTZ,
-      UNIQUE(source_id, external_id, provider)
+      scored_at TIMESTAMPTZ,
+      UNIQUE(user_id, article_id)
+    )
+  `;
+
+  try {
+    await sql`CREATE INDEX IF NOT EXISTS idx_user_articles_user_digest ON user_articles(user_id, digest_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_user_articles_user_archived ON user_articles(user_id, is_archived)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_user_articles_user_bookmarked ON user_articles(user_id, is_bookmarked) WHERE is_bookmarked = true`;
+  } catch { /* indexes may already exist */ }
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS user_source_settings (
+      user_id TEXT NOT NULL REFERENCES users(id),
+      source_id TEXT NOT NULL REFERENCES sources(id) ON DELETE CASCADE,
+      enabled BOOLEAN DEFAULT TRUE,
+      UNIQUE(user_id, source_id)
     )
   `;
 
@@ -124,114 +155,15 @@ export async function ensureSchema(): Promise<void> {
     )
   `;
 
-  // Run one-time migration for existing databases
-  await migrateEngagementColumnsOnce();
-}
-
-/**
- * Wrapper that ensures migrateEngagementColumns only runs once,
- * tracked via a settings row. The migration re-applies old feedback
- * data to article columns, so running it repeatedly would overwrite
- * user-initiated state changes (e.g., unbookmarking).
- */
-async function migrateEngagementColumnsOnce(): Promise<void> {
-  // Always add columns (idempotent) — but only migrate data once
-  await addEngagementColumns();
-
-  try {
-    const { rows } = await sql`
-      SELECT value FROM settings WHERE user_id = 'system' AND key = 'engagement_migrated'
-    `;
-    if (rows.length > 0) return; // Already migrated
-  } catch {
-    // settings table might not exist yet — proceed with migration
-  }
-
-  await migrateEngagementData();
-
-  // Mark migration as complete
-  try {
-    await sql`
-      INSERT INTO settings (user_id, key, value) VALUES ('system', 'engagement_migrated', 'true')
-      ON CONFLICT (user_id, key) DO NOTHING
-    `;
-  } catch {
-    // Best effort — if this fails, migration will run again (safe, just redundant)
-  }
-}
-
-/**
- * Adds engagement columns to the articles table. Safe to run repeatedly.
- */
-async function addEngagementColumns(): Promise<void> {
-  const columns = [
-    { name: 'sentiment', def: "TEXT CHECK (sentiment IN ('liked', 'neutral', 'disliked'))" },
-    { name: 'is_read', def: 'BOOLEAN DEFAULT FALSE' },
-    { name: 'is_bookmarked', def: 'BOOLEAN DEFAULT FALSE' },
-    { name: 'is_archived', def: 'BOOLEAN DEFAULT FALSE' },
-    { name: 'archived_at', def: 'TIMESTAMPTZ' },
-  ];
-
-  for (const col of columns) {
-    try {
-      await sql.query(`ALTER TABLE articles ADD COLUMN ${col.name} ${col.def}`);
-    } catch (e: unknown) {
-      if (e instanceof Error && e.message.includes('already exists')) continue;
-      if (e instanceof Error && e.message.includes('duplicate')) continue;
-      throw e;
-    }
-  }
-
-  // Drop old constraints on feedback so new action types work
-  try {
-    await sql`ALTER TABLE feedback DROP CONSTRAINT IF EXISTS feedback_user_id_article_id_action_key`;
-  } catch { /* may not exist */ }
-  try {
-    await sql`ALTER TABLE feedback DROP CONSTRAINT IF EXISTS feedback_action_check`;
-  } catch { /* may not exist */ }
-
-  // Add indexes
-  try {
-    await sql`CREATE INDEX IF NOT EXISTS idx_articles_digest_archived ON articles(digest_id, is_archived)`;
-  } catch { /* already exists */ }
-  try {
-    await sql`CREATE INDEX IF NOT EXISTS idx_articles_bookmarked ON articles(is_bookmarked) WHERE is_bookmarked = true`;
-  } catch { /* already exists */ }
-}
-
-/**
- * One-time data migration: copies old feedback rows into article columns.
- * Must only run once — running repeatedly would overwrite user changes.
- */
-async function migrateEngagementData(): Promise<void> {
   await sql`
-    UPDATE articles SET sentiment = 'liked'
-    WHERE sentiment IS NULL AND id IN (
-      SELECT article_id FROM feedback WHERE action = 'thumbs_up'
-    )
-  `;
-  await sql`
-    UPDATE articles SET sentiment = 'disliked'
-    WHERE sentiment IS NULL AND id IN (
-      SELECT article_id FROM feedback WHERE action = 'thumbs_down'
-    )
-  `;
-  await sql`
-    UPDATE articles SET is_bookmarked = TRUE
-    WHERE is_bookmarked = FALSE AND id IN (
-      SELECT article_id FROM feedback WHERE action = 'bookmark'
-    )
-  `;
-  await sql`
-    UPDATE articles SET is_archived = TRUE
-    WHERE is_archived = FALSE AND id IN (
-      SELECT article_id FROM feedback WHERE action = 'dismiss'
-    )
-  `;
-  await sql`
-    UPDATE articles SET is_read = TRUE
-    WHERE is_read = FALSE AND id IN (
-      SELECT article_id FROM feedback WHERE action = 'click'
+    CREATE TABLE IF NOT EXISTS invite_codes (
+      id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+      code TEXT UNIQUE NOT NULL,
+      created_by TEXT NOT NULL REFERENCES users(id),
+      used_by TEXT REFERENCES users(id),
+      used_at TIMESTAMPTZ,
+      expires_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT NOW()
     )
   `;
 }

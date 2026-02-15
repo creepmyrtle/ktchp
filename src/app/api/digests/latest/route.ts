@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSessionFromCookies } from '@/lib/auth';
-import { getDefaultUser } from '@/lib/db/users';
 import { getLatestDigest } from '@/lib/db/digests';
-import { getArticlesByDigestId } from '@/lib/db/articles';
+import { getUserArticlesByDigestId } from '@/lib/db/user-articles';
 
 export async function GET() {
   try {
@@ -11,17 +10,12 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const user = await getDefaultUser();
-    if (!user) {
-      return NextResponse.json({ error: 'No user found' }, { status: 500 });
-    }
-
-    const digest = await getLatestDigest(user.id);
+    const digest = await getLatestDigest(userId);
     if (!digest) {
       return NextResponse.json({ digest: null, articles: [] });
     }
 
-    const articles = await getArticlesByDigestId(digest.id);
+    const articles = await getUserArticlesByDigestId(userId, digest.id);
     return NextResponse.json({ digest, articles });
   } catch (error) {
     console.error('Latest digest error:', error);

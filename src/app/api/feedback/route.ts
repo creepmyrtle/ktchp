@@ -2,18 +2,17 @@ import { NextResponse } from 'next/server';
 import { getSessionFromCookies } from '@/lib/auth';
 import { logFeedbackEvent } from '@/lib/db/feedback';
 import {
-  getArticleById,
-  updateArticleSentiment,
-  updateArticleRead,
-  updateArticleBookmark,
-  archiveArticle,
-} from '@/lib/db/articles';
+  getUserArticleByArticleId,
+  updateUserArticleSentiment,
+  updateUserArticleRead,
+  updateUserArticleBookmark,
+  archiveUserArticle,
+} from '@/lib/db/user-articles';
 import type { FeedbackAction, Sentiment } from '@/types';
 
 const VALID_ACTIONS: FeedbackAction[] = ['liked', 'neutral', 'disliked', 'read', 'bookmark', 'unbookmark', 'archived'];
 const SENTIMENTS: Sentiment[] = ['liked', 'neutral', 'disliked'];
 
-/** Best-effort event log — never throw */
 async function logEvent(userId: string, articleId: string, action: FeedbackAction) {
   try {
     await logFeedbackEvent(userId, articleId, action);
@@ -35,50 +34,51 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
     }
 
-    const article = await getArticleById(articleId);
-    if (!article) {
+    // Verify user_articles row exists and belongs to this user
+    const userArticle = await getUserArticleByArticleId(userId, articleId);
+    if (!userArticle) {
       return NextResponse.json({ error: 'Article not found' }, { status: 404 });
     }
 
     // Handle sentiment (liked / neutral / disliked) — three-way toggle
     if (SENTIMENTS.includes(action as Sentiment)) {
       const sentiment = action as Sentiment;
-      const newSentiment = article.sentiment === sentiment ? null : sentiment;
-      const state = await updateArticleSentiment(articleId, newSentiment);
+      const newSentiment = userArticle.sentiment === sentiment ? null : sentiment;
+      const state = await updateUserArticleSentiment(userId, articleId, newSentiment);
       await logEvent(userId, articleId, action);
       return NextResponse.json({ success: true, ...state });
     }
 
     // Handle read toggle
     if (action === 'read') {
-      const state = await updateArticleRead(articleId, !article.is_read);
+      const state = await updateUserArticleRead(userId, articleId, !userArticle.is_read);
       await logEvent(userId, articleId, action);
       return NextResponse.json({ success: true, ...state });
     }
 
     // Handle bookmark
     if (action === 'bookmark') {
-      const state = await updateArticleBookmark(articleId, true);
+      const state = await updateUserArticleBookmark(userId, articleId, true);
       await logEvent(userId, articleId, action);
       return NextResponse.json({ success: true, ...state });
     }
 
     // Handle unbookmark
     if (action === 'unbookmark') {
-      const state = await updateArticleBookmark(articleId, false);
+      const state = await updateUserArticleBookmark(userId, articleId, false);
       await logEvent(userId, articleId, action);
       return NextResponse.json({ success: true, ...state });
     }
 
     // Handle archive — requires sentiment
     if (action === 'archived') {
-      if (!article.sentiment) {
+      if (!userArticle.sentiment) {
         return NextResponse.json(
           { error: 'Sentiment required before archiving' },
           { status: 400 }
         );
       }
-      const state = await archiveArticle(articleId);
+      const state = await archiveUserArticle(userId, articleId);
       if (!state) {
         return NextResponse.json({ error: 'Failed to archive' }, { status: 500 });
       }

@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { getSessionFromCookies } from '@/lib/auth';
-import { getDefaultUser } from '@/lib/db/users';
 import { getPreferencesByUserId } from '@/lib/db/preferences';
 
 export async function GET() {
@@ -10,10 +9,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const user = await getDefaultUser();
-    if (!user) return NextResponse.json([], { status: 200 });
-
-    const preferences = await getPreferencesByUserId(user.id);
+    const preferences = await getPreferencesByUserId(userId);
     return NextResponse.json(preferences);
   } catch (error) {
     console.error('Preferences error:', error);

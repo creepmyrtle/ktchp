@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSessionFromCookies } from '@/lib/auth';
 import { getDigestById } from '@/lib/db/digests';
-import { getArticlesByDigestId } from '@/lib/db/articles';
+import { getUserArticlesByDigestId } from '@/lib/db/user-articles';
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -16,7 +16,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
-    const articles = await getArticlesByDigestId(digest.id);
+    // Ownership check
+    if (digest.user_id !== userId) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+
+    const articles = await getUserArticlesByDigestId(userId, digest.id);
     return NextResponse.json({ digest, articles });
   } catch (error) {
     console.error('Digest error:', error);

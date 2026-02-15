@@ -1,28 +1,32 @@
 'use client';
 
-import { useState } from 'react';
-import type { ArticleWithSource } from '@/types';
+import { useState, useEffect } from 'react';
+import type { UserArticleWithSource } from '@/types';
 import DigestHeader from './DigestHeader';
 import ArticleCard from './ArticleCard';
 import CaughtUpMessage from './CaughtUpMessage';
 
+type Stats = {
+  total_article_count: number;
+  archived_count: number;
+  remaining_count: number;
+  liked_count: number;
+  neutral_count: number;
+  disliked_count: number;
+  bookmarked_count: number;
+};
+
 interface DigestContentProps {
+  digestId: string;
   date: string | Date;
-  articles: ArticleWithSource[];
-  stats: {
-    total_article_count: number;
-    archived_count: number;
-    remaining_count: number;
-    liked_count: number;
-    neutral_count: number;
-    disliked_count: number;
-    bookmarked_count: number;
-  };
+  articles: UserArticleWithSource[];
+  stats: Stats;
   children?: React.ReactNode;
 }
 
-export default function DigestContent({ date, articles, stats, children }: DigestContentProps) {
+export default function DigestContent({ digestId, date, articles, stats, children }: DigestContentProps) {
   const [archivedCount, setArchivedCount] = useState(stats.archived_count);
+  const [liveStats, setLiveStats] = useState<Stats>(stats);
   const [hintDismissed, setHintDismissed] = useState(false);
   const totalCount = stats.total_article_count;
 
@@ -31,6 +35,15 @@ export default function DigestContent({ date, articles, stats, children }: Diges
   }
 
   const allCleared = archivedCount === totalCount && totalCount > 0;
+
+  // Fetch fresh stats from server when digest is fully cleared
+  useEffect(() => {
+    if (!allCleared) return;
+    fetch(`/api/digests/${digestId}/stats`)
+      .then(r => r.json())
+      .then(data => { if (data.total_article_count) setLiveStats(data); })
+      .catch(() => {});
+  }, [allCleared, digestId]);
 
   return (
     <>
@@ -63,10 +76,10 @@ export default function DigestContent({ date, articles, stats, children }: Diges
       <CaughtUpMessage
         isComplete={allCleared}
         totalCount={totalCount}
-        likedCount={stats.liked_count}
-        neutralCount={stats.neutral_count}
-        dislikedCount={stats.disliked_count}
-        bookmarkedCount={stats.bookmarked_count}
+        likedCount={liveStats.liked_count}
+        neutralCount={liveStats.neutral_count}
+        dislikedCount={liveStats.disliked_count}
+        bookmarkedCount={liveStats.bookmarked_count}
       />
     </>
   );

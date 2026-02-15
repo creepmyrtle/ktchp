@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSessionFromCookies } from '@/lib/auth';
-import { updateInterest, deleteInterest } from '@/lib/db/interests';
+import { getInterestById, updateInterest, deleteInterest } from '@/lib/db/interests';
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -10,6 +10,13 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     }
 
     const { id } = await params;
+
+    // Ownership check
+    const existing = await getInterestById(id);
+    if (!existing || existing.user_id !== userId) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+
     const updates = await request.json();
     const interest = await updateInterest(id, updates);
 
@@ -32,8 +39,14 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     }
 
     const { id } = await params;
-    const deleted = await deleteInterest(id);
 
+    // Ownership check
+    const existing = await getInterestById(id);
+    if (!existing || existing.user_id !== userId) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+
+    const deleted = await deleteInterest(id);
     if (!deleted) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }

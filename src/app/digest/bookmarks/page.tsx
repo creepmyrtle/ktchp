@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation';
 import { getSessionFromCookies } from '@/lib/auth';
-import { getDefaultUser } from '@/lib/db/users';
 import { getBookmarkedArticles } from '@/lib/db/feedback';
 import BookmarkCard from '@/components/BookmarkCard';
 import Link from 'next/link';
@@ -9,10 +8,7 @@ export default async function BookmarksPage() {
   const userId = await getSessionFromCookies();
   if (!userId) redirect('/');
 
-  const user = await getDefaultUser();
-  if (!user) redirect('/');
-
-  const bookmarkedArticles = await getBookmarkedArticles(user.id);
+  const bookmarkedArticles = await getBookmarkedArticles(userId);
 
   return (
     <div className="min-h-screen">

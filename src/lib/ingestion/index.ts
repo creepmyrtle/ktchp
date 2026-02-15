@@ -1,5 +1,5 @@
 import type { Source, RawArticle } from '@/types';
-import { getEnabledSourcesByUserId } from '../db/sources';
+import { getAllFetchableSources } from '../db/sources';
 import { createArticle, getRecentArticleExternalIds } from '../db/articles';
 import { fetchRssFeed } from './rss';
 import type { IngestionLogger } from './logger';
@@ -16,15 +16,15 @@ async function fetchFromSource(source: Source): Promise<RawArticle[]> {
 
   switch (source.type) {
     case 'rss':
-      return fetchRssFeed(source.id, cfg.url as string);
+      return fetchRssFeed(source.id, cfg.url as string, source.max_items);
 
     default:
       return [];
   }
 }
 
-export async function runIngestion(userId: string, provider: string, logger?: IngestionLogger): Promise<IngestionResult> {
-  const sources = await getEnabledSourcesByUserId(userId);
+export async function runIngestion(provider: string, logger?: IngestionLogger): Promise<IngestionResult> {
+  const sources = await getAllFetchableSources();
   const result: IngestionResult = {
     totalFetched: 0,
     newArticles: 0,

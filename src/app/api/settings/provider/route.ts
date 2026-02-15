@@ -1,19 +1,13 @@
 import { NextResponse } from 'next/server';
-import { getSessionFromCookies } from '@/lib/auth';
-import { getDefaultUser } from '@/lib/db/users';
-import { getSetting, setSetting } from '@/lib/db/settings';
-import { seedDatabase } from '@/lib/db/seed';
+import { getSessionFromCookies, requireAdmin } from '@/lib/auth';
+import { getGlobalSetting, setGlobalSetting } from '@/lib/db/settings';
 
 export async function GET() {
   try {
     const userId = await getSessionFromCookies();
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    await seedDatabase();
-    const user = await getDefaultUser();
-    if (!user) return NextResponse.json({ error: 'No user' }, { status: 500 });
-
-    const provider = (await getSetting(user.id, 'llm_provider')) || 'anthropic';
+    const provider = (await getGlobalSetting('llm_provider')) || 'synthetic';
     return NextResponse.json({ provider });
   } catch (error) {
     console.error('Get provider error:', error);
@@ -26,16 +20,15 @@ export async function PUT(request: Request) {
     const userId = await getSessionFromCookies();
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    await seedDatabase();
-    const user = await getDefaultUser();
-    if (!user) return NextResponse.json({ error: 'No user' }, { status: 500 });
+    const isAdmin = await requireAdmin(userId);
+    if (!isAdmin) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
 
     const { provider } = await request.json();
     if (provider !== 'anthropic' && provider !== 'synthetic') {
       return NextResponse.json({ error: 'Invalid provider' }, { status: 400 });
     }
 
-    await setSetting(user.id, 'llm_provider', provider);
+    await setGlobalSetting('llm_provider', provider);
     return NextResponse.json({ success: true, provider });
   } catch (error) {
     console.error('Set provider error:', error);

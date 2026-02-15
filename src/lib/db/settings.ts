@@ -14,6 +14,14 @@ export async function setSetting(userId: string, key: string, value: string): Pr
   `;
 }
 
+export async function getGlobalSetting(key: string): Promise<string | null> {
+  return getSetting('global', key);
+}
+
+export async function setGlobalSetting(key: string, value: string): Promise<void> {
+  return setSetting('global', key, value);
+}
+
 export async function getSchedule(userId: string): Promise<string[]> {
   const raw = await getSetting(userId, 'digest_times');
   if (!raw) return ['07:00', '17:00'];

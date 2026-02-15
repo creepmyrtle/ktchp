@@ -10,18 +10,26 @@ Every ingestion run (triggered by a daily GitHub Actions workflow or manually vi
 
 1. **Fetch** — Loops over your enabled RSS sources, fetches new articles, deduplicates against existing articles by normalized URL.
 2. **Prefilter** — Removes spam domains, very short titles, exact title duplicates, and stale articles (>7 days old).
-3. **Score** — Sends articles to an LLM in batches. The LLM scores each article 0.0-1.0 for relevance against your interest profile, writes a 2-3 sentence summary, and flags rare serendipity picks.
+3. **Score** — Sends articles to an LLM in batches. The LLM scores each article 0.0-1.0 for relevance against your interest profile and flags rare serendipity picks.
 4. **Digest** — Selects all articles above the relevance threshold (default 0.5), plus up to 2 serendipity items, and groups them into a digest.
 
 ### Scoring
 
-The LLM receives your explicit interests (with weights), any learned preferences derived from your feedback history, and the article title + content snippet. It returns a structured JSON array with scores, summaries, and relevance reasons.
+The LLM receives your explicit interests (with weights), any learned preferences derived from your feedback history, and the article title + content snippet. It returns a structured JSON array with scores and relevance reasons.
 
 Articles scoring below the threshold are still stored — they just aren't assigned to a digest. Serendipity items are articles that don't match any stated interest but are flagged as genuinely valuable (major world events, cross-domain insights).
 
-### Feedback Loop
+### Engagement Model
 
-Thumbs up/down, bookmark, and dismiss actions are recorded per article. Toggleable actions (thumbs, bookmarks) can be undone by clicking again. These feed into a learned preferences system that extracts patterns from your feedback over time, which are then included in future scoring prompts.
+Each article in a digest supports a multi-step engagement flow:
+
+- **Sentiment** — Three-way rating (liked / neutral / disliked), toggleable. Required before archiving.
+- **Read** — Automatically tracked when the user clicks the article link.
+- **Bookmark** — Save articles for later, viewable on the dedicated bookmarks page.
+- **Share** — Copy the article URL to clipboard.
+- **Archive** — Remove the article from the active feed. On desktop, click the archive button. On mobile, swipe to archive (direction configurable in settings).
+
+Engagement events are logged to an append-only feedback table for future preference learning, while the canonical state lives on the article row itself.
 
 ## Architecture
 
@@ -29,7 +37,7 @@ Thumbs up/down, bookmark, and dismiss actions are recorded per article. Toggleab
 src/
 ├── app/                          # Next.js App Router
 │   ├── page.tsx                  # Login page
-│   ├── settings/page.tsx         # Settings (interests, sources, schedule, logs)
+│   ├── settings/page.tsx         # Settings (interests, sources, schedule, gestures, logs)
 │   ├── digest/page.tsx           # Latest digest view
 │   ├── digest/[id]/page.tsx      # Historical digest view
 │   ├── digest/bookmarks/page.tsx # Bookmarked articles
@@ -40,16 +48,18 @@ src/
 │       ├── digests/              # GET recent, GET by ID, GET latest, POST clear
 │       ├── interests/            # CRUD for user interests
 │       ├── sources/              # CRUD for RSS sources
-│       ├── feedback/             # POST feedback actions (toggleable)
+│       ├── feedback/             # POST engagement actions (sentiment, read, bookmark, archive)
 │       ├── preferences/          # GET/DELETE learned preferences
 │       ├── manual-url/           # POST a URL for manual ingestion
-│       └── settings/             # provider, schedule settings
+│       └── settings/             # provider, schedule, swipe direction
 │
 ├── components/
-│   ├── ArticleCard.tsx           # Article display with feedback buttons
-│   ├── DigestHeader.tsx          # Date/time header for a digest
-│   ├── DigestSelector.tsx        # Dropdown selector for navigating digests
-│   ├── FeedbackButtons.tsx       # Thumbs up/down, bookmark, dismiss (toggleable)
+│   ├── ArticleCard.tsx           # Article display with swipe-to-archive + read indicator
+│   ├── BookmarkCard.tsx          # Simplified card for bookmarks page
+│   ├── DigestContent.tsx         # Client wrapper: tracks archive count, progress bar updates
+│   ├── DigestHeader.tsx          # Date/time header with live progress bar
+│   ├── DigestSelector.tsx        # Dropdown selector with completion badges
+│   ├── FeedbackButtons.tsx       # Action bar: sentiment, bookmark, share, archive
 │   ├── IngestButton.tsx          # "Ingest Now" + "Clear Provider" actions
 │   ├── IngestionLogs.tsx         # Log viewer with expandable event timelines
 │   ├── InterestManager.tsx       # Add/edit/delete interests with weight sliders
@@ -57,7 +67,12 @@ src/
 │   ├── PreferenceViewer.tsx      # View/delete learned preferences
 │   ├── ScheduleManager.tsx       # GitHub Actions schedule info
 │   ├── SourceManager.tsx         # Add/edit/delete RSS sources
-│   └── CaughtUpMessage.tsx       # "You're all caught up" footer
+│   ├── SwipeSettings.tsx         # Configure swipe-to-archive direction
+│   ├── Toast.tsx                 # Toast notification system (context + portal)
+│   └── CaughtUpMessage.tsx       # Completion stats when digest is fully archived
+│
+├── hooks/
+│   └── useSwipeToArchive.ts      # Touch gesture hook with velocity detection
 │
 ├── lib/
 │   ├── config.ts                 # Environment config (API keys, thresholds, batch size)
@@ -65,13 +80,13 @@ src/
 │   ├── llm.ts                    # LLM client abstraction (Anthropic + OpenAI-compatible)
 │   ├── db/
 │   │   ├── index.ts              # DB connection + schema init
-│   │   ├── schema.ts             # All CREATE TABLE statements
+│   │   ├── schema.ts             # Table definitions + one-time engagement migration
 │   │   ├── seed.ts               # Default user, interests, and sources
-│   │   ├── articles.ts           # Article CRUD + scoring updates
+│   │   ├── articles.ts           # Article CRUD, scoring, engagement state mutations
 │   │   ├── digests.ts            # Digest CRUD
 │   │   ├── sources.ts            # Source CRUD
 │   │   ├── interests.ts          # Interest CRUD
-│   │   ├── feedback.ts           # Feedback recording, toggle support, bookmarks query
+│   │   ├── feedback.ts           # Append-only event log, bookmarked articles query
 │   │   ├── preferences.ts        # Learned preference queries
 │   │   ├── settings.ts           # Key-value settings store
 │   │   ├── users.ts              # User queries
@@ -99,12 +114,12 @@ Vercel Postgres with these tables:
 | `users` | Single-user auth (password hash) |
 | `sessions` | Session tokens with expiry |
 | `sources` | RSS feed URLs with enable/disable |
-| `articles` | All ingested articles with scores, summaries, digest assignment |
+| `articles` | Ingested articles with scores, digest assignment, and engagement state (sentiment, is_read, is_bookmarked, is_archived) |
 | `digests` | Generated digests with timestamp and article count |
 | `interests` | User interest categories with weights |
-| `feedback` | Per-article user actions (thumbs up/down, bookmark, dismiss, click) |
+| `feedback` | Append-only event log of all user engagement actions |
 | `learned_preferences` | AI-derived preference statements from feedback patterns |
-| `settings` | Key-value store (e.g. LLM provider) |
+| `settings` | Key-value store (LLM provider, swipe direction, migration flags) |
 | `ingestion_logs` | Full pipeline logs with events JSONB |
 
 ## Ingestion Logs
@@ -156,6 +171,7 @@ Push to main. Vercel auto-deploys the app. The daily ingestion cron runs via Git
 ## Future Improvements
 
 ### Content & Scoring
+- **AI summaries** — Generate 2-3 sentence summaries during scoring (infrastructure exists, currently disabled)
 - **Full-text extraction** — Fetch and parse full article content instead of relying on RSS snippets for richer scoring context
 - **Per-interest score breakdown** — Show how much each interest contributed to an article's score
 - **Adjustable relevance threshold** — Let the user tune the minimum score from the UI instead of an env var
@@ -177,7 +193,7 @@ Push to main. Vercel auto-deploys the app. The daily ingestion cron runs via Git
 
 ### Feedback & Learning
 - **Explicit preference tuning** — Let users write "I prefer technical deep-dives over news summaries"
-- **Feedback-weighted re-scoring** — Re-score articles from sources you consistently thumbs-up higher
+- **Feedback-weighted re-scoring** — Re-score articles from sources you consistently like higher
 - **Source-level preferences** — Learn that you prefer long-form from Source A but skip listicles from Source B
 - **Decay old preferences** — Reduce confidence on preferences derived from old feedback
 

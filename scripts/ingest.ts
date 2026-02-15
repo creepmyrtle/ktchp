@@ -12,7 +12,7 @@ import { seedDatabase } from '@/lib/db/seed';
 import { getDefaultUser } from '@/lib/db/users';
 import { markStaleLogsAsTimedOut } from '@/lib/db/ingestion-logs';
 import { runIngestion } from '@/lib/ingestion';
-import { runRelevanceEngine } from '@/lib/relevance';
+import { runRelevanceForAllUsers } from '@/lib/relevance';
 import { getActiveProvider } from '@/lib/llm';
 import { IngestionLogger } from '@/lib/ingestion/logger';
 
@@ -37,11 +37,11 @@ async function main() {
   logger.log('setup', `Ingestion started (provider: ${provider})`);
 
   try {
-    const ingestionResult = await runIngestion(user.id, provider, logger);
+    const ingestionResult = await runIngestion(provider, logger);
 
-    let digestResult = null;
+    let allResults: Record<string, unknown> = {};
     if (ingestionResult.newArticles > 0) {
-      digestResult = await runRelevanceEngine(user.id, provider, logger);
+      allResults = await runRelevanceForAllUsers(provider, logger);
     } else {
       logger.log('relevance', 'Skipping relevance engine: no new articles');
     }
@@ -51,9 +51,7 @@ async function main() {
       newArticles: ingestionResult.newArticles,
       duplicates: ingestionResult.duplicates,
       errorCount: ingestionResult.errors.length,
-      articlesScored: digestResult?.articlesScored ?? 0,
-      digestId: digestResult?.digestId ?? null,
-      digestArticleCount: digestResult?.digestArticleCount ?? 0,
+      usersScored: Object.keys(allResults).length,
     };
 
     logger.log('complete', 'Pipeline finished', summary);

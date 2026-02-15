@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSessionFromCookies } from '@/lib/auth';
-import { getDefaultUser } from '@/lib/db/users';
-import { getSourcesByUserId, createSource } from '@/lib/db/sources';
-import { seedDatabase } from '@/lib/db/seed';
+import { getSourcesForUser, createSource } from '@/lib/db/sources';
 
 export async function GET() {
   try {
@@ -11,11 +9,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    await seedDatabase();
-    const user = await getDefaultUser();
-    if (!user) return NextResponse.json([], { status: 200 });
-
-    const sources = await getSourcesByUserId(user.id);
+    const sources = await getSourcesForUser(userId);
     return NextResponse.json(sources);
   } catch (error) {
     console.error('Sources error:', error);
@@ -30,16 +24,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    await seedDatabase();
-    const user = await getDefaultUser();
-    if (!user) return NextResponse.json({ error: 'No user' }, { status: 500 });
-
     const { name, type, config } = await request.json();
     if (!name || !type || !config) {
       return NextResponse.json({ error: 'Name, type, and config required' }, { status: 400 });
     }
 
-    const source = await createSource(user.id, name, type, config);
+    const source = await createSource(userId, name, type, config);
     return NextResponse.json(source, { status: 201 });
   } catch (error) {
     console.error('Create source error:', error);

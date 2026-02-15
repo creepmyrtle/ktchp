@@ -20,7 +20,11 @@
       "Bash(findstr:*)",
       "Bash(dir:*)",
       "Bash(if not exist \"C:\\\\Users\\\\joeco\\\\OneDrive\\\\Desktop\\\\ktchp\\\\scripts\" mkdir \"C:\\\\Users\\\\joeco\\\\OneDrive\\\\Desktop\\\\ktchp\\\\scripts\")",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(xargs:*)",
+      "Bash(for comp in ArticleCard BookmarkCard CaughtUpMessage DigestContent DigestHeader DigestSelector FeedbackButtons IngestButton IngestionLogs InterestManager ManualUrlInput PreferenceViewer ProviderToggle ScheduleManager SourceManager SwipeSettings Toast)",
+      "Bash(do echo \"=== $comp ===\")",
+      "Bash(done)"
     ]
   }
 }

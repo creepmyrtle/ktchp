@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getSessionFromCookies, requireCronOrAuth } from '@/lib/auth';
-import { getDefaultUser } from '@/lib/db/users';
 import { seedDatabase } from '@/lib/db/seed';
 import { runIngestion } from '@/lib/ingestion';
-import { runRelevanceEngine } from '@/lib/relevance';
+import { runRelevanceForAllUsers, runRelevanceEngine } from '@/lib/relevance';
 import { getActiveProvider } from '@/lib/llm';
 import { IngestionLogger } from '@/lib/ingestion/logger';
+import { getUserById } from '@/lib/db/users';
 
 export const maxDuration = 300; // 5 minute timeout
 
@@ -22,43 +22,54 @@ async function handleIngest(request: Request) {
 
   try {
     // Check auth: either CRON_SECRET or session token
-    const cronUserId = await requireCronOrAuth(request);
-    const isCron = !!cronUserId;
-    let userId = cronUserId;
-    if (!userId) {
-      userId = await getSessionFromCookies();
-    }
-    if (!userId) {
+    const cronResult = await requireCronOrAuth(request);
+    const isCron = cronResult === 'all_users';
+    let userId = isCron ? null : await getSessionFromCookies();
+
+    if (!isCron && !userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Ensure DB is seeded
     await seedDatabase();
 
-    const user = await getDefaultUser();
-    if (!user) {
-      return NextResponse.json({ error: 'No user found' }, { status: 500 });
-    }
-
     // Get current provider for tagging
     const provider = await getActiveProvider();
 
-    // Create logger
+    // Create logger — use the session user or a system-level log
+    const logUserId = userId || 'system';
     const trigger = isCron ? 'cron' : 'manual';
-    logger = new IngestionLogger(user.id, provider, trigger);
-    await logger.init();
 
-    logger.log('setup', `Ingestion started (${trigger}, provider: ${provider})`);
+    // For logger, we need a real user id. Get the first admin if cron.
+    let loggerUserId = userId;
+    if (!loggerUserId) {
+      const { getAllActiveUsers } = await import('@/lib/db/users');
+      const users = await getAllActiveUsers();
+      loggerUserId = users[0]?.id || null;
+    }
 
-    // Run ingestion
-    const ingestionResult = await runIngestion(user.id, provider, logger);
+    if (loggerUserId) {
+      logger = new IngestionLogger(loggerUserId, provider, trigger);
+      await logger.init();
+      logger.log('setup', `Ingestion started (${trigger}, provider: ${provider})`);
+    }
 
-    // Run relevance engine if new articles were ingested
-    let digestResult = null;
-    if (ingestionResult.newArticles > 0) {
-      digestResult = await runRelevanceEngine(user.id, provider, logger);
+    // Fetch once for all sources
+    const ingestionResult = await runIngestion(provider, logger);
+
+    // Score for users
+    let digestResults: Record<string, unknown> = {};
+    if (ingestionResult.newArticles > 0 || isCron) {
+      if (isCron) {
+        // Score for all active users
+        digestResults = await runRelevanceForAllUsers(provider, logger);
+      } else if (userId) {
+        // Score for the triggering user only
+        const userResult = await runRelevanceEngine(userId, provider, logger);
+        digestResults = { [userId]: userResult };
+      }
     } else {
-      logger.log('relevance', 'Skipping relevance engine: no new articles');
+      logger?.log('relevance', 'Skipping relevance engine: no new articles');
     }
 
     const summary = {
@@ -66,21 +77,19 @@ async function handleIngest(request: Request) {
       newArticles: ingestionResult.newArticles,
       duplicates: ingestionResult.duplicates,
       errorCount: ingestionResult.errors.length,
-      articlesScored: digestResult?.articlesScored ?? 0,
-      digestId: digestResult?.digestId ?? null,
-      digestArticleCount: digestResult?.digestArticleCount ?? 0,
+      userResults: digestResults,
     };
 
-    logger.log('complete', 'Pipeline finished');
-
-    // Persist success log
-    await logger.persist('success', summary);
+    logger?.log('complete', 'Pipeline finished');
+    if (logger) {
+      await logger.persist('success', summary);
+    }
 
     return NextResponse.json({
       success: true,
       provider,
       ingestion: ingestionResult,
-      digest: digestResult,
+      userResults: digestResults,
     });
   } catch (error) {
     console.error('Ingestion error:', error);

@@ -12,13 +12,15 @@ const parser = new Parser({
 
 export async function fetchRssFeed(
   sourceId: string,
-  feedUrl: string
+  feedUrl: string,
+  maxItems?: number
 ): Promise<RawArticle[]> {
   try {
     const feed = await parser.parseURL(feedUrl);
     const articles: RawArticle[] = [];
+    const items = maxItems ? feed.items.slice(0, maxItems) : feed.items;
 
-    for (const item of feed.items) {
+    for (const item of items) {
       if (!item.title || !item.link) continue;
 
       articles.push({

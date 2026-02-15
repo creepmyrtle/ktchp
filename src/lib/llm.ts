@@ -1,10 +1,19 @@
 import Anthropic from '@anthropic-ai/sdk';
 import OpenAI from 'openai';
 import { config } from './config';
+import { getGlobalSetting } from './db/settings';
+import { getDb } from './db/index';
 
 export type LlmProvider = 'anthropic' | 'synthetic';
 
 export async function getActiveProvider(): Promise<LlmProvider> {
+  try {
+    await getDb();
+    const saved = await getGlobalSetting('llm_provider');
+    if (saved === 'anthropic' || saved === 'synthetic') return saved;
+  } catch {
+    // DB not ready yet — fall back to default
+  }
   return 'synthetic';
 }
 

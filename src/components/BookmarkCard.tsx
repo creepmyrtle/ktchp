@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import type { ArticleWithSource } from '@/types';
+import type { UserArticleWithSource } from '@/types';
 import { useToast } from './Toast';
 
 interface BookmarkCardProps {
-  article: ArticleWithSource;
+  article: UserArticleWithSource;
 }
 
 export default function BookmarkCard({ article }: BookmarkCardProps) {
@@ -17,7 +17,7 @@ export default function BookmarkCard({ article }: BookmarkCardProps) {
     fetch('/api/feedback', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ articleId: article.id, action: 'unbookmark' }),
+      body: JSON.stringify({ articleId: article.article_id, action: 'unbookmark' }),
     }).catch(() => {
       setRemoved(false);
       showToast('Failed to remove bookmark', 'error');

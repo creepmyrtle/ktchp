@@ -1,9 +1,7 @@
 import { redirect, notFound } from 'next/navigation';
 import { getSessionFromCookies } from '@/lib/auth';
-import { seedDatabase } from '@/lib/db/seed';
-import { getDefaultUser } from '@/lib/db/users';
 import { getDigestById, getRecentDigests } from '@/lib/db/digests';
-import { getArticlesByDigestId, getDigestCompletionStats } from '@/lib/db/articles';
+import { getUserArticlesByDigestId, getDigestCompletionStats } from '@/lib/db/user-articles';
 import DigestContent from '@/components/DigestContent';
 import DigestSelector from '@/components/DigestSelector';
 import Link from 'next/link';
@@ -12,21 +10,20 @@ export default async function DigestByIdPage({ params }: { params: Promise<{ id:
   const userId = await getSessionFromCookies();
   if (!userId) redirect('/');
 
-  await seedDatabase();
-  const user = await getDefaultUser();
-  if (!user) redirect('/');
-
   const { id } = await params;
   const digest = await getDigestById(id);
   if (!digest) notFound();
 
-  const articles = await getArticlesByDigestId(digest.id);
-  const stats = await getDigestCompletionStats(digest.id);
-  const recentDigests = await getRecentDigests(user.id, 14, digest.provider);
+  // Ownership check
+  if (digest.user_id !== userId) notFound();
+
+  const articles = await getUserArticlesByDigestId(userId, digest.id);
+  const stats = await getDigestCompletionStats(userId, digest.id);
+  const recentDigests = await getRecentDigests(userId, 14, digest.provider);
 
   const enrichedDigests = await Promise.all(
     recentDigests.map(async (d) => {
-      const s = await getDigestCompletionStats(d.id);
+      const s = await getDigestCompletionStats(userId, d.id);
       return {
         ...d,
         remaining_count: s.remaining_count,
@@ -56,6 +53,7 @@ export default async function DigestByIdPage({ params }: { params: Promise<{ id:
 
       <main className="max-w-5xl mx-auto px-4 py-8 animate-fade-up">
         <DigestContent
+          digestId={digest.id}
           date={digest.generated_at}
           articles={articles}
           stats={stats}

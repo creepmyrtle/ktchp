@@ -1,32 +1,26 @@
 import { NextResponse } from 'next/server';
-import { validatePassword, createSession } from '@/lib/auth';
+import { authenticateUser, createSession } from '@/lib/auth';
 import { seedDatabase } from '@/lib/db/seed';
-import { getDefaultUser } from '@/lib/db/users';
 
 export async function POST(request: Request) {
   try {
-    const { password } = await request.json();
+    const { username, password } = await request.json();
 
-    if (!password) {
-      return NextResponse.json({ error: 'Password required' }, { status: 400 });
-    }
-
-    const valid = await validatePassword(password);
-    if (!valid) {
-      return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
+    if (!username || !password) {
+      return NextResponse.json({ error: 'Username and password required' }, { status: 400 });
     }
 
     // Ensure DB is seeded
     await seedDatabase();
 
-    const user = await getDefaultUser();
-    if (!user) {
-      return NextResponse.json({ error: 'No user found' }, { status: 500 });
+    const userId = await authenticateUser(username, password);
+    if (!userId) {
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    const token = await createSession(user.id);
+    const token = await createSession(userId);
 
-    const response = NextResponse.json({ success: true, userId: user.id });
+    const response = NextResponse.json({ success: true, userId });
     response.cookies.set('digest_session', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
