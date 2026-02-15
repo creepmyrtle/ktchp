@@ -1,8 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import OpenAI from 'openai';
 import { config } from './config';
-import { getDefaultUser } from './db/users';
-import { getSetting } from './db/settings';
 
 export type LlmProvider = 'anthropic' | 'synthetic';
 
