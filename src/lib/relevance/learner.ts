@@ -3,7 +3,7 @@ import { getFeedbackCount, getRecentFeedbackWithArticles } from '../db/feedback'
 import { getPreferencesByUserId, createPreference, clearPreferences } from '../db/preferences';
 import { getSetting, setSetting } from '../db/settings';
 
-const FEEDBACK_WINDOW = 200;
+const FEEDBACK_WINDOW = 500;
 const MIN_FEEDBACK = 10;
 const RELEARN_INTERVAL = 50;
 
@@ -47,7 +47,7 @@ export async function runPreferenceLearning(userId: string): Promise<boolean> {
   });
 
   // Prioritize strong signals (liked/disliked/read) over neutrals, cap at 50
-  const MAX_ARTICLES = 50;
+  const MAX_ARTICLES = 100;
   const strong = dedupedFeedback.filter(f => f.action !== 'neutral');
   const neutral = dedupedFeedback.filter(f => f.action === 'neutral');
   const capped = [...strong, ...neutral].slice(0, MAX_ARTICLES);

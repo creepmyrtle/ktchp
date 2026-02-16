@@ -21,8 +21,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
-    const articles = await getUserArticlesByDigestId(userId, digest.id);
-    return NextResponse.json({ digest, articles });
+    const articles = await getUserArticlesByDigestId(userId, digest.id, false, ['recommended', 'serendipity']);
+    const bonus_articles = await getUserArticlesByDigestId(userId, digest.id, false, 'bonus');
+    return NextResponse.json({ digest, articles, bonus_articles });
   } catch (error) {
     console.error('Digest error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

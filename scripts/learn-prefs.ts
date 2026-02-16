@@ -48,7 +48,7 @@ async function main() {
 
   // Quick check: how big is the prompt?
   const { getRecentFeedbackWithArticles } = await import('@/lib/db/feedback');
-  const feedback = await getRecentFeedbackWithArticles(user.id, 200);
+  const feedback = await getRecentFeedbackWithArticles(user.id, 500);
   const promptText = feedback.map((f: Record<string, unknown>) =>
     `Action: ${f.action} | Title: ${f.title} | Source: ${f.source_name} | Category: ${f.relevance_reason || 'unknown'}`
   ).join('\n');

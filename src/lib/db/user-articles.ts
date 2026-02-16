@@ -1,12 +1,29 @@
 import { sql } from '@vercel/postgres';
-import type { UserArticleWithSource, ArticleEngagementState, Sentiment } from '@/types';
+import type { UserArticleWithSource, ArticleEngagementState, Sentiment, DigestTier } from '@/types';
 
 export async function getUserArticlesByDigestId(
   userId: string,
   digestId: string,
-  includeArchived: boolean = false
+  includeArchived: boolean = false,
+  tier?: DigestTier | DigestTier[]
 ): Promise<UserArticleWithSource[]> {
+  // Build tier filter
+  const tiers = tier ? (Array.isArray(tier) ? tier : [tier]) : null;
+
   if (includeArchived) {
+    if (tiers) {
+      const { rows } = await sql.query(
+        `SELECT ua.*, a.title, a.url, a.raw_content, a.summary, a.provider, a.published_at, a.ingested_at, a.source_id,
+                s.name as source_name, s.type as source_type
+         FROM user_articles ua
+         JOIN articles a ON ua.article_id = a.id
+         JOIN sources s ON a.source_id = s.id
+         WHERE ua.user_id = $1 AND ua.digest_id = $2 AND ua.digest_tier = ANY($3)
+         ORDER BY ua.relevance_score DESC`,
+        [userId, digestId, tiers]
+      );
+      return rows as UserArticleWithSource[];
+    }
     const { rows } = await sql`
       SELECT ua.*, a.title, a.url, a.raw_content, a.summary, a.provider, a.published_at, a.ingested_at, a.source_id,
              s.name as source_name, s.type as source_type
@@ -18,6 +35,21 @@ export async function getUserArticlesByDigestId(
     `;
     return rows as UserArticleWithSource[];
   }
+
+  if (tiers) {
+    const { rows } = await sql.query(
+      `SELECT ua.*, a.title, a.url, a.raw_content, a.summary, a.provider, a.published_at, a.ingested_at, a.source_id,
+              s.name as source_name, s.type as source_type
+       FROM user_articles ua
+       JOIN articles a ON ua.article_id = a.id
+       JOIN sources s ON a.source_id = s.id
+       WHERE ua.user_id = $1 AND ua.digest_id = $2 AND ua.is_archived = FALSE AND ua.digest_tier = ANY($3)
+       ORDER BY ua.relevance_score DESC`,
+      [userId, digestId, tiers]
+    );
+    return rows as UserArticleWithSource[];
+  }
+
   const { rows } = await sql`
     SELECT ua.*, a.title, a.url, a.raw_content, a.summary, a.provider, a.published_at, a.ingested_at, a.source_id,
            s.name as source_name, s.type as source_type
@@ -30,7 +62,7 @@ export async function getUserArticlesByDigestId(
   return rows as UserArticleWithSource[];
 }
 
-export async function getDigestCompletionStats(userId: string, digestId: string): Promise<{
+export async function getDigestCompletionStats(userId: string, digestId: string, tier?: DigestTier | DigestTier[]): Promise<{
   total_article_count: number;
   archived_count: number;
   remaining_count: number;
@@ -39,18 +71,35 @@ export async function getDigestCompletionStats(userId: string, digestId: string)
   disliked_count: number;
   bookmarked_count: number;
 }> {
-  const { rows } = await sql`
-    SELECT
-      COUNT(*) as total_article_count,
-      COUNT(*) FILTER (WHERE is_archived = TRUE) as archived_count,
-      COUNT(*) FILTER (WHERE is_archived = FALSE) as remaining_count,
-      COUNT(*) FILTER (WHERE sentiment = 'liked') as liked_count,
-      COUNT(*) FILTER (WHERE sentiment = 'neutral') as neutral_count,
-      COUNT(*) FILTER (WHERE sentiment = 'disliked') as disliked_count,
-      COUNT(*) FILTER (WHERE is_bookmarked = TRUE) as bookmarked_count
-    FROM user_articles
-    WHERE user_id = ${userId} AND digest_id = ${digestId}
-  `;
+  const tiers = tier ? (Array.isArray(tier) ? tier : [tier]) : null;
+
+  const { rows } = tiers
+    ? await sql.query(
+        `SELECT
+          COUNT(*) as total_article_count,
+          COUNT(*) FILTER (WHERE is_archived = TRUE) as archived_count,
+          COUNT(*) FILTER (WHERE is_archived = FALSE) as remaining_count,
+          COUNT(*) FILTER (WHERE sentiment = 'liked') as liked_count,
+          COUNT(*) FILTER (WHERE sentiment = 'neutral') as neutral_count,
+          COUNT(*) FILTER (WHERE sentiment = 'disliked') as disliked_count,
+          COUNT(*) FILTER (WHERE is_bookmarked = TRUE) as bookmarked_count
+        FROM user_articles
+        WHERE user_id = $1 AND digest_id = $2 AND digest_tier = ANY($3)`,
+        [userId, digestId, tiers]
+      )
+    : await sql`
+        SELECT
+          COUNT(*) as total_article_count,
+          COUNT(*) FILTER (WHERE is_archived = TRUE) as archived_count,
+          COUNT(*) FILTER (WHERE is_archived = FALSE) as remaining_count,
+          COUNT(*) FILTER (WHERE sentiment = 'liked') as liked_count,
+          COUNT(*) FILTER (WHERE sentiment = 'neutral') as neutral_count,
+          COUNT(*) FILTER (WHERE sentiment = 'disliked') as disliked_count,
+          COUNT(*) FILTER (WHERE is_bookmarked = TRUE) as bookmarked_count
+        FROM user_articles
+        WHERE user_id = ${userId} AND digest_id = ${digestId}
+      `;
+
   const r = rows[0];
   return {
     total_article_count: parseInt(r.total_article_count, 10),
@@ -139,11 +188,12 @@ export async function createUserArticleScoring(
 export async function assignUserArticlesToDigest(
   userId: string,
   articleIds: string[],
-  digestId: string
+  digestId: string,
+  tier: DigestTier = 'recommended'
 ): Promise<void> {
   for (const articleId of articleIds) {
     await sql`
-      UPDATE user_articles SET digest_id = ${digestId}
+      UPDATE user_articles SET digest_id = ${digestId}, digest_tier = ${tier}
       WHERE user_id = ${userId} AND article_id = ${articleId}
     `;
   }

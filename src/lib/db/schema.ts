@@ -170,10 +170,11 @@ export async function ensureSchema(): Promise<void> {
   // Embeddings table — try pgvector first, fall back to JSONB
   await ensureEmbeddingsTable();
 
-  // Add embedding_score to user_articles if not exists
+  // Add embedding_score and digest_tier to user_articles if not exists
   try {
     await sql`ALTER TABLE user_articles ADD COLUMN IF NOT EXISTS embedding_score REAL`;
-  } catch { /* column may already exist */ }
+    await sql`ALTER TABLE user_articles ADD COLUMN IF NOT EXISTS digest_tier TEXT CHECK (digest_tier IN ('recommended', 'serendipity', 'bonus'))`;
+  } catch { /* columns may already exist */ }
 }
 
 async function ensureEmbeddingsTable(): Promise<void> {

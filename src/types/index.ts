@@ -46,12 +46,16 @@ export interface Article {
   ingested_at: string;
 }
 
+// Digest tier classification
+export type DigestTier = 'recommended' | 'serendipity' | 'bonus';
+
 // Per-user article state (scoring, engagement, digest assignment)
 export interface UserArticle {
   id: string;
   user_id: string;
   article_id: string;
   digest_id: string | null;
+  digest_tier: DigestTier | null;
   relevance_score: number | null;
   relevance_reason: string | null;
   embedding_score: number | null;

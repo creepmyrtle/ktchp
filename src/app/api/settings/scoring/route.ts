@@ -9,6 +9,9 @@ const SCORING_KEYS = [
   'embedding_serendipity_max',
   'serendipity_sample_size',
   'max_llm_candidates',
+  'bonus_digest_enabled',
+  'bonus_min_score',
+  'bonus_max_articles',
 ] as const;
 
 export async function GET() {

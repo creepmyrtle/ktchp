@@ -8,6 +8,8 @@ interface ScoringConfig {
   embedding_serendipity_max: string;
   serendipity_sample_size: string;
   max_llm_candidates: string;
+  bonus_min_score: string;
+  bonus_max_articles: string;
 }
 
 const DEFAULTS: ScoringConfig = {
@@ -16,14 +18,21 @@ const DEFAULTS: ScoringConfig = {
   embedding_serendipity_max: '0.35',
   serendipity_sample_size: '5',
   max_llm_candidates: '40',
+  bonus_min_score: '0.15',
+  bonus_max_articles: '20',
 };
 
-const LABELS: Record<keyof ScoringConfig, string> = {
+const SCORING_LABELS: Record<string, string> = {
   embedding_llm_threshold: 'Embedding → LLM threshold',
   embedding_serendipity_min: 'Serendipity pool min',
   embedding_serendipity_max: 'Serendipity pool max',
   serendipity_sample_size: 'Serendipity sample size',
   max_llm_candidates: 'Max LLM candidates per user',
+};
+
+const BONUS_LABELS: Record<string, string> = {
+  bonus_min_score: 'Bonus minimum score floor',
+  bonus_max_articles: 'Max bonus articles per digest',
 };
 
 const PROVIDERS = [
@@ -35,6 +44,7 @@ const PROVIDERS = [
 export default function ScoringSettings() {
   const [values, setValues] = useState<ScoringConfig>(DEFAULTS);
   const [provider, setProvider] = useState('synthetic');
+  const [bonusEnabled, setBonusEnabled] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -43,6 +53,10 @@ export default function ScoringSettings() {
       .then(res => res.json())
       .then(data => {
         if (data && typeof data === 'object') {
+          if ('bonus_digest_enabled' in data) {
+            setBonusEnabled(data.bonus_digest_enabled !== 'false');
+            delete data.bonus_digest_enabled;
+          }
           setValues(prev => ({ ...prev, ...data }));
         }
       })
@@ -63,7 +77,7 @@ export default function ScoringSettings() {
         fetch('/api/settings/scoring', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(values),
+          body: JSON.stringify({ ...values, bonus_digest_enabled: bonusEnabled ? 'true' : 'false' }),
         }),
         fetch('/api/settings/provider', {
           method: 'PUT',
@@ -114,20 +128,56 @@ export default function ScoringSettings() {
       <hr className="border-card-border" />
 
       <div className="space-y-3">
-        {(Object.keys(LABELS) as (keyof ScoringConfig)[]).map(key => (
+        {(Object.keys(SCORING_LABELS)).map(key => (
           <div key={key} className="flex items-center justify-between gap-4">
-            <label className="text-sm text-foreground">{LABELS[key]}</label>
+            <label className="text-sm text-foreground">{SCORING_LABELS[key]}</label>
             <input
               type="number"
               step={key.includes('size') || key.includes('candidates') ? '1' : '0.01'}
               min="0"
-              value={values[key]}
+              value={values[key as keyof ScoringConfig]}
               onChange={e => setValues(prev => ({ ...prev, [key]: e.target.value }))}
               className="w-20 px-2 py-1 text-sm rounded border border-card-border bg-background text-foreground text-right"
             />
           </div>
         ))}
       </div>
+
+      <hr className="border-card-border" />
+
+      <h4 className="text-sm font-medium text-foreground">Bonus Digest</h4>
+      <p className="text-sm text-muted">
+        After completing their main digest, users can browse below-threshold articles.
+        Feedback on these directly improves scoring.
+      </p>
+
+      <label className="flex items-center gap-3 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={bonusEnabled}
+          onChange={e => setBonusEnabled(e.target.checked)}
+          className="accent-accent"
+        />
+        <span className="text-sm text-foreground">Enable bonus digest</span>
+      </label>
+
+      {bonusEnabled && (
+        <div className="space-y-3">
+          {(Object.keys(BONUS_LABELS)).map(key => (
+            <div key={key} className="flex items-center justify-between gap-4">
+              <label className="text-sm text-foreground">{BONUS_LABELS[key]}</label>
+              <input
+                type="number"
+                step={key.includes('articles') ? '1' : '0.01'}
+                min="0"
+                value={values[key as keyof ScoringConfig]}
+                onChange={e => setValues(prev => ({ ...prev, [key]: e.target.value }))}
+                className="w-20 px-2 py-1 text-sm rounded border border-card-border bg-background text-foreground text-right"
+              />
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="flex items-center gap-3">
         <button

@@ -301,6 +301,23 @@ export async function runRelevanceEngine(userId: string, provider: string, logge
   return result;
 }
 
+// Bonus digest defaults
+const DEFAULT_BONUS_MIN_SCORE = 0.15;
+const DEFAULT_BONUS_MAX_ARTICLES = 20;
+
+async function getBonusSettings(): Promise<{ enabled: boolean; minScore: number; maxArticles: number }> {
+  const [enabled, minScore, maxArticles] = await Promise.all([
+    getGlobalSetting('bonus_digest_enabled'),
+    getGlobalSetting('bonus_min_score'),
+    getGlobalSetting('bonus_max_articles'),
+  ]);
+  return {
+    enabled: enabled !== 'false', // default true
+    minScore: minScore ? parseFloat(minScore) : DEFAULT_BONUS_MIN_SCORE,
+    maxArticles: maxArticles ? parseInt(maxArticles, 10) : DEFAULT_BONUS_MAX_ARTICLES,
+  };
+}
+
 async function generateDigestForUser(userId: string, provider: string, logger?: IngestionLogger): Promise<{ digestId: string | null; articleCount: number; scoredUnassignedCount: number }> {
   const scored = await getScoredUnassignedForUser(userId);
   if (scored.length === 0) {
@@ -310,29 +327,68 @@ async function generateDigestForUser(userId: string, provider: string, logger?: 
 
   const minScore = config.minRelevanceScore;
 
-  let selected = scored.filter(a => (a.relevance_score || 0) >= minScore);
+  // Recommended: above relevance threshold
+  const recommended = scored.filter(
+    a => (a.relevance_score || 0) >= minScore && !a.is_serendipity
+  );
 
+  // Serendipity: flagged as serendipity with decent score
   const serendipityItems = scored.filter(
     a => a.is_serendipity && (a.relevance_score || 0) >= 0.4
   );
 
-  for (const item of serendipityItems.slice(0, 2)) {
-    if (!selected.find(s => s.article_id === item.article_id)) {
-      selected.push(item);
-    }
-  }
+  // Combine recommended + serendipity (cap serendipity at 2)
+  const selectedSerendipity = serendipityItems
+    .filter(s => !recommended.find(r => r.article_id === s.article_id))
+    .slice(0, 2);
 
-  if (selected.length === 0) {
+  const mainDigest = [...recommended, ...selectedSerendipity];
+
+  if (mainDigest.length === 0) {
     logger?.warn('digest', `No articles met threshold (${scored.length} scored, min ${minScore})`);
     return { digestId: null, articleCount: 0, scoredUnassignedCount: scored.length };
   }
 
-  const digest = await createDigest(userId, selected.length, provider);
-  await assignUserArticlesToDigest(userId, selected.map(a => a.article_id), digest.id);
-  await updateDigestArticleCount(digest.id, selected.length);
+  const digest = await createDigest(userId, mainDigest.length, provider);
 
-  const serendipityCount = serendipityItems.filter(s => selected.find(sel => sel.article_id === s.article_id)).length;
-  logger?.log('digest', `Digest created: ${selected.length} articles (${serendipityCount} serendipity)`);
+  // Assign recommended articles
+  const recommendedIds = recommended.map(a => a.article_id);
+  if (recommendedIds.length > 0) {
+    await assignUserArticlesToDigest(userId, recommendedIds, digest.id, 'recommended');
+  }
 
-  return { digestId: digest.id, articleCount: selected.length, scoredUnassignedCount: scored.length };
+  // Assign serendipity articles
+  const serendipityIds = selectedSerendipity.map(a => a.article_id);
+  if (serendipityIds.length > 0) {
+    await assignUserArticlesToDigest(userId, serendipityIds, digest.id, 'serendipity');
+  }
+
+  // Bonus articles: below threshold but above floor, not already in main digest
+  const bonusSettings = await getBonusSettings();
+  let bonusCount = 0;
+
+  if (bonusSettings.enabled) {
+    const mainArticleIds = new Set(mainDigest.map(a => a.article_id));
+    const bonusCandidates = scored
+      .filter(a => {
+        const score = a.relevance_score || 0;
+        return !mainArticleIds.has(a.article_id)
+          && score >= bonusSettings.minScore
+          && score < minScore;
+      })
+      .sort((a, b) => (b.relevance_score || 0) - (a.relevance_score || 0))
+      .slice(0, bonusSettings.maxArticles);
+
+    if (bonusCandidates.length > 0) {
+      await assignUserArticlesToDigest(userId, bonusCandidates.map(a => a.article_id), digest.id, 'bonus');
+      bonusCount = bonusCandidates.length;
+    }
+  }
+
+  const totalCount = mainDigest.length + bonusCount;
+  await updateDigestArticleCount(digest.id, totalCount);
+
+  logger?.log('digest', `Digest created: ${recommended.length} recommended, ${selectedSerendipity.length} serendipity, ${bonusCount} bonus`);
+
+  return { digestId: digest.id, articleCount: mainDigest.length, scoredUnassignedCount: scored.length };
 }

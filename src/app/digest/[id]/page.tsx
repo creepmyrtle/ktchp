@@ -17,13 +17,15 @@ export default async function DigestByIdPage({ params }: { params: Promise<{ id:
   // Ownership check
   if (digest.user_id !== userId) notFound();
 
-  const articles = await getUserArticlesByDigestId(userId, digest.id);
-  const stats = await getDigestCompletionStats(userId, digest.id);
+  const articles = await getUserArticlesByDigestId(userId, digest.id, false, ['recommended', 'serendipity']);
+  const bonusArticles = await getUserArticlesByDigestId(userId, digest.id, false, 'bonus');
+  const stats = await getDigestCompletionStats(userId, digest.id, ['recommended', 'serendipity']);
+  const bonusStats = await getDigestCompletionStats(userId, digest.id, 'bonus');
   const recentDigests = await getRecentDigests(userId, 14, digest.provider);
 
   const enrichedDigests = await Promise.all(
     recentDigests.map(async (d) => {
-      const s = await getDigestCompletionStats(userId, d.id);
+      const s = await getDigestCompletionStats(userId, d.id, ['recommended', 'serendipity']);
       return {
         ...d,
         remaining_count: s.remaining_count,
@@ -56,7 +58,9 @@ export default async function DigestByIdPage({ params }: { params: Promise<{ id:
           digestId={digest.id}
           date={digest.generated_at}
           articles={articles}
+          bonusArticles={bonusArticles}
           stats={stats}
+          bonusStats={bonusStats}
         >
           <DigestSelector digests={enrichedDigests} currentId={digest.id} />
         </DigestContent>

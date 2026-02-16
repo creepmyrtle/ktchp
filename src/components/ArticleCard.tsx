@@ -1,23 +1,25 @@
 'use client';
 
 import { useState } from 'react';
-import type { UserArticleWithSource, Sentiment } from '@/types';
+import type { UserArticleWithSource, Sentiment, DigestTier } from '@/types';
 import ActionBar from './FeedbackButtons';
 import { useSwipeToArchive } from '@/hooks/useSwipeToArchive';
 
 interface ArticleCardProps {
   article: UserArticleWithSource;
   swipeDirection?: 'right' | 'left';
+  tier?: DigestTier;
   onArchived?: () => void;
 }
 
-export default function ArticleCard({ article, swipeDirection = 'right', onArchived }: ArticleCardProps) {
+export default function ArticleCard({ article, swipeDirection = 'right', tier, onArchived }: ArticleCardProps) {
   const [archiving, setArchiving] = useState(false);
   const [archived, setArchived] = useState(false);
   const [sentiment, setSentiment] = useState<Sentiment | null>(article.sentiment);
   const [isRead, setIsRead] = useState(article.is_read);
 
   const isSerendipity = !!article.is_serendipity;
+  const isBonus = tier === 'bonus';
 
   function handleArchive() {
     // Persist to DB
@@ -87,28 +89,32 @@ export default function ArticleCard({ article, swipeDirection = 'right', onArchi
         ref={swipeRef}
         {...handlers}
         className={`relative rounded-lg border p-4 bg-card card-hover ${
-          isSerendipity
-            ? 'border-serendipity/40 card-hover-serendipity'
-            : sentiment
-              ? 'border-card-border/60'
-              : 'border-card-border'
+          isBonus
+            ? 'border-slate-500/40'
+            : isSerendipity
+              ? 'border-serendipity/40 card-hover-serendipity'
+              : sentiment
+                ? 'border-card-border/60'
+                : 'border-card-border'
         }`}
       >
         {/* Header: source + relevance tag */}
         <div className="flex items-start justify-between gap-2 mb-2 flex-wrap">
           <span className="text-xs text-muted flex items-center gap-1.5">
-            {!isRead && <span className="inline-block w-1.5 h-1.5 rounded-full bg-accent" />}
+            {!isRead && <span className={`inline-block w-1.5 h-1.5 rounded-full ${isBonus ? 'bg-slate-400' : 'bg-accent'}`} />}
             {article.source_name}
           </span>
           <span
             className={`text-xs px-2 py-0.5 rounded-full leading-tight ${
-              isSerendipity
-                ? 'bg-serendipity-light text-serendipity'
-                : 'bg-accent-light text-accent'
+              isBonus
+                ? 'bg-slate-500/15 text-slate-400'
+                : isSerendipity
+                  ? 'bg-serendipity-light text-serendipity'
+                  : 'bg-accent-light text-accent'
             }`}
           >
             {isSerendipity && '\u2728 '}
-            {article.relevance_reason || 'Relevant'}
+            {isBonus ? 'Below threshold' : (article.relevance_reason || 'Relevant')}
           </span>
         </div>
 

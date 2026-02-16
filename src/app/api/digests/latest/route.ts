@@ -15,8 +15,9 @@ export async function GET() {
       return NextResponse.json({ digest: null, articles: [] });
     }
 
-    const articles = await getUserArticlesByDigestId(userId, digest.id);
-    return NextResponse.json({ digest, articles });
+    const articles = await getUserArticlesByDigestId(userId, digest.id, false, ['recommended', 'serendipity']);
+    const bonus_articles = await getUserArticlesByDigestId(userId, digest.id, false, 'bonus');
+    return NextResponse.json({ digest, articles, bonus_articles });
   } catch (error) {
     console.error('Latest digest error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

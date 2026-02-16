@@ -18,8 +18,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
-    const stats = await getDigestCompletionStats(userId, id);
-    return NextResponse.json(stats);
+    const stats = await getDigestCompletionStats(userId, id, ['recommended', 'serendipity']);
+    const bonusStats = await getDigestCompletionStats(userId, id, 'bonus');
+    return NextResponse.json({ ...stats, bonus_total_count: bonusStats.total_article_count, bonus_archived_count: bonusStats.archived_count, bonus_remaining_count: bonusStats.remaining_count });
   } catch (error) {
     console.error('Digest stats error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

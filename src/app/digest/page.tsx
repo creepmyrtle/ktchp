@@ -18,13 +18,15 @@ export default async function DigestPage() {
   const provider = await getActiveProvider();
   const latestDigest = await getLatestDigest(userId, provider);
   const recentDigests = await getRecentDigests(userId, 14, provider);
-  const articles = latestDigest ? await getUserArticlesByDigestId(userId, latestDigest.id) : [];
-  const stats = latestDigest ? await getDigestCompletionStats(userId, latestDigest.id) : null;
+  const articles = latestDigest ? await getUserArticlesByDigestId(userId, latestDigest.id, false, ['recommended', 'serendipity']) : [];
+  const bonusArticles = latestDigest ? await getUserArticlesByDigestId(userId, latestDigest.id, false, 'bonus') : [];
+  const stats = latestDigest ? await getDigestCompletionStats(userId, latestDigest.id, ['recommended', 'serendipity']) : null;
+  const bonusStats = latestDigest ? await getDigestCompletionStats(userId, latestDigest.id, 'bonus') : null;
 
-  // Enrich recent digests with completion info
+  // Enrich recent digests with completion info (main digest only)
   const enrichedDigests = await Promise.all(
     recentDigests.map(async (d) => {
-      const s = await getDigestCompletionStats(userId, d.id);
+      const s = await getDigestCompletionStats(userId, d.id, ['recommended', 'serendipity']);
       return {
         ...d,
         remaining_count: s.remaining_count,
@@ -64,7 +66,9 @@ export default async function DigestPage() {
               digestId={latestDigest.id}
               date={latestDigest.generated_at}
               articles={articles}
+              bonusArticles={bonusArticles}
               stats={stats || { total_article_count: 0, archived_count: 0, remaining_count: 0, liked_count: 0, neutral_count: 0, disliked_count: 0, bookmarked_count: 0 }}
+              bonusStats={bonusStats || { total_article_count: 0, archived_count: 0, remaining_count: 0, liked_count: 0, neutral_count: 0, disliked_count: 0, bookmarked_count: 0 }}
             >
               <DigestSelector digests={enrichedDigests} currentId={latestDigest.id} />
             </DigestContent>
