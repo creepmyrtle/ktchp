@@ -4,13 +4,13 @@ import { config } from './config';
 import { getGlobalSetting } from './db/settings';
 import { getDb } from './db/index';
 
-export type LlmProvider = 'anthropic' | 'synthetic';
+export type LlmProvider = 'anthropic' | 'synthetic' | 'openai';
 
 export async function getActiveProvider(): Promise<LlmProvider> {
   try {
     await getDb();
     const saved = await getGlobalSetting('llm_provider');
-    if (saved === 'anthropic' || saved === 'synthetic') return saved;
+    if (saved === 'anthropic' || saved === 'synthetic' || saved === 'openai') return saved;
   } catch {
     // DB not ready yet — fall back to default
   }
@@ -23,6 +23,7 @@ interface LlmResponse {
 
 let anthropicClient: Anthropic | null = null;
 let syntheticClient: OpenAI | null = null;
+let openaiClient: OpenAI | null = null;
 
 function getAnthropicClient(): Anthropic | null {
   if (!config.anthropicApiKey || config.anthropicApiKey === 'sk-ant-your-key-here') {
@@ -45,6 +46,18 @@ function getSyntheticClient(): OpenAI | null {
     });
   }
   return syntheticClient;
+}
+
+function getOpenaiClient(): OpenAI | null {
+  if (!config.openaiApiKey) {
+    return null;
+  }
+  if (!openaiClient) {
+    openaiClient = new OpenAI({
+      apiKey: config.openaiApiKey,
+    });
+  }
+  return openaiClient;
 }
 
 const MAX_RETRIES = 3;
@@ -93,6 +106,40 @@ export async function llmComplete(prompt: string, maxTokens: number = 4096): Pro
           continue;
         }
         console.error('[llm] Synthetic API error (no more retries):', err);
+        return null;
+      }
+    }
+    return null;
+  }
+
+  if (provider === 'openai') {
+    const client = getOpenaiClient();
+    if (!client) return null;
+
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        const response = await client.chat.completions.create({
+          model: config.openaiModel,
+          max_tokens: maxTokens,
+          messages: [
+            { role: 'system', content: 'You are a helpful assistant. Always respond with valid JSON when asked. No markdown fences, no explanations — just the JSON.' },
+            { role: 'user', content: prompt },
+          ],
+        });
+
+        const text = response.choices[0]?.message?.content?.trim() || '';
+        if (!text) {
+          console.warn('[llm] OpenAI returned empty. finish_reason:', response.choices[0]?.finish_reason, 'usage:', JSON.stringify(response.usage));
+        }
+        return { text };
+      } catch (err) {
+        if (isRetryable(err) && attempt < MAX_RETRIES) {
+          const delay = RETRY_DELAYS[attempt] || 10000;
+          console.warn(`[llm] OpenAI API error (attempt ${attempt + 1}/${MAX_RETRIES + 1}), retrying in ${delay}ms...`);
+          await sleep(delay);
+          continue;
+        }
+        console.error('[llm] OpenAI API error (no more retries):', err);
         return null;
       }
     }

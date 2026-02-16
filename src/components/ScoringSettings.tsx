@@ -26,8 +26,15 @@ const LABELS: Record<keyof ScoringConfig, string> = {
   max_llm_candidates: 'Max LLM candidates per user',
 };
 
+const PROVIDERS = [
+  { value: 'openai', label: 'OpenAI (GPT-4o-mini)', description: 'Fast, cheap, reliable' },
+  { value: 'synthetic', label: 'Synthetic (Kimi K2.5)', description: 'Reasoning model, slower' },
+  { value: 'anthropic', label: 'Anthropic (Claude Sonnet)', description: 'High quality, higher cost' },
+] as const;
+
 export default function ScoringSettings() {
   const [values, setValues] = useState<ScoringConfig>(DEFAULTS);
+  const [provider, setProvider] = useState('synthetic');
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -40,18 +47,31 @@ export default function ScoringSettings() {
         }
       })
       .catch(() => {});
+    fetch('/api/settings/provider')
+      .then(res => res.json())
+      .then(data => {
+        if (data?.provider) setProvider(data.provider);
+      })
+      .catch(() => {});
   }, []);
 
   const handleSave = async () => {
     setSaving(true);
     setMessage('');
     try {
-      const res = await fetch('/api/settings/scoring', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      });
-      if (res.ok) {
+      const [scoringRes, providerRes] = await Promise.all([
+        fetch('/api/settings/scoring', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(values),
+        }),
+        fetch('/api/settings/provider', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ provider }),
+        }),
+      ]);
+      if (scoringRes.ok && providerRes.ok) {
         setMessage('Saved');
         setTimeout(() => setMessage(''), 2000);
       } else {
@@ -70,6 +90,28 @@ export default function ScoringSettings() {
         Controls the two-stage embedding + LLM scoring pipeline. Articles above the embedding threshold
         are sent to the LLM. A small random sample from the serendipity range is also included.
       </p>
+
+      <div className="space-y-2 mb-2">
+        <label className="text-sm text-foreground">LLM Provider</label>
+        <div className="space-y-1.5">
+          {PROVIDERS.map(p => (
+            <label key={p.value} className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="radio"
+                name="provider"
+                value={p.value}
+                checked={provider === p.value}
+                onChange={() => setProvider(p.value)}
+                className="accent-accent"
+              />
+              <span className="text-sm text-foreground">{p.label}</span>
+              <span className="text-xs text-muted">{p.description}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <hr className="border-card-border" />
 
       <div className="space-y-3">
         {(Object.keys(LABELS) as (keyof ScoringConfig)[]).map(key => (

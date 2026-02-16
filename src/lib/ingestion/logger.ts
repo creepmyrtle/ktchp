@@ -31,6 +31,16 @@ export class IngestionLogger {
   }
 
   private addEvent(level: LogEvent['level'], phase: string, message: string, data?: Record<string, unknown>) {
+    const elapsed = ((Date.now() - this.startTime) / 1000).toFixed(1);
+    const prefix = `[${elapsed}s] [${phase}]`;
+    if (level === 'error') {
+      console.error(`${prefix} ERROR: ${message}`);
+    } else if (level === 'warn') {
+      console.warn(`${prefix} WARN: ${message}`);
+    } else {
+      console.log(`${prefix} ${message}`);
+    }
+
     this.events.push({
       timestamp: new Date().toISOString(),
       phase,

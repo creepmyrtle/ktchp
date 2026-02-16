@@ -24,7 +24,7 @@ export async function PUT(request: Request) {
     if (!isAdmin) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
 
     const { provider } = await request.json();
-    if (provider !== 'anthropic' && provider !== 'synthetic') {
+    if (provider !== 'anthropic' && provider !== 'synthetic' && provider !== 'openai') {
       return NextResponse.json({ error: 'Invalid provider' }, { status: 400 });
     }
 
