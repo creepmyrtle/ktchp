@@ -47,6 +47,21 @@ function getSyntheticClient(): OpenAI | null {
   return syntheticClient;
 }
 
+const MAX_RETRIES = 3;
+const RETRY_DELAYS = [2000, 5000, 10000]; // ms
+
+function isRetryable(err: unknown): boolean {
+  if (err && typeof err === 'object' && 'status' in err) {
+    const status = (err as { status: number }).status;
+    return status === 429 || status === 500 || status === 502 || status === 503 || status === 524;
+  }
+  return false;
+}
+
+async function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export async function llmComplete(prompt: string, maxTokens: number = 4096): Promise<LlmResponse | null> {
   const provider = await getActiveProvider();
 
@@ -54,30 +69,64 @@ export async function llmComplete(prompt: string, maxTokens: number = 4096): Pro
     const client = getSyntheticClient();
     if (!client) return null;
 
-    const response = await client.chat.completions.create({
-      model: config.syntheticModel,
-      max_tokens: maxTokens,
-      messages: [{ role: 'user', content: prompt }],
-    });
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        const response = await client.chat.completions.create({
+          model: config.syntheticModel,
+          max_tokens: maxTokens,
+          messages: [
+            { role: 'system', content: 'You are a helpful assistant. Always respond with valid JSON when asked. No markdown fences, no explanations — just the JSON.' },
+            { role: 'user', content: prompt },
+          ],
+        });
 
-    const text = response.choices[0]?.message?.content || '';
-    return { text };
+        const text = response.choices[0]?.message?.content?.trim() || '';
+        if (!text) {
+          console.warn('[llm] Synthetic returned empty. finish_reason:', response.choices[0]?.finish_reason, 'usage:', JSON.stringify(response.usage));
+        }
+        return { text };
+      } catch (err) {
+        if (isRetryable(err) && attempt < MAX_RETRIES) {
+          const delay = RETRY_DELAYS[attempt] || 10000;
+          console.warn(`[llm] Synthetic API error (attempt ${attempt + 1}/${MAX_RETRIES + 1}), retrying in ${delay}ms...`);
+          await sleep(delay);
+          continue;
+        }
+        console.error('[llm] Synthetic API error (no more retries):', err);
+        return null;
+      }
+    }
+    return null;
   }
 
   // Default: Anthropic
   const client = getAnthropicClient();
   if (!client) return null;
 
-  const response = await client.messages.create({
-    model: config.claudeModel,
-    max_tokens: maxTokens,
-    messages: [{ role: 'user', content: prompt }],
-  });
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const response = await client.messages.create({
+        model: config.claudeModel,
+        max_tokens: maxTokens,
+        messages: [{ role: 'user', content: prompt }],
+      });
 
-  const text = response.content
-    .filter(block => block.type === 'text')
-    .map(block => block.text)
-    .join('');
+      const text = response.content
+        .filter(block => block.type === 'text')
+        .map(block => block.text)
+        .join('');
 
-  return { text };
+      return { text };
+    } catch (err) {
+      if (isRetryable(err) && attempt < MAX_RETRIES) {
+        const delay = RETRY_DELAYS[attempt] || 10000;
+        console.warn(`[llm] Anthropic API error (attempt ${attempt + 1}/${MAX_RETRIES + 1}), retrying in ${delay}ms...`);
+        await sleep(delay);
+        continue;
+      }
+      console.error('[llm] Anthropic API error (no more retries):', err);
+      return null;
+    }
+  }
+  return null;
 }

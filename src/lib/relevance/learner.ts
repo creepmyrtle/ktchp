@@ -32,9 +32,29 @@ export async function runPreferenceLearning(userId: string): Promise<boolean> {
 
   const existingPrefs = await getPreferencesByUserId(userId);
 
-  const feedbackList = (recentFeedback as Record<string, unknown>[])
+  // Only sentiment + read actions matter for learning
+  const LEARNING_ACTIONS = new Set(['liked', 'neutral', 'disliked', 'read']);
+  const relevant = (recentFeedback as Record<string, unknown>[])
+    .filter(f => LEARNING_ACTIONS.has(f.action as string));
+
+  // Deduplicate: only keep one entry per article (the most recent action)
+  const seen = new Set<string>();
+  const dedupedFeedback = relevant.filter(f => {
+    const key = f.title as string;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  // Prioritize strong signals (liked/disliked/read) over neutrals, cap at 50
+  const MAX_ARTICLES = 50;
+  const strong = dedupedFeedback.filter(f => f.action !== 'neutral');
+  const neutral = dedupedFeedback.filter(f => f.action === 'neutral');
+  const capped = [...strong, ...neutral].slice(0, MAX_ARTICLES);
+
+  const feedbackList = capped
     .map(f =>
-      `Action: ${f.action} | Title: ${f.title} | Source: ${f.source_name} | Category: ${f.relevance_reason || 'unknown'}`
+      `${f.action} | ${(f.title as string).slice(0, 80)} | ${f.source_name} | ${f.relevance_reason || 'unknown'}`
     )
     .join('\n');
 
@@ -42,9 +62,11 @@ export async function runPreferenceLearning(userId: string): Promise<boolean> {
     ? existingPrefs.map(p => `- ${p.preference_text} (confidence: ${p.confidence})`).join('\n')
     : 'None yet.';
 
+  console.log(`[learner] ${capped.length} articles sent (${dedupedFeedback.length} unique from ${relevant.length} events, ${feedbackList.length} chars)`);
+
   const prompt = `Analyze this user's content feedback to identify patterns and preferences.
 
-## Recent Feedback (last ${recentFeedback.length} interactions)
+## Recent Feedback (${capped.length} articles)
 ${feedbackList}
 
 ## Current Learned Preferences
@@ -65,18 +87,28 @@ Return ONLY a JSON array (no markdown code fences):
 ]`;
 
   try {
-    const response = await llmComplete(prompt, 2048);
+    console.log(`[learner] Full prompt length: ${prompt.length} chars`);
+    const response = await llmComplete(prompt, 4096);
+    console.log(`[learner] LLM returned: ${response ? `"${response.text.slice(0, 200)}"` : 'null'}`);
     if (!response) return false;
 
     let parsed: PreferenceResult[];
     try {
       parsed = JSON.parse(response.text);
     } catch {
-      const match = response.text.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (match) {
-        parsed = JSON.parse(match[1]);
+      // Try extracting from markdown code fences
+      const fenceMatch = response.text.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (fenceMatch) {
+        parsed = JSON.parse(fenceMatch[1]);
       } else {
-        throw new Error('Could not parse JSON from response');
+        // Try extracting a JSON array from anywhere in the response
+        const arrayMatch = response.text.match(/\[[\s\S]*\]/);
+        if (arrayMatch) {
+          parsed = JSON.parse(arrayMatch[0]);
+        } else {
+          console.error('Raw LLM response:', response.text.slice(0, 500));
+          throw new Error('Could not parse JSON from response');
+        }
       }
     }
 

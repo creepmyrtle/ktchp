@@ -141,7 +141,7 @@ export async function scoreArticles(
     logger?.log('scoring', `Batch ${batchNum}/${totalBatches}: ${batch.length} articles`);
 
     try {
-      const response = await llmComplete(prompt, 16384);
+      const response = await llmComplete(prompt, 4096);
 
       if (!response) {
         logger?.warn('scoring', `Batch ${batchNum}: API unavailable, using fallback scores`);
