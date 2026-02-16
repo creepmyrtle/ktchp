@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import UserManager from './UserManager';
 import InviteCodeManager from './InviteCodeManager';
+import ScoringSettings from './ScoringSettings';
 
-const ADMIN_TABS = ['Users', 'Invite Codes'] as const;
+const ADMIN_TABS = ['Users', 'Invite Codes', 'Scoring'] as const;
 type AdminTab = (typeof ADMIN_TABS)[number];
 
 export default function AdminPanel() {
@@ -30,6 +31,7 @@ export default function AdminPanel() {
 
       {activeTab === 'Users' && <UserManager />}
       {activeTab === 'Invite Codes' && <InviteCodeManager />}
+      {activeTab === 'Scoring' && <ScoringSettings />}
     </div>
   );
 }

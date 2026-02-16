@@ -54,6 +54,7 @@ export interface UserArticle {
   digest_id: string | null;
   relevance_score: number | null;
   relevance_reason: string | null;
+  embedding_score: number | null;
   is_serendipity: boolean;
   sentiment: Sentiment | null;
   is_read: boolean;
@@ -61,6 +62,15 @@ export interface UserArticle {
   is_archived: boolean;
   archived_at: string | null;
   scored_at: string | null;
+}
+
+// Embedding (article or interest vector)
+export interface Embedding {
+  id: string;
+  ref_type: 'article' | 'interest';
+  ref_id: string;
+  embedding_text: string;
+  created_at: string;
 }
 
 // User article joined with article content and source info (replaces ArticleWithSource)

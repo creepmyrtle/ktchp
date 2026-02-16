@@ -7,7 +7,8 @@ function buildScoringPrompt(
   articles: Article[],
   interests: Interest[],
   preferences: LearnedPreference[],
-  recentFeedback: string
+  recentFeedback: string,
+  serendipityArticleIds?: Set<string>
 ): string {
   const interestNames = interests.map(i => i.category);
 
@@ -19,9 +20,24 @@ function buildScoringPrompt(
     ? preferences.map(p => `- ${p.preference_text} (confidence: ${p.confidence})`).join('\n')
     : 'No learned preferences yet.';
 
-  const articleList = articles
+  // Separate main candidates from serendipity pool
+  const mainArticles = serendipityArticleIds
+    ? articles.filter(a => !serendipityArticleIds.has(a.id))
+    : articles;
+  const serendipityArticles = serendipityArticleIds
+    ? articles.filter(a => serendipityArticleIds.has(a.id))
+    : [];
+
+  let articleSection = mainArticles
     .map(a => `ID: ${a.id}\nTitle: ${a.title}\nURL: ${a.url}`)
     .join('\n---\n');
+
+  if (serendipityArticles.length > 0) {
+    articleSection += '\n\n## Serendipity Candidates\nThe following articles did not score highly on topic similarity but are included as serendipity candidates. Evaluate whether they would be unexpectedly valuable to this user due to cross-domain connections, emerging trends, or adjacent relevance. Score them honestly — most will score low, but flag any genuine discoveries.\n\n';
+    articleSection += serendipityArticles
+      .map(a => `ID: ${a.id}\nTitle: ${a.title}\nURL: ${a.url}`)
+      .join('\n---\n');
+  }
 
   return `You are a content curator for a daily digest app. Score articles based on the user's interest profile.
 
@@ -62,7 +78,7 @@ is_serendipity should be true for AT MOST 1-2 articles per batch. It means:
 - 0.0-0.4: Not relevant enough to include
 
 ## Articles to Score
-${articleList}
+${articleSection}
 
 Respond ONLY with a JSON array (no markdown code fences):
 [
@@ -128,15 +144,17 @@ export async function scoreArticles(
   interests: Interest[],
   preferences: LearnedPreference[],
   recentFeedback: string = '',
-  logger?: IngestionLogger
+  logger?: IngestionLogger,
+  serendipityArticleIds?: string[]
 ): Promise<ScoringResult[]> {
+  const serendipitySet = serendipityArticleIds ? new Set(serendipityArticleIds) : undefined;
   const results: ScoringResult[] = [];
   const totalBatches = Math.ceil(articles.length / config.batchSize);
 
   for (let i = 0; i < articles.length; i += config.batchSize) {
     const batchNum = Math.floor(i / config.batchSize) + 1;
     const batch = articles.slice(i, i + config.batchSize);
-    const prompt = buildScoringPrompt(batch, interests, preferences, recentFeedback);
+    const prompt = buildScoringPrompt(batch, interests, preferences, recentFeedback, serendipitySet);
 
     logger?.log('scoring', `Batch ${batchNum}/${totalBatches}: ${batch.length} articles`);
 

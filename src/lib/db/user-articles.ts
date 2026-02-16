@@ -105,6 +105,19 @@ export async function getScoredUnassignedForUser(
   return rows as { id: string; article_id: string; relevance_score: number; is_serendipity: boolean }[];
 }
 
+export async function setEmbeddingScore(
+  userId: string,
+  articleId: string,
+  embeddingScore: number
+): Promise<void> {
+  await sql`
+    INSERT INTO user_articles (user_id, article_id, embedding_score)
+    VALUES (${userId}, ${articleId}, ${embeddingScore})
+    ON CONFLICT (user_id, article_id) DO UPDATE SET
+      embedding_score = ${embeddingScore}
+  `;
+}
+
 export async function createUserArticleScoring(
   userId: string,
   articleId: string,

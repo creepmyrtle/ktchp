@@ -166,4 +166,52 @@ export async function ensureSchema(): Promise<void> {
       created_at TIMESTAMPTZ DEFAULT NOW()
     )
   `;
+
+  // Embeddings table — try pgvector first, fall back to JSONB
+  await ensureEmbeddingsTable();
+
+  // Add embedding_score to user_articles if not exists
+  try {
+    await sql`ALTER TABLE user_articles ADD COLUMN IF NOT EXISTS embedding_score REAL`;
+  } catch { /* column may already exist */ }
+}
+
+async function ensureEmbeddingsTable(): Promise<void> {
+  let usePgvector = false;
+  try {
+    await sql`CREATE EXTENSION IF NOT EXISTS vector`;
+    usePgvector = true;
+  } catch {
+    // pgvector not available
+  }
+
+  if (usePgvector) {
+    await sql`
+      CREATE TABLE IF NOT EXISTS embeddings (
+        id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+        ref_type TEXT NOT NULL CHECK (ref_type IN ('article', 'interest')),
+        ref_id TEXT NOT NULL,
+        embedding_text TEXT NOT NULL,
+        embedding VECTOR(512),
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(ref_type, ref_id)
+      )
+    `;
+  } else {
+    await sql`
+      CREATE TABLE IF NOT EXISTS embeddings (
+        id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+        ref_type TEXT NOT NULL CHECK (ref_type IN ('article', 'interest')),
+        ref_id TEXT NOT NULL,
+        embedding_text TEXT NOT NULL,
+        embedding_json JSONB,
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(ref_type, ref_id)
+      )
+    `;
+  }
+
+  try {
+    await sql`CREATE INDEX IF NOT EXISTS idx_embeddings_ref ON embeddings(ref_type, ref_id)`;
+  } catch { /* index may already exist */ }
 }
