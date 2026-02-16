@@ -170,6 +170,17 @@ export async function getArticleIdsWithEmbeddings(articleIds: string[]): Promise
   return new Set(rows.map(r => r.ref_id));
 }
 
+// --- Pruning ---
+
+export async function pruneOldArticleEmbeddings(daysOld: number = 7): Promise<number> {
+  const { rowCount } = await sql`
+    DELETE FROM embeddings
+    WHERE ref_type = 'article'
+      AND created_at < NOW() - INTERVAL '1 day' * ${daysOld}
+  `;
+  return rowCount ?? 0;
+}
+
 // --- Interest embedding text builder ---
 
 export function buildInterestEmbeddingText(category: string, description: string | null): string {

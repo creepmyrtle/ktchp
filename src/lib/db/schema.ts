@@ -185,30 +185,25 @@ async function ensureEmbeddingsTable(): Promise<void> {
     // pgvector not available
   }
 
+  // Create the table with whichever columns are appropriate
+  await sql`
+    CREATE TABLE IF NOT EXISTS embeddings (
+      id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+      ref_type TEXT NOT NULL CHECK (ref_type IN ('article', 'interest')),
+      ref_id TEXT NOT NULL,
+      embedding_text TEXT NOT NULL,
+      embedding_json JSONB,
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(ref_type, ref_id)
+    )
+  `;
+
+  // If pgvector is available, ensure the VECTOR column exists
+  // (handles case where table was created before pgvector was enabled)
   if (usePgvector) {
-    await sql`
-      CREATE TABLE IF NOT EXISTS embeddings (
-        id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-        ref_type TEXT NOT NULL CHECK (ref_type IN ('article', 'interest')),
-        ref_id TEXT NOT NULL,
-        embedding_text TEXT NOT NULL,
-        embedding VECTOR(512),
-        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(ref_type, ref_id)
-      )
-    `;
-  } else {
-    await sql`
-      CREATE TABLE IF NOT EXISTS embeddings (
-        id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-        ref_type TEXT NOT NULL CHECK (ref_type IN ('article', 'interest')),
-        ref_id TEXT NOT NULL,
-        embedding_text TEXT NOT NULL,
-        embedding_json JSONB,
-        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(ref_type, ref_id)
-      )
-    `;
+    try {
+      await sql`ALTER TABLE embeddings ADD COLUMN IF NOT EXISTS embedding VECTOR(512)`;
+    } catch { /* column may already exist */ }
   }
 
   try {

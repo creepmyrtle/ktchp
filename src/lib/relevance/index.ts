@@ -15,6 +15,7 @@ import {
 import {
   getEmbeddingsByType,
   cosineSimilarity,
+  pruneOldArticleEmbeddings,
 } from '../embeddings';
 import { prefilterArticles } from './prefilter';
 import { scoreArticles } from './scorer';
@@ -76,7 +77,7 @@ export async function runRelevanceForAllUsers(provider: string, logger?: Ingesti
   for (const user of users) {
     try {
       results[user.id] = await runRelevanceEngine(user.id, provider, logger);
-    } catch (error) {
+    } catch (error: unknown) {
       logger?.error('relevance', `Error scoring for user ${user.username}: ${error}`);
       results[user.id] = {
         articlesScored: 0,
@@ -91,6 +92,16 @@ export async function runRelevanceForAllUsers(provider: string, logger?: Ingesti
         scoredUnassignedCount: 0,
       };
     }
+  }
+
+  // Prune old article embeddings to save database storage
+  try {
+    const pruned = await pruneOldArticleEmbeddings(7);
+    if (pruned > 0) {
+      logger?.log('embedding', `Pruned ${pruned} old article embeddings (>7 days)`);
+    }
+  } catch (err) {
+    logger?.warn('embedding', `Embedding pruning failed: ${err}`);
   }
 
   return results;
