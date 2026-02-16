@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import type { UserArticleWithSource, Sentiment, DigestTier } from '@/types';
 import ActionBar from './FeedbackButtons';
 import { useSwipeToArchive } from '@/hooks/useSwipeToArchive';
@@ -17,24 +17,42 @@ export default function ArticleCard({ article, swipeDirection = 'right', tier, o
   const [archived, setArchived] = useState(false);
   const [sentiment, setSentiment] = useState<Sentiment | null>(article.sentiment);
   const [isRead, setIsRead] = useState(article.is_read);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   const isSerendipity = !!article.is_serendipity;
   const isBonus = tier === 'bonus';
 
-  function handleArchive() {
+  const handleArchive = useCallback(() => {
     // Persist to DB
     fetch('/api/feedback', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ articleId: article.article_id, action: 'archived' }),
     });
+
+    // Pin the wrapper height so collapse can transition smoothly
+    const wrapper = wrapperRef.current;
+    if (wrapper) {
+      wrapper.style.height = `${wrapper.offsetHeight}px`;
+    }
+
     setArchiving(true);
-    // After animation, fully remove
+
+    // After fade, collapse the space smoothly
     setTimeout(() => {
+      if (wrapper) {
+        wrapper.style.transition = 'height 300ms ease-out';
+        wrapper.style.height = '0px';
+        wrapper.style.overflow = 'hidden';
+        // After collapse, fully remove from layout
+        setTimeout(() => {
+          if (wrapper) wrapper.style.display = 'none';
+        }, 300);
+      }
       setArchived(true);
       onArchived?.();
     }, 400);
-  }
+  }, [article.article_id, onArchived]);
 
   function handleSwipeBlocked() {
     // Shake the sentiment buttons — handled by ActionBar's pulse
@@ -70,87 +88,89 @@ export default function ArticleCard({ article, swipeDirection = 'right', tier, o
     return `${days}d ago`;
   }
 
-  if (archived) return null;
-
   return (
-    <div className={`relative ${archiving ? 'card-archiving' : ''}`}>
-      {/* Swipe background indicator */}
-      <div
-        ref={bgRef}
-        className={`absolute inset-0 rounded-lg flex items-center opacity-0 transition-opacity ${
-          swipeDirection === 'right' ? 'justify-start pl-6' : 'justify-end pr-6'
-        } ${sentiment ? 'bg-success/20' : 'bg-serendipity/20'}`}
-      >
-        <span className="text-xl">{sentiment ? '\u2713' : '\u26A0'}</span>
-      </div>
+    <div ref={wrapperRef}>
+      {!archived && (
+        <div className={`relative ${archiving ? 'card-archiving' : ''}`}>
+          {/* Swipe background indicator */}
+          <div
+            ref={bgRef}
+            className={`absolute inset-0 rounded-lg flex items-center opacity-0 transition-opacity ${
+              swipeDirection === 'right' ? 'justify-start pl-6' : 'justify-end pr-6'
+            } ${sentiment ? 'bg-success/20' : 'bg-serendipity/20'}`}
+          >
+            <span className="text-xl">{sentiment ? '\u2713' : '\u26A0'}</span>
+          </div>
 
-      {/* Card content — swipeable */}
-      <div
-        ref={swipeRef}
-        {...handlers}
-        className={`relative rounded-lg border p-4 bg-card card-hover ${
-          isBonus
-            ? 'border-slate-500/40'
-            : isSerendipity
-              ? 'border-serendipity/40 card-hover-serendipity'
-              : sentiment
-                ? 'border-card-border/60'
-                : 'border-card-border'
-        }`}
-      >
-        {/* Header: source + relevance tag */}
-        <div className="flex items-start justify-between gap-2 mb-2 flex-wrap">
-          <span className="text-xs text-muted flex items-center gap-1.5">
-            {!isRead && <span className={`inline-block w-1.5 h-1.5 rounded-full ${isBonus ? 'bg-slate-400' : 'bg-accent'}`} />}
-            {article.source_name}
-          </span>
-          <span
-            className={`text-xs px-2 py-0.5 rounded-full leading-tight ${
+          {/* Card content — swipeable */}
+          <div
+            ref={swipeRef}
+            {...handlers}
+            className={`relative rounded-lg border p-4 bg-card card-hover ${
               isBonus
-                ? 'bg-slate-500/15 text-slate-400'
+                ? 'border-slate-500/40'
                 : isSerendipity
-                  ? 'bg-serendipity-light text-serendipity'
-                  : 'bg-accent-light text-accent'
+                  ? 'border-serendipity/40 card-hover-serendipity'
+                  : sentiment
+                    ? 'border-card-border/60'
+                    : 'border-card-border'
             }`}
           >
-            {isSerendipity && '\u2728 '}
-            {isBonus ? 'Below threshold' : (article.relevance_reason || 'Relevant')}
-          </span>
+            {/* Header: source + relevance tag */}
+            <div className="flex items-start justify-between gap-2 mb-2 flex-wrap">
+              <span className="text-xs text-muted flex items-center gap-1.5">
+                {!isRead && <span className={`inline-block w-1.5 h-1.5 rounded-full ${isBonus ? 'bg-slate-400' : 'bg-accent'}`} />}
+                {article.source_name}
+              </span>
+              <span
+                className={`text-xs px-2 py-0.5 rounded-full leading-tight ${
+                  isBonus
+                    ? 'bg-slate-500/15 text-slate-400'
+                    : isSerendipity
+                      ? 'bg-serendipity-light text-serendipity'
+                      : 'bg-accent-light text-accent'
+                }`}
+              >
+                {isSerendipity && '\u2728 '}
+                {isBonus ? 'Below threshold' : (article.relevance_reason || 'Relevant')}
+              </span>
+            </div>
+
+            {/* Title — clickable, marks as read */}
+            <a
+              href={article.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`block text-base font-medium leading-snug hover:text-accent transition-colors mb-2 ${isRead ? 'text-muted' : ''}`}
+              onClick={handleLinkClick}
+            >
+              {article.title}
+            </a>
+
+            {/* AI Summary */}
+            {article.summary && (
+              <p className="text-sm text-muted leading-relaxed mb-3">
+                {article.summary}
+              </p>
+            )}
+
+            {/* Metadata + action bar */}
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <span className="text-xs text-muted">
+                {timeAgo(article.published_at)}
+              </span>
+              <ActionBar
+                articleId={article.article_id}
+                articleUrl={article.url}
+                initialSentiment={article.sentiment}
+                initialIsBookmarked={article.is_bookmarked}
+                onArchive={handleArchive}
+                onSentimentChange={(s) => setSentiment(s)}
+              />
+            </div>
+          </div>
         </div>
-
-        {/* Title — clickable, marks as read */}
-        <a
-          href={article.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`block text-base font-medium leading-snug hover:text-accent transition-colors mb-2 ${isRead ? 'text-muted' : ''}`}
-          onClick={handleLinkClick}
-        >
-          {article.title}
-        </a>
-
-        {/* AI Summary */}
-        {article.summary && (
-          <p className="text-sm text-muted leading-relaxed mb-3">
-            {article.summary}
-          </p>
-        )}
-
-        {/* Metadata + action bar */}
-        <div className="flex items-center justify-between gap-2 flex-wrap">
-          <span className="text-xs text-muted">
-            {timeAgo(article.published_at)}
-          </span>
-          <ActionBar
-            articleId={article.article_id}
-            articleUrl={article.url}
-            initialSentiment={article.sentiment}
-            initialIsBookmarked={article.is_bookmarked}
-            onArchive={handleArchive}
-            onSentimentChange={(s) => setSentiment(s)}
-          />
-        </div>
-      </div>
+      )}
     </div>
   );
 }

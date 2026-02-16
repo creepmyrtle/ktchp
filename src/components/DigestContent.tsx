@@ -139,12 +139,16 @@ export default function DigestContent({ digestId, date, articles, bonusArticles 
       {/* Bonus digest section — visible after main digest is complete */}
       {bonusTotalCount > 0 && allCleared && (
         <div className="mt-2">
-          {!bonusExpanded ? (
+          {allBonusCleared ? (
+            /* All bonus articles already reviewed */
+            <div className="text-center py-8 border-t border-card-border">
+              <p className="text-muted text-sm">Bonus complete &mdash; You reviewed all {bonusTotalCount} additional articles.</p>
+            </div>
+          ) : !bonusExpanded ? (
+            /* Bonus available but not yet expanded */
             <div className="rounded-lg border border-slate-500/30 bg-card p-5 text-center">
               <p className="text-foreground font-light text-base mb-1">
-                {bonusTotalCount - bonusArchivedCount > 0
-                  ? `${bonusTotalCount - bonusArchivedCount} more article${bonusTotalCount - bonusArchivedCount !== 1 ? 's' : ''}`
-                  : 'Bonus articles'}
+                {bonusTotalCount - bonusArchivedCount} more article{bonusTotalCount - bonusArchivedCount !== 1 ? 's' : ''}
               </p>
               <p className="text-muted text-sm mb-4">
                 These didn&apos;t make your main digest but browsing them helps ktchp learn what you like.
@@ -158,6 +162,7 @@ export default function DigestContent({ digestId, date, articles, bonusArticles 
               </button>
             </div>
           ) : (
+            /* Bonus expanded — show cards */
             <>
               <div className="flex items-center gap-3 mb-4 text-xs text-muted">
                 <div className="flex-1 border-t border-slate-500/30" />
