@@ -109,7 +109,7 @@ Respond ONLY with a JSON array (no markdown code fences):
       });
 
       const content = response.choices[0]?.message?.content?.trim() || '';
-      const reasoning = (response.choices[0]?.message as Record<string, unknown>)?.reasoning_content as string || '';
+      const reasoning = (response.choices[0]?.message as unknown as Record<string, unknown>)?.reasoning_content as string || '';
 
       console.log(`finish_reason: ${response.choices[0]?.finish_reason}`);
       console.log(`usage: prompt=${response.usage?.prompt_tokens}, completion=${response.usage?.completion_tokens}, total=${response.usage?.total_tokens}`);
