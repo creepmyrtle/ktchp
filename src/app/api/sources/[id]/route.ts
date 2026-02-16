@@ -48,7 +48,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
 
     const { id } = await params;
     const existing = await getSourceById(id);
-    if (!existing || existing.user_id !== userId || existing.is_default) {
+    if (!existing || existing.user_id !== userId) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 

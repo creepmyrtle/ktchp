@@ -62,8 +62,6 @@ export async function runPreferenceLearning(userId: string): Promise<boolean> {
     ? existingPrefs.map(p => `- ${p.preference_text} (confidence: ${p.confidence})`).join('\n')
     : 'None yet.';
 
-  console.log(`[learner] ${capped.length} articles sent (${dedupedFeedback.length} unique from ${relevant.length} events, ${feedbackList.length} chars)`);
-
   const prompt = `Analyze this user's content feedback to identify patterns and preferences.
 
 ## Recent Feedback (${capped.length} articles)
@@ -87,9 +85,7 @@ Return ONLY a JSON array (no markdown code fences):
 ]`;
 
   try {
-    console.log(`[learner] Full prompt length: ${prompt.length} chars`);
     const response = await llmComplete(prompt, 4096);
-    console.log(`[learner] LLM returned: ${response ? `"${response.text.slice(0, 200)}"` : 'null'}`);
     if (!response) return false;
 
     let parsed: PreferenceResult[];
