@@ -1,0 +1,165 @@
+{
+  "id": "b814683b-ffb2-4419-a682-245df5bc5fb2",
+  "user_id": "cbd80c68-3b9e-4fbf-888d-dc5958151a40",
+  "provider": "synthetic",
+  "trigger": "cron",
+  "status": "success",
+  "started_at": "2026-02-16T12:57:03.171Z",
+  "finished_at": "2026-02-16T13:01:18.485Z",
+  "duration_ms": 255314,
+  "summary": {
+    "duplicates": 113,
+    "errorCount": 0,
+    "newArticles": 7,
+    "usersScored": 2,
+    "totalFetched": 120
+  },
+  "events": [
+    {
+      "level": "info",
+      "phase": "setup",
+      "message": "Ingestion started (provider: synthetic)",
+      "timestamp": "2026-02-16T12:57:03.183Z"
+    },
+    {
+      "level": "info",
+      "phase": "fetch",
+      "message": "Fetching from 6 sources",
+      "timestamp": "2026-02-16T12:57:03.209Z"
+    },
+    {
+      "level": "info",
+      "phase": "fetch",
+      "message": "ZeroHedge: 3 new, 22 dupes (25 fetched)",
+      "timestamp": "2026-02-16T12:57:03.802Z"
+    },
+    {
+      "level": "info",
+      "phase": "fetch",
+      "message": "Hacker News: 3 new, 17 dupes (20 fetched)",
+      "timestamp": "2026-02-16T12:57:03.864Z"
+    },
+    {
+      "level": "info",
+      "phase": "fetch",
+      "message": "Ars Technica: 0 new, 20 dupes (20 fetched)",
+      "timestamp": "2026-02-16T12:57:03.864Z"
+    },
+    {
+      "level": "info",
+      "phase": "fetch",
+      "message": "The Verge: 1 new, 9 dupes (10 fetched)",
+      "timestamp": "2026-02-16T12:57:03.887Z"
+    },
+    {
+      "level": "info",
+      "phase": "fetch",
+      "message": "Simon Willison's Blog: 0 new, 25 dupes (25 fetched)",
+      "timestamp": "2026-02-16T12:57:03.888Z"
+    },
+    {
+      "level": "info",
+      "phase": "fetch",
+      "message": "One Useful Thing: 0 new, 20 dupes (20 fetched)",
+      "timestamp": "2026-02-16T12:57:03.888Z"
+    },
+    {
+      "level": "info",
+      "phase": "fetch",
+      "message": "Ingestion done: 7 new, 113 dupes, 0 errors",
+      "timestamp": "2026-02-16T12:57:03.888Z"
+    },
+    {
+      "level": "info",
+      "phase": "relevance",
+      "message": "Scoring for 2 active user(s)",
+      "timestamp": "2026-02-16T12:57:03.907Z"
+    },
+    {
+      "level": "info",
+      "phase": "relevance",
+      "message": "User cbd80c68-3b9e-4fbf-888d-dc5958151a40: 12 unscored articles",
+      "timestamp": "2026-02-16T12:57:04.093Z"
+    },
+    {
+      "level": "info",
+      "phase": "prefilter",
+      "message": "Prefilter: 12 → 8 (4 removed)",
+      "timestamp": "2026-02-16T12:57:04.093Z"
+    },
+    {
+      "level": "info",
+      "phase": "scoring",
+      "message": "Batch 1/1: 8 articles",
+      "timestamp": "2026-02-16T12:57:04.180Z"
+    },
+    {
+      "level": "error",
+      "phase": "scoring",
+      "message": "Batch 1 failed: Error: Could not parse JSON from response",
+      "timestamp": "2026-02-16T12:58:07.700Z"
+    },
+    {
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored 8 articles",
+      "timestamp": "2026-02-16T12:58:07.700Z"
+    },
+    {
+      "level": "info",
+      "phase": "digest",
+      "message": "Digest created: 8 articles (0 serendipity)",
+      "timestamp": "2026-02-16T12:58:08.281Z"
+    },
+    {
+      "level": "info",
+      "phase": "relevance",
+      "message": "User 8ea02b15-eec6-4805-8bda-8b2caeddbccd: 32 unscored articles",
+      "timestamp": "2026-02-16T12:58:08.446Z"
+    },
+    {
+      "level": "info",
+      "phase": "prefilter",
+      "message": "Prefilter: 32 → 14 (18 removed)",
+      "timestamp": "2026-02-16T12:58:08.446Z"
+    },
+    {
+      "level": "info",
+      "phase": "scoring",
+      "message": "Batch 1/2: 10 articles",
+      "timestamp": "2026-02-16T12:58:08.516Z"
+    },
+    {
+      "level": "info",
+      "phase": "scoring",
+      "message": "Batch 2/2: 4 articles",
+      "timestamp": "2026-02-16T12:59:51.716Z"
+    },
+    {
+      "level": "info",
+      "phase": "scoring",
+      "message": "Scored 14 articles",
+      "timestamp": "2026-02-16T13:01:17.718Z"
+    },
+    {
+      "level": "info",
+      "phase": "digest",
+      "message": "Digest created: 13 articles (1 serendipity)",
+      "timestamp": "2026-02-16T13:01:18.474Z"
+    },
+    {
+      "data": {
+        "duplicates": 113,
+        "errorCount": 0,
+        "newArticles": 7,
+        "usersScored": 2,
+        "totalFetched": 120
+      },
+      "level": "info",
+      "phase": "complete",
+      "message": "Pipeline finished",
+      "timestamp": "2026-02-16T13:01:18.474Z"
+    }
+  ],
+  "error": null
+}

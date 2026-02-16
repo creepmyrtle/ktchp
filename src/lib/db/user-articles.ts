@@ -68,14 +68,20 @@ export async function getUnscoredArticlesForUser(
   sourceIds: string[]
 ): Promise<{ id: string; source_id: string; title: string; url: string; raw_content: string | null; published_at: string | null }[]> {
   if (sourceIds.length === 0) return [];
-  // Articles from these sources that don't have a user_articles row for this user
+  // Articles that either have no user_articles row, were fallback-scored, or had scores cleared
   const placeholders = sourceIds.map((_, i) => `$${i + 2}`).join(', ');
   const { rows } = await sql.query(
     `SELECT a.id, a.source_id, a.title, a.url, a.raw_content, a.published_at
      FROM articles a
      WHERE a.source_id IN (${placeholders})
-       AND NOT EXISTS (
-         SELECT 1 FROM user_articles ua WHERE ua.article_id = a.id AND ua.user_id = $1
+       AND (
+         NOT EXISTS (
+           SELECT 1 FROM user_articles ua WHERE ua.article_id = a.id AND ua.user_id = $1
+         )
+         OR EXISTS (
+           SELECT 1 FROM user_articles ua WHERE ua.article_id = a.id AND ua.user_id = $1
+             AND (ua.relevance_reason LIKE 'Default score%' OR ua.relevance_score IS NULL)
+         )
        )
      ORDER BY a.ingested_at DESC`,
     [userId, ...sourceIds]

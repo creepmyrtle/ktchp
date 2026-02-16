@@ -5,5 +5,5 @@ export const config = {
   get minRelevanceScore() { return parseFloat(process.env.MIN_RELEVANCE_SCORE || '0.5'); },
   claudeModel: 'claude-sonnet-4-20250514' as const,
   syntheticModel: 'hf:moonshotai/Kimi-K2.5',
-  batchSize: 10,
+  batchSize: 20,
 };

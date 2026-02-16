@@ -20,7 +20,7 @@ function buildScoringPrompt(
     : 'No learned preferences yet.';
 
   const articleList = articles
-    .map(a => `ID: ${a.id}\nTitle: ${a.title}\nURL: ${a.url}\nContent: ${(a.raw_content || '').slice(0, 300)}`)
+    .map(a => `ID: ${a.id}\nTitle: ${a.title}\nURL: ${a.url}`)
     .join('\n---\n');
 
   return `You are a content curator for a daily digest app. Score articles based on the user's interest profile.
