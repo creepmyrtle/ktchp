@@ -60,6 +60,7 @@ async function main() {
     await logger.persist('success', summary);
 
     console.log('Ingestion complete:', JSON.stringify(summary, null, 2));
+    process.exit(0);
   } catch (error) {
     console.error('Ingestion error:', error);
 
