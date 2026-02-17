@@ -128,25 +128,10 @@ export default function DigestContent({ digestId, date, articles, bonusArticles 
         </div>
       )}
 
-      {/* Caught up / completion message */}
-      <CaughtUpMessage
-        isComplete={allCleared}
-        totalCount={totalCount}
-        likedCount={liveStats.liked_count}
-        neutralCount={liveStats.neutral_count}
-        dislikedCount={liveStats.disliked_count}
-        bookmarkedCount={liveStats.bookmarked_count}
-      />
-
-      {/* Bonus digest section — visible after main digest is complete */}
-      {bonusTotalCount > 0 && allCleared && (
+      {/* Bonus digest section — visible after main is complete but bonus is not yet cleared */}
+      {bonusTotalCount > 0 && allCleared && !allBonusCleared && (
         <div className="mt-2">
-          {allBonusCleared ? (
-            /* All bonus articles already reviewed */
-            <div className="text-center py-8 border-t border-card-border">
-              <p className="text-muted text-sm">Bonus complete &mdash; You reviewed all {bonusTotalCount} additional articles.</p>
-            </div>
-          ) : !bonusExpanded ? (
+          {!bonusExpanded ? (
             /* Bonus available but not yet expanded */
             <div className="rounded-lg border border-slate-500/30 bg-card p-5 text-center">
               <p className="text-foreground font-light text-base mb-1">
@@ -181,14 +166,21 @@ export default function DigestContent({ digestId, date, articles, bonusArticles 
                   />
                 ))}
               </div>
-              {allBonusCleared && (
-                <div className="text-center py-8 mt-4 border-t border-card-border">
-                  <p className="text-muted text-sm">Bonus complete &mdash; You reviewed all {bonusTotalCount} additional articles.</p>
-                </div>
-              )}
             </>
           )}
         </div>
+      )}
+
+      {/* Caught up / completion message — only after all articles (main + bonus) are cleared */}
+      {allCleared && (bonusTotalCount === 0 || allBonusCleared) && (
+        <CaughtUpMessage
+          isComplete={true}
+          totalCount={totalCount + bonusTotalCount}
+          likedCount={liveStats.liked_count}
+          neutralCount={liveStats.neutral_count}
+          dislikedCount={liveStats.disliked_count}
+          bookmarkedCount={liveStats.bookmarked_count}
+        />
       )}
     </>
   );
