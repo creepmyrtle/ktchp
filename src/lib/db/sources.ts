@@ -105,6 +105,17 @@ export async function updateSource(id: string, updates: Partial<Pick<Source, 'na
 }
 
 export async function deleteSource(id: string): Promise<boolean> {
+  // Must delete in dependency order: user_articles → feedback → embeddings → articles → source
+  const articleIds = await sql`SELECT id FROM articles WHERE source_id = ${id}`;
+  if (articleIds.rows.length > 0) {
+    const ids = articleIds.rows.map(r => r.id);
+    const placeholders = ids.map((_, i) => `$${i + 1}`).join(', ');
+    await sql.query(`DELETE FROM user_articles WHERE article_id IN (${placeholders})`, ids);
+    await sql.query(`DELETE FROM feedback WHERE article_id IN (${placeholders})`, ids);
+    await sql.query(`DELETE FROM embeddings WHERE ref_type = 'article' AND ref_id IN (${placeholders})`, ids);
+    await sql.query(`DELETE FROM articles WHERE source_id = $1`, [id]);
+  }
+  await sql`DELETE FROM user_source_settings WHERE source_id = ${id}`;
   const { rowCount } = await sql`DELETE FROM sources WHERE id = ${id}`;
   return (rowCount ?? 0) > 0;
 }

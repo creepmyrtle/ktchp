@@ -66,6 +66,8 @@ export default function DigestContent({ digestId, date, articles, bonusArticles 
         articleCount={totalCount - archivedCount}
         archivedCount={archivedCount}
         totalCount={totalCount}
+        bonusTotalCount={bonusTotalCount}
+        bonusArchivedCount={bonusArchivedCount}
       />
 
       {!hintDismissed && articles.length > 0 && (

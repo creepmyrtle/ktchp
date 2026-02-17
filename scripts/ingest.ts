@@ -50,8 +50,10 @@ async function main() {
       totalFetched: ingestionResult.totalFetched,
       newArticles: ingestionResult.newArticles,
       duplicates: ingestionResult.duplicates,
+      articlesEmbedded: ingestionResult.articlesEmbedded,
+      embeddingTokens: ingestionResult.embeddingTokens,
       errorCount: ingestionResult.errors.length,
-      usersScored: Object.keys(allResults).length,
+      userResults: allResults,
     };
 
     logger.log('complete', 'Pipeline finished', summary);

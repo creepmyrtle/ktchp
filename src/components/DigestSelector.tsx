@@ -6,8 +6,11 @@ interface DigestOption {
   id: string;
   generated_at: string | Date;
   article_count: number;
+  main_count?: number;
   remaining_count?: number;
   is_complete?: boolean;
+  bonus_count?: number;
+  bonus_remaining?: number;
 }
 
 interface DigestSelectorProps {
@@ -40,6 +43,37 @@ function formatTime(dateVal: string | Date): string {
   });
 }
 
+function buildLabel(digest: DigestOption): string {
+  const date = formatDate(digest.generated_at);
+  const time = formatTime(digest.generated_at);
+
+  const mainCount = digest.main_count ?? digest.article_count;
+  const bonusCount = digest.bonus_count ?? 0;
+  const mainComplete = digest.is_complete;
+  const bonusRemaining = digest.bonus_remaining ?? 0;
+  const allDone = mainComplete && bonusCount > 0 && bonusRemaining === 0;
+
+  // Article count portion
+  let countPart = `${mainCount}`;
+  if (bonusCount > 0) {
+    countPart += ` + ${bonusCount} bonus`;
+  }
+
+  // Status portion
+  let statusPart = '';
+  if (allDone) {
+    statusPart = '\u2713';
+  } else if (mainComplete && bonusCount > 0) {
+    statusPart = `\u2713 ${bonusRemaining} bonus left`;
+  } else if (mainComplete) {
+    statusPart = '\u2713';
+  } else if (digest.remaining_count != null) {
+    statusPart = `${digest.remaining_count} left`;
+  }
+
+  return `${date} \u2014 ${time} (${countPart})${statusPart ? ` ${statusPart}` : ''}`;
+}
+
 export default function DigestSelector({ digests, currentId }: DigestSelectorProps) {
   const router = useRouter();
 
@@ -56,18 +90,11 @@ export default function DigestSelector({ digests, currentId }: DigestSelectorPro
         }}
         className="w-full sm:w-auto px-3 py-2 rounded-lg text-sm bg-card border border-card-border text-foreground cursor-pointer focus:outline-none focus:border-accent"
       >
-        {digests.map((digest) => {
-          const badge = digest.is_complete
-            ? '\u2713'
-            : digest.remaining_count != null
-              ? `${digest.remaining_count} left`
-              : '';
-          return (
-            <option key={digest.id} value={digest.id}>
-              {formatDate(digest.generated_at)} — {formatTime(digest.generated_at)} ({digest.article_count} articles){badge ? ` ${badge}` : ''}
-            </option>
-          );
-        })}
+        {digests.map((digest) => (
+          <option key={digest.id} value={digest.id}>
+            {buildLabel(digest)}
+          </option>
+        ))}
       </select>
     </div>
   );

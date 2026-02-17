@@ -26,11 +26,17 @@ export default async function DigestPage() {
   // Enrich recent digests with completion info (main digest only)
   const enrichedDigests = await Promise.all(
     recentDigests.map(async (d) => {
-      const s = await getDigestCompletionStats(userId, d.id, ['recommended', 'serendipity']);
+      const [mainStats, bStats] = await Promise.all([
+        getDigestCompletionStats(userId, d.id, ['recommended', 'serendipity']),
+        getDigestCompletionStats(userId, d.id, 'bonus'),
+      ]);
       return {
         ...d,
-        remaining_count: s.remaining_count,
-        is_complete: s.remaining_count === 0 && s.total_article_count > 0,
+        main_count: mainStats.total_article_count,
+        remaining_count: mainStats.remaining_count,
+        is_complete: mainStats.remaining_count === 0 && mainStats.total_article_count > 0,
+        bonus_count: bStats.total_article_count,
+        bonus_remaining: bStats.remaining_count,
       };
     })
   );

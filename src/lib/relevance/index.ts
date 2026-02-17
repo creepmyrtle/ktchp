@@ -286,20 +286,28 @@ export async function runRelevanceEngine(userId: string, provider: string, logge
     }
   }
 
-  // Articles that passed embedding but weren't sent to LLM (above cap) get embedding_score as fallback
+  // Articles not sent to LLM get their embedding similarity as a fallback relevance score
   if (hasEmbeddings) {
     const llmScoredIds = new Set([...llmCandidates, ...serendipityPool].map(a => a.id));
     const unscoredByLlm = filtered.filter(a => !llmScoredIds.has(a.id));
     for (const article of unscoredByLlm) {
-      const emb = articleEmbeddings.get(article.id);
-      if (!emb) continue;
-      // These articles were below threshold or beyond cap — give them a fallback score
-      // based on their embedding score (mapped to a relevance-like range)
+      const articleEmb = articleEmbeddings.get(article.id);
+      if (!articleEmb) continue;
+
+      // Use the article's best embedding similarity as its relevance score
+      let maxSimilarity = 0;
+      for (const interest of interests) {
+        const interestEmb = interestEmbeddings.get(interest.id);
+        if (!interestEmb) continue;
+        const sim = cosineSimilarity(articleEmb, interestEmb);
+        if (sim > maxSimilarity) maxSimilarity = sim;
+      }
+
       await createUserArticleScoring(
         userId,
         article.id,
-        0.0, // Below threshold — score as not relevant
-        'Below embedding threshold',
+        parseFloat(maxSimilarity.toFixed(4)),
+        'Embedding score (not sent to LLM)',
         false
       );
     }
@@ -315,7 +323,7 @@ export async function runRelevanceEngine(userId: string, provider: string, logge
 
 // Bonus digest defaults
 const DEFAULT_BONUS_MIN_SCORE = 0.15;
-const DEFAULT_BONUS_MAX_ARTICLES = 20;
+const DEFAULT_BONUS_MAX_ARTICLES = 50;
 
 async function getBonusSettings(): Promise<{ enabled: boolean; minScore: number; maxArticles: number }> {
   const [enabled, minScore, maxArticles] = await Promise.all([

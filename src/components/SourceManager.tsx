@@ -10,12 +10,38 @@ interface Source {
   enabled: boolean;
 }
 
+interface OpmlFeed {
+  name: string;
+  url: string;
+}
+
+function parseOpml(xml: string): OpmlFeed[] {
+  // Sanitize unescaped & characters that break XML parsing (common in OPML exports)
+  const sanitized = xml.replace(/&(?!amp;|lt;|gt;|apos;|quot;|#\d+;|#x[\da-fA-F]+;)/g, '&amp;');
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(sanitized, 'text/xml');
+  const feeds: OpmlFeed[] = [];
+
+  const outlines = doc.querySelectorAll('outline[xmlUrl]');
+  for (const outline of outlines) {
+    const url = outline.getAttribute('xmlUrl');
+    const name = outline.getAttribute('title') || outline.getAttribute('text') || '';
+    if (url) {
+      feeds.push({ name: name.trim(), url: url.trim() });
+    }
+  }
+
+  return feeds;
+}
+
 export default function SourceManager() {
   const [sources, setSources] = useState<Source[]>([]);
   const [loading, setLoading] = useState(true);
   const [feedUrl, setFeedUrl] = useState('');
   const [feedName, setFeedName] = useState('');
   const [adding, setAdding] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [importStatus, setImportStatus] = useState<string | null>(null);
 
   const fetchSources = useCallback(async () => {
     const res = await fetch('/api/sources');
@@ -69,6 +95,79 @@ export default function SourceManager() {
   async function deleteSource(id: string) {
     await fetch(`/api/sources/${id}`, { method: 'DELETE' });
     fetchSources();
+  }
+
+  const [importResults, setImportResults] = useState<Array<{ name: string; url: string; status: 'added' | 'duplicate' | 'failed'; error?: string }>>([]);
+
+  async function handleOpmlImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImporting(true);
+    setImportStatus(null);
+    setImportResults([]);
+
+    try {
+      const text = await file.text();
+      const feeds = parseOpml(text);
+
+      if (feeds.length === 0) {
+        setImportStatus('No feeds found in file.');
+        setImporting(false);
+        return;
+      }
+
+      setImportStatus(`Found ${feeds.length} feed${feeds.length !== 1 ? 's' : ''} in file. Importing...`);
+
+      const existingUrls = new Set(sources.map(s => (s.config.url as string)?.toLowerCase()));
+      const results: typeof importResults = [];
+
+      for (let i = 0; i < feeds.length; i++) {
+        const feed = feeds[i];
+        setImportStatus(`Processing ${i + 1} of ${feeds.length}: ${feed.name || feed.url}`);
+
+        if (existingUrls.has(feed.url.toLowerCase())) {
+          results.push({ name: feed.name, url: feed.url, status: 'duplicate' });
+          continue;
+        }
+
+        try {
+          const res = await fetch('/api/sources', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: feed.name, type: 'rss', config: { url: feed.url } }),
+          });
+          if (res.ok) {
+            results.push({ name: feed.name, url: feed.url, status: 'added' });
+            existingUrls.add(feed.url.toLowerCase());
+          } else {
+            const body = await res.json().catch(() => ({}));
+            results.push({ name: feed.name, url: feed.url, status: 'failed', error: body.error || `HTTP ${res.status}` });
+          }
+        } catch (err) {
+          results.push({ name: feed.name, url: feed.url, status: 'failed', error: String(err) });
+        }
+      }
+
+      setImportResults(results);
+
+      const added = results.filter(r => r.status === 'added').length;
+      const dupes = results.filter(r => r.status === 'duplicate').length;
+      const failed = results.filter(r => r.status === 'failed').length;
+
+      const parts = [`${feeds.length} feeds found`];
+      if (added > 0) parts.push(`${added} added`);
+      if (dupes > 0) parts.push(`${dupes} already existed`);
+      if (failed > 0) parts.push(`${failed} failed`);
+      setImportStatus(parts.join(' \u2022 '));
+
+      if (added > 0) fetchSources();
+    } catch {
+      setImportStatus('Failed to parse file. Make sure it\'s a valid OPML/XML file.');
+    }
+
+    setImporting(false);
+    e.target.value = '';
   }
 
   const [helpOpen, setHelpOpen] = useState(false);
@@ -152,6 +251,49 @@ export default function SourceManager() {
           </button>
         </div>
       </form>
+
+      <div className="p-4 rounded-lg bg-card border border-card-border space-y-2">
+        <p className="text-sm font-medium">Import from OPML</p>
+        <p className="text-xs text-muted">
+          Import feeds from an OPML file exported from another RSS reader (e.g., Feedly, Inoreader, NetNewsWire).
+        </p>
+        <div className="flex items-center gap-2 flex-wrap">
+          <label className={`px-4 py-2 rounded text-sm shrink-0 cursor-pointer transition-opacity ${
+            importing ? 'bg-accent/50 text-white opacity-50 pointer-events-none' : 'bg-accent text-white hover:opacity-90'
+          }`}>
+            {importing ? 'Importing...' : 'Choose OPML File'}
+            <input
+              type="file"
+              accept=".opml,.xml,.txt"
+              onChange={handleOpmlImport}
+              disabled={importing}
+              className="hidden"
+            />
+          </label>
+          {importStatus && (
+            <p className="text-xs text-muted">{importStatus}</p>
+          )}
+        </div>
+
+        {importResults.length > 0 && !importing && (
+          <div className="mt-2 space-y-1 max-h-48 overflow-y-auto">
+            {importResults.map((r, i) => (
+              <div key={i} className="flex items-start gap-2 text-xs">
+                <span className={`shrink-0 mt-0.5 ${
+                  r.status === 'added' ? 'text-green-400' : r.status === 'duplicate' ? 'text-muted' : 'text-red-400'
+                }`}>
+                  {r.status === 'added' ? '\u2713' : r.status === 'duplicate' ? '\u2013' : '\u2717'}
+                </span>
+                <div className="min-w-0">
+                  <span className="text-foreground">{r.name || r.url}</span>
+                  {r.status === 'duplicate' && <span className="text-muted ml-1">(already exists)</span>}
+                  {r.status === 'failed' && <span className="text-red-400 ml-1">({r.error})</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {sources.filter(s => s.enabled).length > 0 && (
         <div>
