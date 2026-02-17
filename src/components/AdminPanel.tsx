@@ -5,6 +5,7 @@ import UserManager from './UserManager';
 import InviteCodeManager from './InviteCodeManager';
 import ScoringSettings from './ScoringSettings';
 import AnalyticsDashboard from './AnalyticsDashboard';
+import CostDashboard from './CostDashboard';
 
 const ADMIN_TABS = ['Users', 'Invite Codes', 'Scoring', 'Analytics'] as const;
 type AdminTab = (typeof ADMIN_TABS)[number];
@@ -33,7 +34,14 @@ export default function AdminPanel() {
       {activeTab === 'Users' && <UserManager />}
       {activeTab === 'Invite Codes' && <InviteCodeManager />}
       {activeTab === 'Scoring' && <ScoringSettings />}
-      {activeTab === 'Analytics' && <AnalyticsDashboard />}
+      {activeTab === 'Analytics' && (
+        <div className="space-y-10">
+          <AnalyticsDashboard />
+          <div className="border-t border-card-border pt-8">
+            <CostDashboard />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -45,7 +45,7 @@ async function backfillInterests() {
   console.log(`Found ${interests.length} interests without embeddings.`);
 
   const texts = interests.map(i => buildInterestEmbeddingText(i.category, i.description));
-  const embeddings = await generateEmbeddings(texts);
+  const { embeddings } = await generateEmbeddings(texts);
 
   for (let i = 0; i < interests.length; i++) {
     await storeEmbedding('interest', interests[i].id, texts[i], embeddings[i]);
@@ -81,7 +81,7 @@ async function backfillArticles() {
   for (let i = 0; i < articles.length; i += BATCH_SIZE) {
     const batch = articles.slice(i, i + BATCH_SIZE);
     const texts = batch.map(a => buildArticleEmbeddingText(a.title, a.raw_content));
-    const embeddings = await generateEmbeddings(texts);
+    const { embeddings } = await generateEmbeddings(texts);
 
     for (let j = 0; j < batch.length; j++) {
       await storeEmbedding('article', batch[j].id, texts[j], embeddings[j]);

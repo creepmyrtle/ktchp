@@ -66,6 +66,9 @@ interface RelevanceResult {
   serendipityCandidates: number;
   sentToLlm: number;
   scoredUnassignedCount: number;
+  llmInputTokens: number;
+  llmOutputTokens: number;
+  llmApiCalls: number;
 }
 
 export async function runRelevanceForAllUsers(provider: string, logger?: IngestionLogger): Promise<Record<string, RelevanceResult>> {
@@ -90,6 +93,9 @@ export async function runRelevanceForAllUsers(provider: string, logger?: Ingesti
         serendipityCandidates: 0,
         sentToLlm: 0,
         scoredUnassignedCount: 0,
+        llmInputTokens: 0,
+        llmOutputTokens: 0,
+        llmApiCalls: 0,
       };
     }
   }
@@ -119,6 +125,9 @@ export async function runRelevanceEngine(userId: string, provider: string, logge
     serendipityCandidates: 0,
     sentToLlm: 0,
     scoredUnassignedCount: 0,
+    llmInputTokens: 0,
+    llmOutputTokens: 0,
+    llmApiCalls: 0,
   };
 
   const userSources = await getEnabledSourcesForUser(userId);
@@ -258,10 +267,13 @@ export async function runRelevanceEngine(userId: string, provider: string, logge
   // --- Stage 2: LLM scoring (candidates only) ---
   if (llmCandidates.length > 0 || serendipityPool.length > 0) {
     const allCandidates = [...llmCandidates, ...serendipityPool];
-    const scores = await scoreArticles(allCandidates, interests, preferences, '', logger, serendipityPool.map(a => a.id));
+    const { results: scores, usage } = await scoreArticles(allCandidates, interests, preferences, '', logger, serendipityPool.map(a => a.id));
     result.articlesScored = scores.length;
+    result.llmInputTokens = usage.prompt_tokens;
+    result.llmOutputTokens = usage.completion_tokens;
+    result.llmApiCalls = usage.api_calls;
 
-    logger?.log('scoring', `LLM scored ${scores.length} articles`);
+    logger?.log('scoring', `LLM scored ${scores.length} articles (${usage.total_tokens.toLocaleString()} tokens, ${usage.api_calls} API calls)`);
 
     for (const score of scores) {
       await createUserArticleScoring(

@@ -76,6 +76,8 @@ async function handleIngest(request: Request) {
       totalFetched: ingestionResult.totalFetched,
       newArticles: ingestionResult.newArticles,
       duplicates: ingestionResult.duplicates,
+      articlesEmbedded: ingestionResult.articlesEmbedded,
+      embeddingTokens: ingestionResult.embeddingTokens,
       errorCount: ingestionResult.errors.length,
       userResults: digestResults,
     };

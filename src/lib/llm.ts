@@ -17,8 +17,15 @@ export async function getActiveProvider(): Promise<LlmProvider> {
   return 'synthetic';
 }
 
+export interface LlmUsage {
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+}
+
 interface LlmResponse {
   text: string;
+  usage?: LlmUsage;
 }
 
 let anthropicClient: Anthropic | null = null;
@@ -97,7 +104,12 @@ export async function llmComplete(prompt: string, maxTokens: number = 4096): Pro
         if (!text) {
           console.warn('[llm] Synthetic returned empty. finish_reason:', response.choices[0]?.finish_reason, 'usage:', JSON.stringify(response.usage));
         }
-        return { text };
+        const usage = response.usage ? {
+          prompt_tokens: response.usage.prompt_tokens ?? 0,
+          completion_tokens: response.usage.completion_tokens ?? 0,
+          total_tokens: response.usage.total_tokens ?? 0,
+        } : undefined;
+        return { text, usage };
       } catch (err) {
         if (isRetryable(err) && attempt < MAX_RETRIES) {
           const delay = RETRY_DELAYS[attempt] || 10000;
@@ -131,7 +143,12 @@ export async function llmComplete(prompt: string, maxTokens: number = 4096): Pro
         if (!text) {
           console.warn('[llm] OpenAI returned empty. finish_reason:', response.choices[0]?.finish_reason, 'usage:', JSON.stringify(response.usage));
         }
-        return { text };
+        const usage = response.usage ? {
+          prompt_tokens: response.usage.prompt_tokens ?? 0,
+          completion_tokens: response.usage.completion_tokens ?? 0,
+          total_tokens: response.usage.total_tokens ?? 0,
+        } : undefined;
+        return { text, usage };
       } catch (err) {
         if (isRetryable(err) && attempt < MAX_RETRIES) {
           const delay = RETRY_DELAYS[attempt] || 10000;
@@ -163,7 +180,12 @@ export async function llmComplete(prompt: string, maxTokens: number = 4096): Pro
         .map(block => block.text)
         .join('');
 
-      return { text };
+      const usage = response.usage ? {
+        prompt_tokens: response.usage.input_tokens ?? 0,
+        completion_tokens: response.usage.output_tokens ?? 0,
+        total_tokens: (response.usage.input_tokens ?? 0) + (response.usage.output_tokens ?? 0),
+      } : undefined;
+      return { text, usage };
     } catch (err) {
       if (isRetryable(err) && attempt < MAX_RETRIES) {
         const delay = RETRY_DELAYS[attempt] || 10000;

@@ -71,12 +71,62 @@ export default function SourceManager() {
     fetchSources();
   }
 
+  const [helpOpen, setHelpOpen] = useState(false);
+
   if (loading) return <p className="text-muted text-sm">Loading...</p>;
 
   return (
     <div className="space-y-4">
       <form onSubmit={addFeed} className="p-4 rounded-lg bg-card border border-card-border space-y-2">
-        <p className="text-sm font-medium mb-1">Add RSS Feed</p>
+        <div className="flex items-center justify-between mb-1">
+          <p className="text-sm font-medium">Add RSS Feed</p>
+          <button
+            type="button"
+            onClick={() => setHelpOpen(!helpOpen)}
+            className="text-xs text-muted hover:text-foreground transition-colors"
+          >
+            {helpOpen ? 'Hide help' : 'What is this?'}
+          </button>
+        </div>
+
+        {helpOpen && (
+          <div className="text-xs text-muted space-y-2 pb-2 border-b border-card-border mb-2">
+            <p>
+              <strong className="text-foreground">RSS feeds</strong> are how websites publish updates.
+              Most news sites, blogs, and publications have one. ktchp checks your feeds
+              periodically and scores new articles against your interests.
+            </p>
+            <p className="font-medium text-foreground">How to find a feed URL:</p>
+            <ul className="list-disc pl-4 space-y-1">
+              <li>
+                Look for an RSS or feed icon on the site (often in the footer or header).
+              </li>
+              <li>
+                Try adding <code className="bg-card-border/50 px-1 rounded">/feed</code>,{' '}
+                <code className="bg-card-border/50 px-1 rounded">/rss</code>, or{' '}
+                <code className="bg-card-border/50 px-1 rounded">/feed.xml</code> to the site&apos;s URL.
+              </li>
+              <li>
+                Search for <em>&quot;[site name] RSS feed&quot;</em> &mdash; most sites document theirs.
+              </li>
+              <li>
+                For Reddit: add <code className="bg-card-border/50 px-1 rounded">/.rss</code> to any subreddit URL
+                (e.g., <code className="bg-card-border/50 px-1 rounded">reddit.com/r/technology/.rss</code>).
+              </li>
+            </ul>
+            <p className="font-medium text-foreground">Examples of feed URLs:</p>
+            <ul className="list-disc pl-4 space-y-0.5">
+              <li><code className="bg-card-border/50 px-1 rounded">https://hnrss.org/frontpage</code> &mdash; Hacker News</li>
+              <li><code className="bg-card-border/50 px-1 rounded">https://www.theverge.com/rss/index.xml</code> &mdash; The Verge</li>
+              <li><code className="bg-card-border/50 px-1 rounded">https://feeds.arstechnica.com/arstechnica/index</code> &mdash; Ars Technica</li>
+              <li><code className="bg-card-border/50 px-1 rounded">https://lobste.rs/rss</code> &mdash; Lobsters</li>
+            </ul>
+            <p>
+              After adding a feed, it will be checked during the next ingestion cycle and new articles
+              will appear in your digest scored against your interests.
+            </p>
+          </div>
+        )}
         <input
           type="url"
           value={feedUrl}

@@ -15,6 +15,7 @@ interface IngestionResult {
   newArticles: number;
   duplicates: number;
   articlesEmbedded: number;
+  embeddingTokens: number;
   errors: string[];
 }
 
@@ -37,6 +38,7 @@ export async function runIngestion(provider: string, logger?: IngestionLogger): 
     newArticles: 0,
     duplicates: 0,
     articlesEmbedded: 0,
+    embeddingTokens: 0,
     errors: [],
   };
 
@@ -95,7 +97,9 @@ export async function runIngestion(provider: string, logger?: IngestionLogger): 
 
   // Embed new articles that don't already have embeddings
   if (newArticleData.length > 0) {
-    result.articlesEmbedded = await embedNewArticles(newArticleData, logger);
+    const embedResult = await embedNewArticles(newArticleData, logger);
+    result.articlesEmbedded = embedResult.count;
+    result.embeddingTokens = embedResult.tokens;
   }
 
   return result;
@@ -104,7 +108,7 @@ export async function runIngestion(provider: string, logger?: IngestionLogger): 
 async function embedNewArticles(
   articles: { id: string; title: string; rawContent: string | null }[],
   logger?: IngestionLogger
-): Promise<number> {
+): Promise<{ count: number; tokens: number }> {
   try {
     // Filter out articles that already have embeddings (shouldn't happen for new articles, but be safe)
     const existingIds = await getArticleIdsWithEmbeddings(articles.map(a => a.id));
@@ -112,22 +116,22 @@ async function embedNewArticles(
 
     if (toEmbed.length === 0) {
       logger?.log('embedding', 'All articles already have embeddings');
-      return 0;
+      return { count: 0, tokens: 0 };
     }
 
     logger?.log('embedding', `Generating embeddings for ${toEmbed.length} new articles`);
 
     const texts = toEmbed.map(a => buildArticleEmbeddingText(a.title, a.rawContent));
-    const embeddings = await generateEmbeddings(texts);
+    const { embeddings, totalTokens } = await generateEmbeddings(texts);
 
     for (let i = 0; i < toEmbed.length; i++) {
       await storeEmbedding('article', toEmbed[i].id, texts[i], embeddings[i]);
     }
 
-    logger?.log('embedding', `Embedded ${toEmbed.length} articles`);
-    return toEmbed.length;
+    logger?.log('embedding', `Embedded ${toEmbed.length} articles (${totalTokens.toLocaleString()} tokens)`);
+    return { count: toEmbed.length, tokens: totalTokens };
   } catch (error) {
     logger?.warn('embedding', `Article embedding failed (will fall back to LLM-only scoring): ${error}`);
-    return 0;
+    return { count: 0, tokens: 0 };
   }
 }

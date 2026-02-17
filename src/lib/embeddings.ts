@@ -26,12 +26,18 @@ function getClient(): OpenAI {
   return new OpenAI({ apiKey: config.openaiApiKey });
 }
 
-export async function generateEmbeddings(texts: string[]): Promise<number[][]> {
-  if (texts.length === 0) return [];
+export interface EmbeddingResult {
+  embeddings: number[][];
+  totalTokens: number;
+}
+
+export async function generateEmbeddings(texts: string[]): Promise<EmbeddingResult> {
+  if (texts.length === 0) return { embeddings: [], totalTokens: 0 };
 
   const client = getClient();
   // OpenAI batches up to 2048 texts per call. Batch aggressively.
   const allEmbeddings: number[][] = [];
+  let totalTokens = 0;
 
   for (let i = 0; i < texts.length; i += 2048) {
     const batch = texts.slice(i, i + 2048);
@@ -43,14 +49,15 @@ export async function generateEmbeddings(texts: string[]): Promise<number[][]> {
     for (const item of response.data) {
       allEmbeddings.push(item.embedding);
     }
+    totalTokens += response.usage?.total_tokens ?? 0;
   }
 
-  return allEmbeddings;
+  return { embeddings: allEmbeddings, totalTokens };
 }
 
 export async function generateEmbedding(text: string): Promise<number[]> {
-  const [embedding] = await generateEmbeddings([text]);
-  return embedding;
+  const { embeddings } = await generateEmbeddings([text]);
+  return embeddings[0];
 }
 
 // --- Cosine similarity (application-level fallback) ---

@@ -1,7 +1,15 @@
 import { config } from '../config';
 import { llmComplete } from '../llm';
+import type { LlmUsage } from '../llm';
 import type { Article, Interest, LearnedPreference, ScoringResult } from '@/types';
 import type { IngestionLogger } from '../ingestion/logger';
+
+export interface ScoringUsage {
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+  api_calls: number;
+}
 
 function buildScoringPrompt(
   articles: Article[],
@@ -146,9 +154,10 @@ export async function scoreArticles(
   recentFeedback: string = '',
   logger?: IngestionLogger,
   serendipityArticleIds?: string[]
-): Promise<ScoringResult[]> {
+): Promise<{ results: ScoringResult[]; usage: ScoringUsage }> {
   const serendipitySet = serendipityArticleIds ? new Set(serendipityArticleIds) : undefined;
   const results: ScoringResult[] = [];
+  const usage: ScoringUsage = { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0, api_calls: 0 };
   const totalBatches = Math.ceil(articles.length / config.batchSize);
 
   for (let i = 0; i < articles.length; i += config.batchSize) {
@@ -174,6 +183,13 @@ export async function scoreArticles(
         continue;
       }
 
+      usage.api_calls++;
+      if (response.usage) {
+        usage.prompt_tokens += response.usage.prompt_tokens;
+        usage.completion_tokens += response.usage.completion_tokens;
+        usage.total_tokens += response.usage.total_tokens;
+      }
+
       const { results: parsed, method } = parseJsonResponse(response.text);
 
       if (method !== 'direct') {
@@ -195,5 +211,5 @@ export async function scoreArticles(
     }
   }
 
-  return results;
+  return { results, usage };
 }

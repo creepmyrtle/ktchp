@@ -3,6 +3,7 @@ import { getDb } from './index';
 import { createUser, getDefaultUser } from './users';
 import { createSource, getSourcesByUserId } from './sources';
 import { createInterest, getInterestsByUserId } from './interests';
+import { getGlobalSetting, setGlobalSetting } from './settings';
 import { sql } from '@vercel/postgres';
 
 const SEED_INTERESTS = [
@@ -47,5 +48,14 @@ export async function seedDatabase(): Promise<void> {
       await createSource(user.id, source.name, source.type, source.config, true, true);
     }
     console.log(`Seeded ${SEED_SOURCES.length} sources`);
+  }
+
+  // Seed default cost rate settings if not already set
+  const existingRate = await getGlobalSetting('cost_rate_embedding');
+  if (!existingRate) {
+    await setGlobalSetting('cost_rate_embedding', '0.02');    // text-embedding-3-small: $0.02/1M tokens
+    await setGlobalSetting('cost_rate_llm_input', '0.15');    // GPT-4o-mini: $0.15/1M input tokens
+    await setGlobalSetting('cost_rate_llm_output', '0.60');   // GPT-4o-mini: $0.60/1M output tokens
+    console.log('Seeded default cost rate settings');
   }
 }
