@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSessionFromCookies, requireAdmin } from '@/lib/auth';
-import { updateUser, getUserById } from '@/lib/db/users';
+import { updateUser, getUserById, deleteUser } from '@/lib/db/users';
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -33,6 +33,33 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     return NextResponse.json(safeUser);
   } catch (error) {
     console.error('Admin user update error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const userId = await getSessionFromCookies();
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const isAdmin = await requireAdmin(userId);
+    if (!isAdmin) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
+
+    const { id } = await params;
+
+    if (id === userId) {
+      return NextResponse.json({ error: 'Cannot delete yourself' }, { status: 400 });
+    }
+
+    const target = await getUserById(id);
+    if (!target) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+
+    const deleted = await deleteUser(id);
+    if (!deleted) return NextResponse.json({ error: 'Delete failed' }, { status: 500 });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Admin user delete error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

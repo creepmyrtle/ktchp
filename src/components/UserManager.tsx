@@ -14,6 +14,7 @@ interface UserInfo {
 export default function UserManager() {
   const [users, setUsers] = useState<UserInfo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const fetchUsers = useCallback(async () => {
     const res = await fetch('/api/admin/users');
@@ -40,6 +41,12 @@ export default function UserManager() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ is_admin: !isAdmin }),
     });
+    fetchUsers();
+  }
+
+  async function handleDelete(id: string) {
+    await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+    setConfirmDeleteId(null);
     fetchUsers();
   }
 
@@ -74,6 +81,29 @@ export default function UserManager() {
             >
               {user.is_active ? 'Deactivate' : 'Activate'}
             </button>
+            {confirmDeleteId === user.id ? (
+              <>
+                <button
+                  onClick={() => handleDelete(user.id)}
+                  className="text-xs px-2 py-1 rounded bg-danger text-white"
+                >
+                  Confirm
+                </button>
+                <button
+                  onClick={() => setConfirmDeleteId(null)}
+                  className="text-xs px-2 py-1 rounded text-muted hover:text-foreground"
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => setConfirmDeleteId(user.id)}
+                className="text-xs text-danger hover:opacity-80"
+              >
+                Delete
+              </button>
+            )}
           </div>
         </div>
       ))}

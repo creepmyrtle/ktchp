@@ -84,3 +84,23 @@ export async function updateUser(
   }
   return getUserById(id);
 }
+
+export async function deleteUser(id: string): Promise<boolean> {
+  // Delete all user data in dependency order
+  await sql`DELETE FROM feedback WHERE user_id = ${id}`;
+  await sql`DELETE FROM user_articles WHERE user_id = ${id}`;
+  await sql`DELETE FROM digests WHERE user_id = ${id}`;
+  await sql`DELETE FROM user_source_settings WHERE user_id = ${id}`;
+  await sql`DELETE FROM sources WHERE user_id = ${id}`;
+  await sql`DELETE FROM interests WHERE user_id = ${id}`;
+  await sql`DELETE FROM learned_preferences WHERE user_id = ${id}`;
+  await sql`DELETE FROM settings WHERE user_id = ${id}`;
+  await sql`DELETE FROM sessions WHERE user_id = ${id}`;
+  await sql`DELETE FROM ingestion_logs WHERE user_id = ${id}`;
+  // Clear invite code references (don't delete codes themselves)
+  await sql`UPDATE invite_codes SET used_by = NULL, used_at = NULL WHERE used_by = ${id}`;
+  await sql`DELETE FROM invite_codes WHERE created_by = ${id} AND used_by IS NULL`;
+  // Delete the user
+  const { rowCount } = await sql`DELETE FROM users WHERE id = ${id}`;
+  return (rowCount ?? 0) > 0;
+}

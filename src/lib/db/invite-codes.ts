@@ -41,9 +41,14 @@ export async function getInviteCodesByCreator(createdBy: string): Promise<Invite
   return rows as InviteCode[];
 }
 
-export async function getAllInviteCodes(): Promise<InviteCode[]> {
-  const { rows } = await sql`SELECT * FROM invite_codes ORDER BY created_at DESC`;
-  return rows as InviteCode[];
+export async function getAllInviteCodes(): Promise<(InviteCode & { used_by_username?: string })[]> {
+  const { rows } = await sql`
+    SELECT ic.*, u.username AS used_by_username
+    FROM invite_codes ic
+    LEFT JOIN users u ON ic.used_by = u.id
+    ORDER BY ic.created_at DESC
+  `;
+  return rows as (InviteCode & { used_by_username?: string })[];
 }
 
 export async function deleteInviteCode(id: string): Promise<boolean> {

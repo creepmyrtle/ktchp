@@ -7,6 +7,7 @@ interface InviteCodeInfo {
   code: string;
   created_by: string;
   used_by: string | null;
+  used_by_username?: string;
   used_at: string | null;
   expires_at: string | null;
   created_at: string;
@@ -68,7 +69,7 @@ export default function InviteCodeManager() {
               <p className="text-sm font-mono">{code.code}</p>
               <p className="text-xs text-muted">
                 {code.used_by
-                  ? `Used ${code.used_at ? new Date(code.used_at).toLocaleDateString() : ''}`
+                  ? `Claimed by ${code.used_by_username || 'unknown'} ${code.used_at ? `on ${new Date(code.used_at).toLocaleDateString()}` : ''}`
                   : 'Available'
                 }
               </p>

@@ -6,6 +6,7 @@ import { getActiveProvider } from '@/lib/llm';
 import { getUserById } from '@/lib/db/users';
 import DigestContent from '@/components/DigestContent';
 import DigestSelector from '@/components/DigestSelector';
+import WelcomeBanner from '@/components/WelcomeBanner';
 import Link from 'next/link';
 
 export default async function DigestPage() {
@@ -66,6 +67,7 @@ export default async function DigestPage() {
       </nav>
 
       <main className="max-w-5xl mx-auto px-4 py-8 animate-fade-up">
+        <WelcomeBanner />
         {latestDigest ? (
           <>
             <DigestContent
