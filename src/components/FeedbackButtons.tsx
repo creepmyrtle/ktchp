@@ -89,9 +89,9 @@ export default function ActionBar({
 
   return (
     <div className="flex items-center gap-0.5 sm:gap-1 flex-wrap">
-      {/* Sentiment group */}
+      {/* Sentiment group — order matches swipe direction so "like" is on the swipe side */}
       <div className="flex items-center border border-card-border rounded-lg overflow-hidden">
-        {swipeDirection === 'left' ? (
+        {swipeDirection === 'right' ? (
           <>
             <button onClick={() => handleSentiment('disliked')} className={sentimentBtnClass('disliked')} title="Disliked">
               &#x1F44E;
