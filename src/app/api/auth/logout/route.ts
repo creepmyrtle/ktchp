@@ -3,5 +3,5 @@ import { clearSessionCookie } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   await clearSessionCookie();
-  return NextResponse.redirect(new URL('/', request.url));
+  return NextResponse.redirect(new URL('/', request.url), 303);
 }
