@@ -121,7 +121,7 @@ export default function RegisterPage() {
     <main className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-light tracking-tight mb-2">ktchp</h1>
+          <h1 className="text-3xl font-light tracking-tight mb-2">ketchup</h1>
           <p className="text-muted text-sm">Create your account</p>
         </div>
 

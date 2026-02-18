@@ -95,7 +95,7 @@ export default function DigestContent({ digestId, date, articles, bonusArticles 
       {articles.length > 0 && (
         <div className="mt-6 mb-4">
           <p className="text-sm text-muted">
-            Articles picked for you based on your interests. Rate each one to help ktchp learn your preferences.
+            Articles picked for you based on your interests. Rate each one to help ketchup learn your preferences.
           </p>
         </div>
       )}
@@ -152,7 +152,7 @@ export default function DigestContent({ digestId, date, articles, bonusArticles 
                 {bonusTotalCount - bonusArchivedCount} more article{bonusTotalCount - bonusArchivedCount !== 1 ? 's' : ''}
               </p>
               <p className="text-muted text-sm mb-4">
-                These didn&apos;t make your main digest but browsing them helps ktchp learn what you like.
+                These didn&apos;t make your main digest but browsing them helps ketchup learn what you like.
                 Your feedback here directly improves future recommendations.
               </p>
               <button

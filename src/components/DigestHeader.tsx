@@ -59,7 +59,7 @@ export default function DigestHeader({
     const bonusLeft = bonusTotalCount - bonusArchivedCount;
     subtitle = `${time} \u00b7 Main complete \u00b7 ${bonusLeft} bonus available`;
   } else {
-    subtitle = `${time} \u00b7 ${articleCount} article${articleCount !== 1 ? 's' : ''} remaining`;
+    subtitle = `${time} \u00b7 ${articleCount} recommended article${articleCount !== 1 ? 's' : ''} remaining`;
     if (bonusTotalCount > 0) {
       subtitle += ` \u00b7 ${bonusTotalCount} bonus after`;
     }

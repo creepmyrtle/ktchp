@@ -14,7 +14,7 @@ export default async function BookmarksPage() {
     <div className="min-h-screen">
       <nav className="border-b border-card-border px-4 py-3 max-w-5xl mx-auto">
         <div className="flex items-center justify-between">
-          <Link href="/digest" className="text-lg font-light tracking-tight hover:opacity-80 transition-opacity">ktchp</Link>
+          <Link href="/digest" className="text-lg font-light tracking-tight hover:opacity-80 transition-opacity">ketchup</Link>
           <Link href="/digest" className="text-sm text-accent hover:opacity-80 transition-opacity">
             Back to digest
           </Link>

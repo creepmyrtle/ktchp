@@ -32,7 +32,7 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen">
       <nav className="border-b border-card-border px-4 py-3 flex items-center justify-between max-w-5xl mx-auto">
-        <Link href="/digest" className="text-lg font-light tracking-tight hover:opacity-80 transition-opacity">ktchp</Link>
+        <Link href="/digest" className="text-lg font-light tracking-tight hover:opacity-80 transition-opacity">ketchup</Link>
         <Link href="/digest" className="text-sm text-accent hover:opacity-80 transition-opacity">
           Back to digest
         </Link>

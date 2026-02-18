@@ -207,7 +207,7 @@ export default function SourceManager() {
           <div className="text-xs text-muted space-y-2 pb-2 border-b border-card-border mb-2">
             <p>
               <strong className="text-foreground">RSS feeds</strong> are how websites publish updates.
-              Most news sites, blogs, and publications have one. ktchp checks your feeds
+              Most news sites, blogs, and publications have one. ketchup checks your feeds
               periodically and scores new articles against your interests.
             </p>
             <p className="font-medium text-foreground">How to find a feed URL:</p>

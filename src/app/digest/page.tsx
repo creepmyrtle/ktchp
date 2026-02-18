@@ -6,7 +6,6 @@ import { getActiveProvider } from '@/lib/llm';
 import { getUserById } from '@/lib/db/users';
 import DigestContent from '@/components/DigestContent';
 import DigestSelector from '@/components/DigestSelector';
-import WelcomeBanner from '@/components/WelcomeBanner';
 import Link from 'next/link';
 
 export default async function DigestPage() {
@@ -46,7 +45,7 @@ export default async function DigestPage() {
     <div className="min-h-screen">
       <nav className="border-b border-card-border px-4 py-3 max-w-5xl mx-auto">
         <div className="flex items-center justify-between">
-          <Link href="/digest" className="text-lg font-light tracking-tight hover:opacity-80 transition-opacity">ktchp</Link>
+          <Link href="/digest" className="text-lg font-light tracking-tight hover:opacity-80 transition-opacity">ketchup</Link>
           <div className="flex gap-3 sm:gap-4 items-center">
             {user.display_name && (
               <span className="text-sm text-muted hidden sm:inline">{user.display_name}</span>
@@ -67,7 +66,11 @@ export default async function DigestPage() {
       </nav>
 
       <main className="max-w-5xl mx-auto px-4 py-8 animate-fade-up">
-        <WelcomeBanner />
+        <div className="mb-4">
+          <Link href="/settings" className="text-xs text-muted hover:text-accent transition-colors">
+            Add interests and sources &rarr;
+          </Link>
+        </div>
         {latestDigest ? (
           <>
             <DigestContent
