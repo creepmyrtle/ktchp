@@ -11,7 +11,7 @@ import SwipeSettings from '@/components/SwipeSettings';
 import AdminPanel from '@/components/AdminPanel';
 import AccountSettings from '@/components/AccountSettings';
 
-const BASE_TABS = ['Interests', 'Sources', 'Schedule', 'Gestures', 'Preferences', 'Logs', 'Account'] as const;
+const USER_TABS = ['Interests', 'Sources', 'Gestures', 'Preferences', 'Account'];
 type Tab = string;
 
 export default function SettingsPage() {
@@ -27,7 +27,7 @@ export default function SettingsPage() {
       .catch(() => {});
   }, []);
 
-  const tabs = isAdmin ? [...BASE_TABS, 'Admin'] : [...BASE_TABS];
+  const tabs = isAdmin ? [...USER_TABS, 'Schedule', 'Logs', 'Admin'] : USER_TABS;
 
   return (
     <div className="min-h-screen">
@@ -59,10 +59,10 @@ export default function SettingsPage() {
 
         {activeTab === 'Interests' && <InterestManager />}
         {activeTab === 'Sources' && <SourceManager />}
-        {activeTab === 'Schedule' && <ScheduleManager />}
+        {activeTab === 'Schedule' && isAdmin && <ScheduleManager />}
         {activeTab === 'Gestures' && <SwipeSettings />}
         {activeTab === 'Preferences' && <PreferenceViewer />}
-        {activeTab === 'Logs' && <IngestionLogs />}
+        {activeTab === 'Logs' && isAdmin && <IngestionLogs />}
         {activeTab === 'Account' && <AccountSettings />}
         {activeTab === 'Admin' && isAdmin && <AdminPanel />}
       </main>

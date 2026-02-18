@@ -32,8 +32,20 @@ export default function DigestContent({ digestId, date, articles, bonusArticles 
   const [liveStats, setLiveStats] = useState<Stats>(stats);
   const [hintDismissed, setHintDismissed] = useState(false);
   const [bonusExpanded, setBonusExpanded] = useState(false);
+  const [swipeDirection, setSwipeDirection] = useState<'right' | 'left'>('right');
   const totalCount = stats.total_article_count;
   const bonusTotalCount = bonusStats?.total_article_count ?? 0;
+
+  useEffect(() => {
+    fetch('/api/settings/swipe')
+      .then(r => r.json())
+      .then(data => {
+        if (data.direction === 'left' || data.direction === 'right') {
+          setSwipeDirection(data.direction);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   function handleArticleArchived() {
     setArchivedCount(prev => prev + 1);
@@ -94,6 +106,7 @@ export default function DigestContent({ digestId, date, articles, bonusArticles 
           <ArticleCard
             key={article.id}
             article={article}
+            swipeDirection={swipeDirection}
             onArchived={handleArticleArchived}
           />
         ))}
@@ -112,6 +125,7 @@ export default function DigestContent({ digestId, date, articles, bonusArticles 
               <ArticleCard
                 key={article.id}
                 article={article}
+                swipeDirection={swipeDirection}
                 onArchived={handleArticleArchived}
               />
             ))}
@@ -161,6 +175,7 @@ export default function DigestContent({ digestId, date, articles, bonusArticles 
                   <ArticleCard
                     key={article.id}
                     article={article}
+                    swipeDirection={swipeDirection}
                     tier="bonus"
                     onArchived={handleBonusArticleArchived}
                   />

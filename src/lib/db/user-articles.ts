@@ -141,15 +141,21 @@ export async function getUnscoredArticlesForUser(
 export async function getScoredUnassignedForUser(
   userId: string
 ): Promise<{ id: string; article_id: string; relevance_score: number; is_serendipity: boolean }[]> {
+  // Subquery uses DISTINCT ON (a.external_id) to deduplicate cross-source articles
+  // (same URL from different feeds), keeping the highest-scored version per URL.
+  // Outer query re-sorts by relevance_score for digest generation.
   const { rows } = await sql`
-    SELECT ua.id, ua.article_id, ua.relevance_score, ua.is_serendipity
-    FROM user_articles ua
-    JOIN articles a ON ua.article_id = a.id
-    WHERE ua.user_id = ${userId}
-      AND ua.relevance_score IS NOT NULL
-      AND ua.digest_id IS NULL
-      AND a.ingested_at > NOW() - INTERVAL '7 days'
-    ORDER BY ua.relevance_score DESC
+    SELECT id, article_id, relevance_score, is_serendipity FROM (
+      SELECT DISTINCT ON (a.external_id) ua.id, ua.article_id, ua.relevance_score, ua.is_serendipity
+      FROM user_articles ua
+      JOIN articles a ON ua.article_id = a.id
+      WHERE ua.user_id = ${userId}
+        AND ua.relevance_score IS NOT NULL
+        AND ua.digest_id IS NULL
+        AND a.ingested_at > NOW() - INTERVAL '7 days'
+      ORDER BY a.external_id, ua.relevance_score DESC
+    ) deduped
+    ORDER BY relevance_score DESC
   `;
   return rows as { id: string; article_id: string; relevance_score: number; is_serendipity: boolean }[];
 }

@@ -8,6 +8,7 @@ interface Source {
   type: string;
   config: Record<string, unknown>;
   enabled: boolean;
+  is_default?: boolean;
 }
 
 interface OpmlFeed {
@@ -20,14 +21,28 @@ function parseOpml(xml: string): OpmlFeed[] {
   const sanitized = xml.replace(/&(?!amp;|lt;|gt;|apos;|quot;|#\d+;|#x[\da-fA-F]+;)/g, '&amp;');
   const parser = new DOMParser();
   const doc = parser.parseFromString(sanitized, 'text/xml');
+
+  // Check for XML parse errors
+  const parseError = doc.querySelector('parsererror');
+  if (parseError) {
+    throw new Error('Invalid XML');
+  }
+
   const feeds: OpmlFeed[] = [];
 
   const outlines = doc.querySelectorAll('outline[xmlUrl]');
   for (const outline of outlines) {
-    const url = outline.getAttribute('xmlUrl');
+    const rawUrl = outline.getAttribute('xmlUrl');
     const name = outline.getAttribute('title') || outline.getAttribute('text') || '';
-    if (url) {
-      feeds.push({ name: name.trim(), url: url.trim() });
+    if (rawUrl) {
+      const url = rawUrl.trim();
+      // Validate URL
+      try {
+        new URL(url);
+        feeds.push({ name: name.trim(), url });
+      } catch {
+        // Skip invalid URLs silently during parse — they'll never work as feeds
+      }
     }
   }
 
@@ -311,12 +326,16 @@ export default function SourceManager() {
                 >
                   Disable
                 </button>
-                <button
-                  onClick={() => deleteSource(source.id)}
-                  className="text-xs text-danger hover:opacity-80"
-                >
-                  Delete
-                </button>
+                {source.is_default ? (
+                  <span className="text-xs text-muted">Default</span>
+                ) : (
+                  <button
+                    onClick={() => deleteSource(source.id)}
+                    className="text-xs text-danger hover:opacity-80"
+                  >
+                    Delete
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -339,12 +358,16 @@ export default function SourceManager() {
                 >
                   Enable
                 </button>
-                <button
-                  onClick={() => deleteSource(source.id)}
-                  className="text-xs text-danger hover:opacity-80"
-                >
-                  Delete
-                </button>
+                {source.is_default ? (
+                  <span className="text-xs text-muted">Default</span>
+                ) : (
+                  <button
+                    onClick={() => deleteSource(source.id)}
+                    className="text-xs text-danger hover:opacity-80"
+                  >
+                    Delete
+                  </button>
+                )}
               </div>
             </div>
           ))}

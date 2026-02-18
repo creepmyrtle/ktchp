@@ -36,6 +36,9 @@ export default function ArticleCard({ article, swipeDirection = 'right', tier, o
       wrapper.style.height = `${wrapper.offsetHeight}px`;
     }
 
+    // Capture scroll position before animation starts
+    const savedScrollY = window.scrollY;
+
     setArchiving(true);
 
     // After fade, collapse the space smoothly
@@ -44,13 +47,17 @@ export default function ArticleCard({ article, swipeDirection = 'right', tier, o
         wrapper.style.transition = 'height 300ms ease-out';
         wrapper.style.height = '0px';
         wrapper.style.overflow = 'hidden';
-        // After collapse, fully remove from layout
+        // After collapse, fully remove from layout and notify parent
         setTimeout(() => {
           if (wrapper) wrapper.style.display = 'none';
+          // Restore scroll position if the collapse caused a shift
+          if (window.scrollY !== savedScrollY) {
+            window.scrollTo(0, savedScrollY);
+          }
+          setArchived(true);
+          onArchived?.();
         }, 300);
       }
-      setArchived(true);
-      onArchived?.();
     }, 400);
   }, [article.article_id, onArchived]);
 
@@ -164,6 +171,7 @@ export default function ArticleCard({ article, swipeDirection = 'right', tier, o
                 articleUrl={article.url}
                 initialSentiment={article.sentiment}
                 initialIsBookmarked={article.is_bookmarked}
+                swipeDirection={swipeDirection}
                 onArchive={handleArchive}
                 onSentimentChange={(s) => setSentiment(s)}
               />

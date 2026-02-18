@@ -9,6 +9,7 @@ interface ActionBarProps {
   articleUrl: string;
   initialSentiment: Sentiment | null;
   initialIsBookmarked: boolean;
+  swipeDirection?: 'right' | 'left';
   onArchive: () => void;
   onSentimentChange?: (sentiment: Sentiment | null) => void;
 }
@@ -18,6 +19,7 @@ export default function ActionBar({
   articleUrl,
   initialSentiment,
   initialIsBookmarked,
+  swipeDirection = 'right',
   onArchive,
   onSentimentChange,
 }: ActionBarProps) {
@@ -89,15 +91,31 @@ export default function ActionBar({
     <div className="flex items-center gap-0.5 sm:gap-1 flex-wrap">
       {/* Sentiment group */}
       <div className="flex items-center border border-card-border rounded-lg overflow-hidden">
-        <button onClick={() => handleSentiment('liked')} className={sentimentBtnClass('liked')} title="Liked">
-          &#x1F44D;
-        </button>
-        <button onClick={() => handleSentiment('neutral')} className={sentimentBtnClass('neutral')} title="Neutral">
-          &#x2796;
-        </button>
-        <button onClick={() => handleSentiment('disliked')} className={sentimentBtnClass('disliked')} title="Disliked">
-          &#x1F44E;
-        </button>
+        {swipeDirection === 'left' ? (
+          <>
+            <button onClick={() => handleSentiment('disliked')} className={sentimentBtnClass('disliked')} title="Disliked">
+              &#x1F44E;
+            </button>
+            <button onClick={() => handleSentiment('neutral')} className={sentimentBtnClass('neutral')} title="Neutral">
+              &#x2796;
+            </button>
+            <button onClick={() => handleSentiment('liked')} className={sentimentBtnClass('liked')} title="Liked">
+              &#x1F44D;
+            </button>
+          </>
+        ) : (
+          <>
+            <button onClick={() => handleSentiment('liked')} className={sentimentBtnClass('liked')} title="Liked">
+              &#x1F44D;
+            </button>
+            <button onClick={() => handleSentiment('neutral')} className={sentimentBtnClass('neutral')} title="Neutral">
+              &#x2796;
+            </button>
+            <button onClick={() => handleSentiment('disliked')} className={sentimentBtnClass('disliked')} title="Disliked">
+              &#x1F44E;
+            </button>
+          </>
+        )}
       </div>
 
       {/* Bookmark */}

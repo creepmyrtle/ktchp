@@ -110,18 +110,23 @@ export default function InterestManager() {
               </button>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs text-muted">Weight:</span>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.1"
-              value={interest.weight}
-              onChange={e => updateInterest(interest.id, { weight: parseFloat(e.target.value) })}
-              className="flex-1 h-1 accent-accent"
-            />
-            <span className="text-xs text-muted w-8">{interest.weight}</span>
+            <div className="flex items-center gap-1">
+              {[0, 0.2, 0.4, 0.6, 0.8, 1.0].map(w => (
+                <button
+                  key={w}
+                  onClick={() => updateInterest(interest.id, { weight: w })}
+                  className={`px-2 py-0.5 text-xs rounded-full border transition-colors ${
+                    interest.weight === w
+                      ? 'bg-accent-light text-accent border-accent'
+                      : 'border-card-border text-muted hover:text-foreground hover:border-border-hover'
+                  }`}
+                >
+                  {w}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       ))}
