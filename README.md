@@ -1,4 +1,4 @@
-# ktchp
+# ketchup
 
 A multi-user, AI-curated daily digest app. Aggregates articles from RSS feeds, scores them for relevance using a two-stage embedding + LLM pipeline, and presents personalized digests tailored to each user's interests.
 
@@ -14,7 +14,7 @@ Every ingestion run (triggered by a daily GitHub Actions cron or manually) execu
 4. **Score (per user)** — Two-stage scoring for each active user:
    - **Stage 1 — Embedding pre-filter**: Computes cosine similarity between article embeddings and user interest embeddings. Filters out ~60-80% of obviously irrelevant articles.
    - **Stage 2 — LLM refinement**: Sends only the top embedding-matched candidates (plus a small serendipity pool) to the LLM for nuanced scoring, reason tagging, and serendipity detection.
-5. **Digest** — Selects all articles above the relevance threshold (default 0.5), plus up to 2 serendipity items, and groups them into a digest.
+5. **Digest** — Selects all articles above the relevance threshold (default 0.5), plus up to 2 serendipity items, and groups them into a digest. Articles below the threshold are included as bonus articles.
 
 ### Scoring
 
@@ -24,7 +24,7 @@ The two-stage pipeline cuts LLM API costs by 60-80% while maintaining digest qua
 
 **Stage 2 (LLM):** The LLM receives the user's explicit interests (with weights), learned preferences from feedback history, and article titles + URLs. It returns structured JSON with relevance scores, reason tags, and serendipity flags. Serendipity candidates get a special prompt note asking the LLM to evaluate them for unexpected cross-domain value.
 
-Articles scoring below the threshold are still stored — they just aren't assigned to a digest.
+Articles scoring below the threshold are still stored — they just appear as bonus articles rather than in the main digest.
 
 ### Preference Learning
 
@@ -34,24 +34,25 @@ The system learns user preferences over time from feedback. After every 50 new f
 
 Each article in a digest supports a multi-step engagement flow:
 
-- **Sentiment** — Three-way rating (liked / neutral / disliked), toggleable. Required before archiving.
+- **Sentiment** — Three-way rating (liked / neutral / disliked), toggleable. Required before archiving. Button order matches the configured swipe direction.
 - **Read** — Automatically tracked when the user clicks the article link.
 - **Bookmark** — Save articles for later, viewable on the dedicated bookmarks page.
 - **Share** — Copy the article URL to clipboard.
-- **Archive** — Remove the article from the active feed. On desktop, click the archive button. On mobile, swipe to archive (direction configurable in settings).
+- **Archive** — Remove the article from the active feed. On desktop, click the archive button. On mobile, swipe to archive (direction configurable in settings). Scroll position is preserved during card collapse animation.
 
 Engagement events are logged to an append-only feedback table for preference learning, while the canonical state lives on the `user_articles` row.
 
 ## Multi-User
 
-ktchp supports multiple users, each with their own personalized digest experience:
+ketchup supports multiple users, each with their own personalized digest experience:
 
 - **Invite-based registration** — Admin generates invite codes; new users register with a code.
-- **Independent interests** — Each user has their own interest categories with weights.
-- **Independent sources** — Default sources (managed by admin) are shared, but users can toggle them off and add private sources.
+- **Independent interests** — Each user has their own interest categories with configurable weights (discrete 0.0–1.0 buttons).
+- **Independent sources** — Default sources (managed by admin) are shared and protected from deletion. Users can toggle them off and add private sources. OPML import supported.
 - **Independent digests** — Articles are fetched once but scored per-user against each user's interest profile.
 - **Independent engagement** — Likes, bookmarks, archives are all scoped to the user.
-- **Admin panel** — Admin can manage users, generate invite codes, and configure global scoring settings.
+- **Admin panel** — Admin can manage users (activate/deactivate/delete), generate invite codes (with claimed-by tracking), configure scoring settings, and view analytics.
+- **Role-based UI** — Non-admin users only see relevant settings tabs (Interests, Sources, Gestures, Preferences, Account). Admin-only tabs (Schedule, Logs, Admin) are hidden.
 
 ### Architecture
 
@@ -60,14 +61,14 @@ src/
 ├── app/                          # Next.js App Router
 │   ├── page.tsx                  # Login page
 │   ├── register/page.tsx         # Invite-based registration
-│   ├── settings/page.tsx         # Settings (interests, sources, schedule, gestures, prefs, logs, account, admin)
+│   ├── settings/page.tsx         # Settings (role-gated tabs)
 │   ├── digest/page.tsx           # Latest digest view
 │   ├── digest/[id]/page.tsx      # Historical digest view
 │   ├── digest/bookmarks/page.tsx # Bookmarked articles
 │   └── api/
-│       ├── auth/                 # login, logout, register
+│       ├── auth/                 # login, logout (redirects to login), register
 │       ├── account/              # profile updates (display name, password)
-│       ├── admin/                # user management, invite codes (admin only)
+│       ├── admin/                # user management, invite codes, analytics (admin only)
 │       ├── ingest/route.ts       # POST — runs full ingestion pipeline
 │       ├── ingestion-logs/       # GET recent logs, GET log by ID
 │       ├── digests/              # GET recent, GET by ID, GET latest, POST clear
@@ -78,25 +79,27 @@ src/
 │       └── settings/             # provider, schedule, swipe direction, scoring thresholds
 │
 ├── components/
-│   ├── ArticleCard.tsx           # Article display with swipe-to-archive + read indicator
+│   ├── ArticleCard.tsx           # Article display with swipe-to-archive, scroll-preserving collapse
 │   ├── BookmarkCard.tsx          # Simplified card for bookmarks page
-│   ├── DigestContent.tsx         # Client wrapper: tracks archive count, progress bar
-│   ├── DigestHeader.tsx          # Date/time header with live progress bar
+│   ├── DigestContent.tsx         # Client wrapper: tracks archive count, fetches swipe direction
+│   ├── DigestHeader.tsx          # Date/time header with live progress bar (recommended vs bonus)
 │   ├── DigestSelector.tsx        # Dropdown selector with completion badges
-│   ├── FeedbackButtons.tsx       # Action bar: sentiment, bookmark, share, archive
+│   ├── FeedbackButtons.tsx       # Action bar: sentiment (order follows swipe direction), bookmark, share, archive
 │   ├── IngestionLogs.tsx         # Log viewer with expandable event timelines
-│   ├── InterestManager.tsx       # Add/edit/delete interests with weight sliders
+│   ├── InterestManager.tsx       # Add/edit/delete interests with discrete weight buttons
 │   ├── PreferenceViewer.tsx      # View/delete learned preferences
 │   ├── ScheduleManager.tsx       # GitHub Actions schedule info
-│   ├── SourceManager.tsx         # Add/edit/delete RSS sources (default + private)
+│   ├── SourceManager.tsx         # Add/edit/delete RSS sources, OPML import, default source protection
 │   ├── SwipeSettings.tsx         # Configure swipe-to-archive direction
 │   ├── ScoringSettings.tsx       # Embedding/LLM threshold tuning (admin)
-│   ├── AdminPanel.tsx            # Admin tabs: users, invite codes, scoring
-│   ├── UserManager.tsx           # Activate/deactivate users (admin)
-│   ├── InviteCodeManager.tsx     # Generate/revoke invite codes (admin)
+│   ├── AdminPanel.tsx            # Admin tabs: users, invite codes, scoring, analytics
+│   ├── UserManager.tsx           # Activate/deactivate/delete users (admin)
+│   ├── InviteCodeManager.tsx     # Generate/revoke invite codes, shows claimed-by username (admin)
+│   ├── AnalyticsDashboard.tsx    # Usage analytics (admin)
+│   ├── CostDashboard.tsx         # LLM cost tracking (admin)
 │   ├── AccountSettings.tsx       # Change password, display name
 │   ├── Toast.tsx                 # Toast notification system
-│   └── CaughtUpMessage.tsx       # Completion stats when digest is archived
+│   └── CaughtUpMessage.tsx       # Completion stats when digest is fully archived
 │
 ├── hooks/
 │   └── useSwipeToArchive.ts      # Touch gesture hook with velocity detection
@@ -118,8 +121,8 @@ src/
 │   │   ├── feedback.ts           # Append-only event log, bookmarked articles query
 │   │   ├── preferences.ts        # Learned preference queries
 │   │   ├── settings.ts           # Key-value settings store (per-user + global)
-│   │   ├── users.ts              # User CRUD, active user queries
-│   │   ├── invite-codes.ts       # Invite code CRUD
+│   │   ├── users.ts              # User CRUD, full cascading delete, active user queries
+│   │   ├── invite-codes.ts       # Invite code CRUD with username join
 │   │   └── ingestion-logs.ts     # Ingestion log CRUD
 │   ├── ingestion/
 │   │   ├── index.ts              # Fetch loop + article embedding generation
@@ -154,7 +157,7 @@ Vercel Postgres (Neon) with pgvector extension.
 | `feedback` | Append-only event log of all user engagement actions |
 | `learned_preferences` | AI-derived preference statements from feedback patterns |
 | `settings` | Key-value store (per-user settings + global settings with user_id = 'global') |
-| `invite_codes` | Invite codes for user registration |
+| `invite_codes` | Invite codes for user registration (tracks claimed-by user) |
 | `ingestion_logs` | Full pipeline logs with events JSONB |
 
 ### Storage Notes
@@ -175,6 +178,7 @@ Standalone scripts run via `npx tsx scripts/<name>.ts`. All load `.env.local` au
 | `scripts/migrate-multiuser.ts` | One-time migration from single-user to multi-user schema. Supports `--dry-run` |
 | `scripts/backfill-embeddings.ts` | Generate embeddings for existing interests and articles. Use `--articles` to include articles |
 | `scripts/reset-password.ts` | Reset a user's password: `npx tsx scripts/reset-password.ts <password> [username]` |
+| `scripts/reset-embedding-scores.ts` | Clear embedding scores to force re-scoring on next ingestion |
 | `scripts/make-digest.ts` | Create a digest from scored, unassigned articles for the admin user |
 | `scripts/delete-digests.ts` | Delete N recent digests and clear article scores for re-scoring |
 | `scripts/learn-prefs.ts` | Force-run preference learning for the admin user |
@@ -188,8 +192,8 @@ Standalone scripts run via `npx tsx scripts/<name>.ts`. All load `.env.local` au
 - **Embeddings**: OpenAI `text-embedding-3-small` (512 dimensions)
 - **LLM**: Kimi K2.5 via Synthetic API (OpenAI-compatible). Anthropic Claude infrastructure preserved but inactive.
 - **Styling**: Tailwind CSS 4, dark theme (DM Sans + JetBrains Mono)
-- **Deployment**: Vercel (hosting) + GitHub Actions (daily cron)
-- **Auth**: Invite-based multi-user with bcrypt + session cookies
+- **Deployment**: Vercel (hosting) + GitHub Actions (daily cron at 5 AM CT)
+- **Auth**: Invite-based multi-user with bcrypt + session cookies (httpOnly, HMAC-SHA256, 7-day expiry)
 
 ## Environment Variables
 
@@ -245,10 +249,10 @@ Push to main. Vercel auto-deploys the app. The daily ingestion cron runs via Git
 - **Full-text extraction** — Fetch and parse full article content for richer embedding + scoring context
 - **Per-interest score breakdown** — Show how much each interest contributed to an article's score
 - **Scoring calibration** — Track score distributions over time and auto-adjust thresholds
+- **New user digest seeding** — Trigger scoring for new users at registration using already-ingested articles (pipeline supports this, not yet wired up)
 
 ### Sources
 - **Source health monitoring** — Track fetch success rates per source, surface broken/stale feeds
-- **OPML import/export** — Bulk import RSS feeds from other readers
 - **Auto-discovery** — Given a website URL, auto-detect its RSS feed
 - **Non-RSS sources** — Support Hacker News, Reddit, newsletters, or arbitrary web pages
 

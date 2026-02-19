@@ -1,9 +1,12 @@
 /**
- * Deletes the N most recent digests for the admin user,
- * unassigning their articles so they can be re-scored and re-digested.
+ * Deletes the N most recent digests, unassigning their articles
+ * so they can be re-scored and re-digested.
  *
  * Usage:
- *   npx tsx scripts/delete-digests.ts [count]   (default: 2)
+ *   npx tsx scripts/delete-digests.ts              — delete 1 latest digest for all active users
+ *   npx tsx scripts/delete-digests.ts 3             — delete 3 latest digests for all active users
+ *   npx tsx scripts/delete-digests.ts 1 admin       — delete 1 latest digest for user "admin"
+ *   npx tsx scripts/delete-digests.ts 2 all         — same as no username (all active users)
  */
 
 import { existsSync } from 'fs';
@@ -17,63 +20,84 @@ if (existsSync(envPath)) {
 import { sql } from '@vercel/postgres';
 
 async function main() {
-  const count = parseInt(process.argv[2] || '2', 10);
+  const count = parseInt(process.argv[2] || '1', 10);
+  const targetUsername = process.argv[3] || null; // optional: specific username, or 'all'
 
-  // Get admin user
-  const { rows: users } = await sql`
-    SELECT id, username, display_name FROM users WHERE is_admin = TRUE LIMIT 1
-  `;
+  // Get target users
+  let users;
+  if (targetUsername && targetUsername !== 'all') {
+    const { rows } = await sql`
+      SELECT id, username, display_name FROM users WHERE username = ${targetUsername}
+    `;
+    users = rows;
+    if (users.length === 0) {
+      console.error(`User "${targetUsername}" not found`);
+      process.exit(1);
+    }
+  } else if (targetUsername === 'all') {
+    const { rows } = await sql`
+      SELECT id, username, display_name FROM users WHERE is_active = TRUE ORDER BY created_at ASC
+    `;
+    users = rows;
+  } else {
+    // Default: all active users
+    const { rows } = await sql`
+      SELECT id, username, display_name FROM users WHERE is_active = TRUE ORDER BY created_at ASC
+    `;
+    users = rows;
+  }
+
   if (users.length === 0) {
-    console.error('No admin user found');
+    console.error('No users found');
     process.exit(1);
   }
-  const user = users[0];
-  console.log(`Admin: ${user.display_name || user.username} (${user.id})`);
 
-  // Get the most recent digests
-  const { rows: digests } = await sql`
-    SELECT id, generated_at, article_count
-    FROM digests
-    WHERE user_id = ${user.id}
-    ORDER BY generated_at DESC
-    LIMIT ${count}
-  `;
+  for (const user of users) {
+    console.log(`\n${user.display_name || user.username} (@${user.username}):`);
 
-  if (digests.length === 0) {
-    console.log('No digests found');
-    process.exit(0);
-  }
-
-  console.log(`\nDeleting ${digests.length} digest(s):\n`);
-
-  for (const digest of digests) {
-    console.log(`  ${digest.id} — ${new Date(digest.generated_at).toLocaleString()} (${digest.article_count} articles)`);
-
-    // Clear digest_id and reset fallback scores so articles get re-scored
-    const { rowCount: cleared } = await sql`
-      UPDATE user_articles
-      SET digest_id = NULL,
-          relevance_score = NULL,
-          relevance_reason = NULL,
-          is_serendipity = FALSE,
-          scored_at = NULL
-      WHERE user_id = ${user.id} AND digest_id = ${digest.id} AND is_archived = FALSE
+    // Get the most recent digests for this user
+    const { rows: digests } = await sql`
+      SELECT id, generated_at, article_count
+      FROM digests
+      WHERE user_id = ${user.id}
+      ORDER BY generated_at DESC
+      LIMIT ${count}
     `;
-    console.log(`    Unassigned ${cleared} non-archived article(s) for re-scoring`);
 
-    // For archived articles, just clear the digest_id (keep their scores)
-    const { rowCount: archivedCleared } = await sql`
-      UPDATE user_articles
-      SET digest_id = NULL
-      WHERE user_id = ${user.id} AND digest_id = ${digest.id} AND is_archived = TRUE
-    `;
-    if (archivedCleared && archivedCleared > 0) {
-      console.log(`    Unassigned ${archivedCleared} archived article(s) (scores preserved)`);
+    if (digests.length === 0) {
+      console.log('  No digests found');
+      continue;
     }
 
-    // Delete the digest
-    await sql`DELETE FROM digests WHERE id = ${digest.id}`;
-    console.log(`    Digest deleted`);
+    for (const digest of digests) {
+      console.log(`  ${digest.id} — ${new Date(digest.generated_at).toLocaleString()} (${digest.article_count} articles)`);
+
+      // Clear digest_id and reset fallback scores so articles get re-scored
+      const { rowCount: cleared } = await sql`
+        UPDATE user_articles
+        SET digest_id = NULL,
+            relevance_score = NULL,
+            relevance_reason = NULL,
+            is_serendipity = FALSE,
+            scored_at = NULL
+        WHERE user_id = ${user.id} AND digest_id = ${digest.id} AND is_archived = FALSE
+      `;
+      console.log(`    Unassigned ${cleared} non-archived article(s) for re-scoring`);
+
+      // For archived articles, just clear the digest_id (keep their scores)
+      const { rowCount: archivedCleared } = await sql`
+        UPDATE user_articles
+        SET digest_id = NULL
+        WHERE user_id = ${user.id} AND digest_id = ${digest.id} AND is_archived = TRUE
+      `;
+      if (archivedCleared && archivedCleared > 0) {
+        console.log(`    Unassigned ${archivedCleared} archived article(s) (scores preserved)`);
+      }
+
+      // Delete the digest
+      await sql`DELETE FROM digests WHERE id = ${digest.id}`;
+      console.log(`    Digest deleted`);
+    }
   }
 
   console.log('\nDone. Run ingestion to re-score and create new digests.');

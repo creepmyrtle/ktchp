@@ -175,6 +175,12 @@ export async function ensureSchema(): Promise<void> {
     await sql`ALTER TABLE user_articles ADD COLUMN IF NOT EXISTS embedding_score REAL`;
     await sql`ALTER TABLE user_articles ADD COLUMN IF NOT EXISTS digest_tier TEXT CHECK (digest_tier IN ('recommended', 'serendipity', 'bonus'))`;
   } catch { /* columns may already exist */ }
+
+  // Add fetch error tracking to sources
+  try {
+    await sql`ALTER TABLE sources ADD COLUMN IF NOT EXISTS last_fetch_error TEXT`;
+    await sql`ALTER TABLE sources ADD COLUMN IF NOT EXISTS last_fetched_at TIMESTAMPTZ`;
+  } catch { /* columns may already exist */ }
 }
 
 async function ensureEmbeddingsTable(): Promise<void> {

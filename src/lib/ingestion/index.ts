@@ -1,5 +1,5 @@
 import type { Source, RawArticle } from '@/types';
-import { getAllFetchableSources } from '../db/sources';
+import { getAllFetchableSources, updateSourceFetchStatus } from '../db/sources';
 import { createArticle, getRecentArticleExternalIds } from '../db/articles';
 import { fetchRssFeed } from './rss';
 import {
@@ -44,12 +44,19 @@ export async function runIngestion(provider: string, logger?: IngestionLogger): 
 
   logger?.log('fetch', `Fetching from ${sources.length} sources`);
 
-  // Fetch all sources in parallel
-  const fetchResults = await Promise.allSettled(
+  // Fetch all sources in parallel, handling errors per-source
+  const fetchResults = await Promise.all(
     sources.map(async (source) => {
-      const existingIds = await getRecentArticleExternalIds(source.id, provider);
-      const rawArticles = await fetchFromSource(source);
-      return { source, rawArticles, existingIds };
+      try {
+        const existingIds = await getRecentArticleExternalIds(source.id, provider);
+        const rawArticles = await fetchFromSource(source);
+        await updateSourceFetchStatus(source.id, null);
+        return { source, rawArticles, existingIds, error: null as string | null };
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        await updateSourceFetchStatus(source.id, msg);
+        return { source, rawArticles: [] as RawArticle[], existingIds: new Set<string>(), error: msg };
+      }
     })
   );
 
@@ -58,15 +65,15 @@ export async function runIngestion(provider: string, logger?: IngestionLogger): 
 
   // Process results sequentially (DB writes)
   for (const fetchResult of fetchResults) {
-    if (fetchResult.status === 'rejected') {
-      const msg = `Source fetch error: ${fetchResult.reason}`;
+    if (fetchResult.error) {
+      const msg = `Source fetch error (${fetchResult.source.name}): ${fetchResult.error}`;
       console.error(msg);
       result.errors.push(msg);
-      logger?.error('fetch', `Source error: ${fetchResult.reason}`);
+      logger?.error('fetch', `${fetchResult.source.name}: ${fetchResult.error}`);
       continue;
     }
 
-    const { source, rawArticles, existingIds } = fetchResult.value;
+    const { source, rawArticles, existingIds } = fetchResult;
     result.totalFetched += rawArticles.length;
 
     let sourceNew = 0;

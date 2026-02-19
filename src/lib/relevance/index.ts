@@ -16,6 +16,9 @@ import {
   getEmbeddingsByType,
   cosineSimilarity,
   pruneOldArticleEmbeddings,
+  generateEmbedding,
+  storeEmbedding,
+  buildInterestEmbeddingText,
 } from '../embeddings';
 import { prefilterArticles } from './prefilter';
 import { scoreArticles } from './scorer';
@@ -172,8 +175,25 @@ export async function runRelevanceEngine(userId: string, provider: string, logge
   const preferences = await getPreferencesByUserId(userId);
   const thresholds = await getThresholds();
 
+  // --- Ensure interest embeddings are up to date ---
+  const existingInterestEmbeddings = await getEmbeddingsByType('interest', interests.map(i => i.id));
+  const missingInterests = interests.filter(i => !existingInterestEmbeddings.has(i.id));
+  if (missingInterests.length > 0) {
+    logger?.log('embedding', `Generating embeddings for ${missingInterests.length} interest(s)`);
+    for (const interest of missingInterests) {
+      try {
+        const text = buildInterestEmbeddingText(interest.category, interest.description);
+        const emb = await generateEmbedding(text);
+        await storeEmbedding('interest', interest.id, text, emb);
+        existingInterestEmbeddings.set(interest.id, emb);
+      } catch (err) {
+        logger?.warn('embedding', `Failed to generate embedding for interest "${interest.category}": ${err}`);
+      }
+    }
+  }
+
   // --- Stage 1: Embedding pre-filter ---
-  const interestEmbeddings = await getEmbeddingsByType('interest', interests.map(i => i.id));
+  const interestEmbeddings = existingInterestEmbeddings;
   const articleIds = filtered.map(a => a.id);
   const articleEmbeddings = await getEmbeddingsByType('article', articleIds);
 

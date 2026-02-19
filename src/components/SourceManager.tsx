@@ -9,6 +9,8 @@ interface Source {
   config: Record<string, unknown>;
   enabled: boolean;
   is_default?: boolean;
+  last_fetch_error?: string | null;
+  last_fetched_at?: string | null;
 }
 
 interface OpmlFeed {
@@ -318,6 +320,11 @@ export default function SourceManager() {
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{source.name}</p>
                 <p className="text-xs text-muted truncate">{(source.config.url as string) || source.type}</p>
+                {source.last_fetch_error && (
+                  <p className="text-xs text-danger truncate" title={source.last_fetch_error}>
+                    Error: {source.last_fetch_error}
+                  </p>
+                )}
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <button
@@ -350,6 +357,11 @@ export default function SourceManager() {
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{source.name}</p>
                 <p className="text-xs text-muted truncate">{(source.config.url as string) || source.type}</p>
+                {source.last_fetch_error && (
+                  <p className="text-xs text-danger truncate" title={source.last_fetch_error}>
+                    Error: {source.last_fetch_error}
+                  </p>
+                )}
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <button

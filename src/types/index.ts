@@ -30,6 +30,8 @@ export interface Source {
   created_by: string | null;
   max_items: number;
   created_at: string;
+  last_fetch_error?: string | null;
+  last_fetched_at?: string | null;
 }
 
 // Ingested Article (shared content only — no per-user scoring/engagement)

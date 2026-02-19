@@ -15,27 +15,22 @@ export async function fetchRssFeed(
   feedUrl: string,
   maxItems?: number
 ): Promise<RawArticle[]> {
-  try {
-    const feed = await parser.parseURL(feedUrl);
-    const articles: RawArticle[] = [];
-    const items = maxItems ? feed.items.slice(0, maxItems) : feed.items;
+  const feed = await parser.parseURL(feedUrl);
+  const articles: RawArticle[] = [];
+  const items = maxItems ? feed.items.slice(0, maxItems) : feed.items;
 
-    for (const item of items) {
-      if (!item.title || !item.link) continue;
+  for (const item of items) {
+    if (!item.title || !item.link) continue;
 
-      articles.push({
-        title: item.title,
-        url: normalizeUrl(item.link),
-        content: item.contentSnippet || item.content || item.summary || null,
-        external_id: normalizeUrl(item.link),
-        published_at: item.isoDate || item.pubDate || null,
-        source_id: sourceId,
-      });
-    }
-
-    return articles;
-  } catch (error) {
-    console.error(`Failed to fetch RSS feed ${feedUrl}:`, error);
-    return [];
+    articles.push({
+      title: item.title,
+      url: normalizeUrl(item.link),
+      content: item.contentSnippet || item.content || item.summary || null,
+      external_id: normalizeUrl(item.link),
+      published_at: item.isoDate || item.pubDate || null,
+      source_id: sourceId,
+    });
   }
+
+  return articles;
 }

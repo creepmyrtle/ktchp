@@ -136,6 +136,14 @@ export async function setUserSourceSetting(userId: string, sourceId: string, ena
   `;
 }
 
+export async function updateSourceFetchStatus(id: string, error: string | null): Promise<void> {
+  if (error) {
+    await sql`UPDATE sources SET last_fetched_at = NOW(), last_fetch_error = ${error} WHERE id = ${id}`;
+  } else {
+    await sql`UPDATE sources SET last_fetched_at = NOW(), last_fetch_error = NULL WHERE id = ${id}`;
+  }
+}
+
 // Legacy — used by old routes. Kept for backward-compat during migration.
 export async function getSourcesByUserId(userId: string): Promise<Source[]> {
   return getSourcesForUser(userId);
