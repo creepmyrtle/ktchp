@@ -89,30 +89,30 @@ export default function ActionBar({
 
   return (
     <div className="flex items-center gap-0.5 sm:gap-1 flex-wrap">
-      {/* Sentiment group — order matches swipe direction so "like" is on the swipe side */}
+      {/* Sentiment group — "like" is opposite the swipe side for easy one-handed reach */}
       <div className="flex items-center border border-card-border rounded-lg overflow-hidden">
         {swipeDirection === 'right' ? (
           <>
-            <button onClick={() => handleSentiment('disliked')} className={sentimentBtnClass('disliked')} title="Disliked">
-              &#x1F44E;
+            <button onClick={() => handleSentiment('liked')} className={sentimentBtnClass('liked')} title="Liked">
+              &#x1F44D;
             </button>
             <button onClick={() => handleSentiment('neutral')} className={sentimentBtnClass('neutral')} title="Neutral">
               &#x2796;
             </button>
-            <button onClick={() => handleSentiment('liked')} className={sentimentBtnClass('liked')} title="Liked">
-              &#x1F44D;
+            <button onClick={() => handleSentiment('disliked')} className={sentimentBtnClass('disliked')} title="Disliked">
+              &#x1F44E;
             </button>
           </>
         ) : (
           <>
-            <button onClick={() => handleSentiment('liked')} className={sentimentBtnClass('liked')} title="Liked">
-              &#x1F44D;
+            <button onClick={() => handleSentiment('disliked')} className={sentimentBtnClass('disliked')} title="Disliked">
+              &#x1F44E;
             </button>
             <button onClick={() => handleSentiment('neutral')} className={sentimentBtnClass('neutral')} title="Neutral">
               &#x2796;
             </button>
-            <button onClick={() => handleSentiment('disliked')} className={sentimentBtnClass('disliked')} title="Disliked">
-              &#x1F44E;
+            <button onClick={() => handleSentiment('liked')} className={sentimentBtnClass('liked')} title="Liked">
+              &#x1F44D;
             </button>
           </>
         )}
