@@ -84,7 +84,7 @@ export default function InterestManager() {
         </button>
       </form>
 
-      {interests.map(interest => (
+      {[...interests].sort((a, b) => a.category.localeCompare(b.category)).map(interest => (
         <div key={interest.id} className="p-4 rounded-lg bg-card border border-card-border">
           <div className="flex items-start justify-between gap-2 mb-2">
             <div className="flex-1">
