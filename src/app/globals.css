@@ -49,9 +49,15 @@ body {
 
 /* Card with hover lift + top accent line */
 .card-hover {
-  transition: border-color 0.3s ease, transform 0.3s ease;
+  transition: border-color 0.3s ease;
   position: relative;
   overflow: hidden;
+}
+
+@media (hover: hover) {
+  .card-hover {
+    transition: border-color 0.3s ease, transform 0.3s ease;
+  }
 }
 
 .card-hover::before {
