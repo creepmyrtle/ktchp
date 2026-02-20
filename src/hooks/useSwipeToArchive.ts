@@ -50,6 +50,11 @@ export function useSwipeToArchive({
     const el = ref.current;
     if (!el) return;
 
+    let moveCount = 0;
+    let rafCount = 0;
+    let preventedCount = 0;
+    let lastMoveTime = 0;
+
     function handleTouchStart(e: TouchEvent) {
       if (!enabledRef.current) return;
       const touch = e.touches[0];
@@ -59,6 +64,10 @@ export function useSwipeToArchive({
       isSwiping.current = false;
       isScrollLocked.current = false;
       startTime.current = Date.now();
+      moveCount = 0;
+      rafCount = 0;
+      preventedCount = 0;
+      lastMoveTime = 0;
       if (ref.current) {
         ref.current.style.transition = 'none';
         ref.current.style.willChange = 'transform';
@@ -66,10 +75,16 @@ export function useSwipeToArchive({
       if (bgRef.current) {
         bgRef.current.style.willChange = 'opacity';
       }
+      console.log('[swipe] touchstart', { x: touch.clientX, y: touch.clientY, enabled: enabledRef.current });
     }
 
     function handleTouchMove(e: TouchEvent) {
       if (!enabledRef.current) return;
+      const now = performance.now();
+      const sinceLast = lastMoveTime ? Math.round(now - lastMoveTime) : 0;
+      lastMoveTime = now;
+      moveCount++;
+
       const touch = e.touches[0];
       const deltaX = touch.clientX - startX.current;
       const deltaY = touch.clientY - startY.current;
@@ -80,8 +95,9 @@ export function useSwipeToArchive({
         if (Math.abs(deltaX) > 10 && Math.abs(deltaX) > Math.abs(deltaY)) {
           isSwiping.current = true;
           isScrollLocked.current = true;
+          console.log('[swipe] locked horizontal', { deltaX: Math.round(deltaX), deltaY: Math.round(deltaY), moveCount });
         } else if (Math.abs(deltaY) > 10) {
-          // Vertical scroll — abort swipe
+          if (moveCount <= 3) console.log('[swipe] aborted — vertical scroll', { deltaX: Math.round(deltaX), deltaY: Math.round(deltaY) });
           return;
         }
       }
@@ -90,12 +106,25 @@ export function useSwipeToArchive({
 
       // Prevent vertical scrolling during swipe
       e.preventDefault();
+      preventedCount++;
+
+      // Log if preventDefault is being ignored (cancelable check)
+      if (moveCount <= 5 || moveCount % 20 === 0) {
+        console.log('[swipe] touchmove', {
+          moveCount,
+          deltaX: Math.round(deltaX),
+          cancelable: e.cancelable,
+          defaultPrevented: e.defaultPrevented,
+          intervalMs: sinceLast,
+        });
+      }
 
       currentX.current = deltaX;
 
       // Batch DOM updates to next frame
       cancelAnimationFrame(rafId.current);
       rafId.current = requestAnimationFrame(() => {
+        rafCount++;
         const isCorrectDirection = dir === 'right' ? deltaX > 0 : deltaX < 0;
         if (!isCorrectDirection) {
           if (ref.current) ref.current.style.transform = '';
@@ -118,7 +147,11 @@ export function useSwipeToArchive({
     }
 
     function handleTouchEnd() {
-      if (!enabledRef.current || !isSwiping.current) return;
+      const wasSwiping = isSwiping.current;
+      if (!enabledRef.current || !wasSwiping) {
+        console.log('[swipe] touchend (ignored)', { enabled: enabledRef.current, wasSwiping, moveCount });
+        return;
+      }
       cancelAnimationFrame(rafId.current);
       const dir = directionRef.current;
 
@@ -127,6 +160,17 @@ export function useSwipeToArchive({
       const velocity = absDelta / Math.max(elapsed, 1);
 
       const triggered = absDelta >= THRESHOLD_PX || (velocity > VELOCITY_THRESHOLD && absDelta > 40);
+
+      console.log('[swipe] touchend', {
+        absDelta: Math.round(absDelta),
+        elapsed,
+        velocity: velocity.toFixed(3),
+        triggered,
+        canArchive: canArchiveRef.current,
+        moveCount,
+        rafCount,
+        preventedCount,
+      });
 
       if (ref.current) {
         ref.current.style.transition = 'transform 0.3s ease';
