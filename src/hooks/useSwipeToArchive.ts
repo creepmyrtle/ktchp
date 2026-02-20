@@ -28,6 +28,7 @@ export function useSwipeToArchive({
   const isSwiping = useRef(false);
   const isScrollLocked = useRef(false);
   const startTime = useRef(0);
+  const rafId = useRef(0);
 
   const THRESHOLD_PX = 100;
   const VELOCITY_THRESHOLD = 0.5; // px/ms
@@ -60,6 +61,10 @@ export function useSwipeToArchive({
       startTime.current = Date.now();
       if (ref.current) {
         ref.current.style.transition = 'none';
+        ref.current.style.willChange = 'transform';
+      }
+      if (bgRef.current) {
+        bgRef.current.style.willChange = 'opacity';
       }
     }
 
@@ -86,32 +91,35 @@ export function useSwipeToArchive({
       // Prevent vertical scrolling during swipe
       e.preventDefault();
 
-      // Check direction
-      const isCorrectDirection = dir === 'right' ? deltaX > 0 : deltaX < 0;
-      if (!isCorrectDirection) {
-        if (ref.current) ref.current.style.transform = '';
-        return;
-      }
-
-      const absDelta = Math.abs(deltaX);
-      // Apply resistance after threshold
-      const translated = absDelta > THRESHOLD_PX
-        ? THRESHOLD_PX + (absDelta - THRESHOLD_PX) * 0.4
-        : absDelta;
-
       currentX.current = deltaX;
 
-      if (ref.current) {
-        const sign = dir === 'right' ? 1 : -1;
-        ref.current.style.transform = `translateX(${sign * translated}px)`;
-      }
-      if (bgRef.current) {
-        bgRef.current.style.opacity = `${Math.min(absDelta / THRESHOLD_PX, 1)}`;
-      }
+      // Batch DOM updates to next frame
+      cancelAnimationFrame(rafId.current);
+      rafId.current = requestAnimationFrame(() => {
+        const isCorrectDirection = dir === 'right' ? deltaX > 0 : deltaX < 0;
+        if (!isCorrectDirection) {
+          if (ref.current) ref.current.style.transform = '';
+          return;
+        }
+
+        const absDelta = Math.abs(deltaX);
+        const translated = absDelta > THRESHOLD_PX
+          ? THRESHOLD_PX + (absDelta - THRESHOLD_PX) * 0.4
+          : absDelta;
+
+        if (ref.current) {
+          const sign = dir === 'right' ? 1 : -1;
+          ref.current.style.transform = `translateX(${sign * translated}px)`;
+        }
+        if (bgRef.current) {
+          bgRef.current.style.opacity = `${Math.min(absDelta / THRESHOLD_PX, 1)}`;
+        }
+      });
     }
 
     function handleTouchEnd() {
       if (!enabledRef.current || !isSwiping.current) return;
+      cancelAnimationFrame(rafId.current);
       const dir = directionRef.current;
 
       const absDelta = Math.abs(currentX.current);
@@ -149,6 +157,12 @@ export function useSwipeToArchive({
 
       isSwiping.current = false;
       isScrollLocked.current = false;
+
+      // Clear will-change after transition completes to free GPU memory
+      setTimeout(() => {
+        if (ref.current) ref.current.style.willChange = '';
+        if (bgRef.current) bgRef.current.style.willChange = '';
+      }, 350);
     }
 
     el.addEventListener('touchstart', handleTouchStart, { passive: true });
@@ -156,6 +170,7 @@ export function useSwipeToArchive({
     el.addEventListener('touchend', handleTouchEnd, { passive: true });
 
     return () => {
+      cancelAnimationFrame(rafId.current);
       el.removeEventListener('touchstart', handleTouchStart);
       el.removeEventListener('touchmove', handleTouchMove);
       el.removeEventListener('touchend', handleTouchEnd);
