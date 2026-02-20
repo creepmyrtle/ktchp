@@ -102,7 +102,7 @@ export function useSwipeToArchive({
         : absDelta;
       const sign = dir === 'right' ? 1 : -1;
 
-      el.style.transform = `translateX(${sign * translated}px)`;
+      el.style.transform = `translate3d(${sign * translated}px, 0, 0)`;
       if (bgRef.current) {
         bgRef.current.style.opacity = `${Math.min(absDelta / THRESHOLD_PX, 1)}`;
       }
@@ -128,7 +128,7 @@ export function useSwipeToArchive({
 
       if (triggered && canArchiveRef.current) {
         const sign = dir === 'right' ? 1 : -1;
-        el.style.transform = `translateX(${sign * 120}%)`;
+        el.style.transform = `translate3d(${sign * 120}%, 0, 0)`;
         setTimeout(() => onArchiveRef.current(), 200);
       } else if (triggered && !canArchiveRef.current) {
         el.style.transform = '';

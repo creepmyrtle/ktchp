@@ -206,7 +206,100 @@ Standalone scripts run via `npx tsx scripts/<name>.ts`. All load `.env.local` au
 | `ANTHROPIC_API_KEY` | No | Anthropic API key (inactive, kept for future use) |
 | `MIN_RELEVANCE_SCORE` | No | Minimum LLM score for digest inclusion (default: 0.5) |
 
-## Development
+## Quick Start — Deploy Your Own Instance
+
+You can have ketchup running in about 10 minutes. You'll need:
+
+- A [GitHub](https://github.com) account
+- A [Vercel](https://vercel.com) account (free tier works)
+- An [OpenAI](https://platform.openai.com) API key (for article embeddings)
+- A [Synthetic](https://synthetic.new) API key (for LLM scoring — free tier available)
+
+### Step 1: Fork and Deploy to Vercel
+
+1. Fork this repository on GitHub.
+2. Go to [vercel.com/new](https://vercel.com/new) and click **Import** next to your forked repo.
+3. Vercel will detect it's a Next.js project. Leave the default settings and click **Deploy**.
+4. The first deploy will fail (no database yet). That's expected — continue to Step 2.
+
+### Step 2: Create a Free Postgres Database
+
+1. In your Vercel project dashboard, go to the **Storage** tab.
+2. Click **Create Database** and select **Neon Serverless Postgres**.
+3. Choose the **Free** plan (256 MB, more than enough to start).
+4. Pick a region close to you and click **Create**.
+5. Vercel automatically adds the `POSTGRES_URL` environment variable to your project.
+
+### Step 3: Add API Keys
+
+In your Vercel project, go to **Settings > Environment Variables** and add:
+
+| Variable | Value | Where to get it |
+|----------|-------|-----------------|
+| `CRON_SECRET` | Any random string (e.g., run `openssl rand -hex 32`) | You generate this yourself |
+| `OPENAI_API_KEY` | `sk-...` | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
+| `SYNTHETIC_API_KEY` | Your API key | [synthetic.new](https://synthetic.new) |
+
+Make sure all three are added for **Production**, **Preview**, and **Development** environments.
+
+### Step 4: Redeploy
+
+1. Go to the **Deployments** tab in your Vercel project.
+2. Find the latest deployment, click the **...** menu, and select **Redeploy**.
+3. The app will create all database tables and seed a default admin user automatically.
+
+### Step 5: Log In and Configure
+
+1. Open your deployed app (the `.vercel.app` URL from your dashboard).
+2. Log in with username `admin` and password `changeme`.
+3. **Change your password** immediately in Settings > Account.
+4. Go to Settings > Sources and add some RSS feeds (or import an OPML file).
+5. Go to Settings > Interests and set up your interest categories with weights.
+
+### Step 6: Run Your First Ingestion
+
+You have two options:
+
+**Option A — From the Vercel dashboard (no code required):**
+1. In your Vercel project, go to the **Functions** tab (or open your app's URL).
+2. Make a POST request to `https://your-app.vercel.app/api/ingest` with the header `Authorization: Bearer <your CRON_SECRET>`.
+
+**Option B — From your local machine:**
+1. Clone your fork and create a `.env.local` file with your environment variables:
+   ```
+   POSTGRES_URL=<from Vercel dashboard, Settings > Environment Variables>
+   CRON_SECRET=<your secret>
+   OPENAI_API_KEY=<your key>
+   SYNTHETIC_API_KEY=<your key>
+   ```
+2. Run:
+   ```bash
+   npm install
+   npx tsx scripts/ingest.ts
+   ```
+
+After ingestion completes, refresh your app — your first digest should be ready.
+
+### Step 7: Set Up Daily Ingestion (Optional)
+
+To get a fresh digest every morning, set up the GitHub Actions cron:
+
+1. In your forked repo on GitHub, go to **Settings > Secrets and variables > Actions**.
+2. Add these repository secrets:
+   - `POSTGRES_URL` — your database connection string
+   - `OPENAI_API_KEY` — your OpenAI key
+   - `SYNTHETIC_API_KEY` — your Synthetic key
+3. Go to the **Actions** tab and enable workflows if prompted.
+
+The cron runs daily at 11:00 UTC (5 AM Central). You can adjust the schedule in `.github/workflows/ingest.yml` or trigger it manually from the Actions tab.
+
+### Adding More Users
+
+1. Go to Settings > Admin > Invite Codes and generate a code.
+2. Share the registration URL with the new user.
+3. New users get a starter interest set — they can customize in Settings > Interests.
+
+## Local Development
 
 ```bash
 npm install
@@ -214,31 +307,7 @@ npm run dev         # http://localhost:3000
 npm run build       # Production build
 ```
 
-### First-Time Setup
-
-1. Set up a Vercel Postgres database and add `POSTGRES_URL` to `.env.local`
-2. Add API keys: `SYNTHETIC_API_KEY`, `OPENAI_API_KEY`, `CRON_SECRET`
-3. Run `npm run dev` — the schema is auto-created and the default admin user is seeded (username: `admin`, password: `changeme`)
-4. Log in and change the admin password in Settings > Account
-5. Add RSS sources in Settings > Sources
-6. Run `npx tsx scripts/ingest.ts` to trigger the first ingestion
-
-### Adding Users
-
-1. Go to Settings > Admin > Invite Codes
-2. Generate an invite code
-3. Share the registration URL with the new user
-4. New users get a generic starter interest set — they can customize in Settings > Interests
-
-## Deployment
-
-Push to main. Vercel auto-deploys the app. The daily ingestion cron runs via GitHub Actions at 11:00 UTC (5 AM CT) per `.github/workflows/ingest.yml`.
-
-### Required GitHub Secrets
-
-- `POSTGRES_URL`
-- `SYNTHETIC_API_KEY`
-- `OPENAI_API_KEY`
+Create a `.env.local` with the variables from Step 3 above, plus `POSTGRES_URL` from your Vercel database (found in Settings > Environment Variables). The schema auto-creates on first run.
 
 ---
 
