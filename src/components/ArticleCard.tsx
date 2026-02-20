@@ -65,7 +65,7 @@ export default function ArticleCard({ article, swipeDirection = 'right', tier, o
     // Shake the sentiment buttons — handled by ActionBar's pulse
   }
 
-  const { ref: swipeRef, bgRef, handlers } = useSwipeToArchive({
+  const { ref: swipeRef, bgRef } = useSwipeToArchive({
     onArchive: handleArchive,
     canArchive: !!sentiment,
     onSwipeBlocked: handleSwipeBlocked,
@@ -112,7 +112,7 @@ export default function ArticleCard({ article, swipeDirection = 'right', tier, o
           {/* Card content — swipeable */}
           <div
             ref={swipeRef}
-            {...handlers}
+            style={{ touchAction: 'pan-y' }}
             className={`relative rounded-lg border p-4 bg-card card-hover ${
               isBonus
                 ? 'border-slate-500/40'
