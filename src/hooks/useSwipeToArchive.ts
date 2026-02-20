@@ -9,9 +9,12 @@ interface SwipeConfig {
 }
 
 interface SwipeState {
-  ref: RefObject<HTMLDivElement | null>;
-  bgRef: RefObject<HTMLDivElement | null>;
+  scrollRef: RefObject<HTMLDivElement | null>;
+  indicatorRef: RefObject<HTMLDivElement | null>;
 }
+
+// Width of the archive zone — snap triggers at roughly half this distance
+export const SWIPE_ZONE_PX = 150;
 
 export function useSwipeToArchive({
   onArchive,
@@ -20,13 +23,9 @@ export function useSwipeToArchive({
   direction = 'right',
   enabled = true,
 }: SwipeConfig): SwipeState {
-  const ref = useRef<HTMLDivElement>(null);
-  const bgRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const indicatorRef = useRef<HTMLDivElement>(null);
 
-  const THRESHOLD_PX = 100;
-  const VELOCITY_THRESHOLD = 0.5; // px/ms
-
-  // Store latest values in refs so event handlers always see current state
   const enabledRef = useRef(enabled);
   const canArchiveRef = useRef(canArchive);
   const directionRef = useRef(direction);
@@ -40,140 +39,65 @@ export function useSwipeToArchive({
   useEffect(() => { onSwipeBlockedRef.current = onSwipeBlocked; }, [onSwipeBlocked]);
 
   useEffect(() => {
-    const el = ref.current;
+    const el = scrollRef.current;
     if (!el) return;
 
-    let startX = 0;
-    let startY = 0;
-    let currentDeltaX = 0;
-    let startTime = 0;
-    let isSwiping = false;
-    let directionLocked = false;
-    let pointerId: number | null = null;
+    const dir = directionRef.current;
+    // Home scroll position: show card, hide archive zone
+    const home = dir === 'right' ? SWIPE_ZONE_PX : 0;
 
-    function handlePointerDown(e: PointerEvent) {
-      if (!enabledRef.current || e.pointerType === 'mouse' || !el) return;
-      pointerId = e.pointerId;
-      el.setPointerCapture(e.pointerId);
-      startX = e.clientX;
-      startY = e.clientY;
-      currentDeltaX = 0;
-      startTime = e.timeStamp;
-      isSwiping = false;
-      directionLocked = false;
-      el.style.transition = 'none';
-      el.style.willChange = 'transform';
-      if (bgRef.current) bgRef.current.style.willChange = 'opacity';
+    // Set initial position without animation
+    el.style.scrollBehavior = 'auto';
+    el.scrollLeft = home;
+    el.style.scrollBehavior = '';
+
+    let triggered = false;
+    let scrollEndTimer: ReturnType<typeof setTimeout>;
+
+    function handleScroll() {
+      if (!el || triggered) return;
+
+      // Compute how far the user has scrolled away from home
+      const scrolled = dir === 'right'
+        ? home - el.scrollLeft
+        : el.scrollLeft;
+      const progress = Math.max(0, Math.min(1, scrolled / SWIPE_ZONE_PX));
+
+      if (indicatorRef.current) {
+        indicatorRef.current.style.opacity = `${progress}`;
+      }
+
+      // Debounced scroll-end fallback
+      clearTimeout(scrollEndTimer);
+      scrollEndTimer = setTimeout(checkScrollEnd, 150);
     }
 
-    function handlePointerMove(e: PointerEvent) {
-      if (pointerId === null || e.pointerId !== pointerId || !el) return;
-      const deltaX = e.clientX - startX;
-      const deltaY = e.clientY - startY;
-      const dir = directionRef.current;
+    function checkScrollEnd() {
+      if (!el || triggered || !enabledRef.current) return;
 
-      if (!directionLocked) {
-        if (Math.abs(deltaX) > 10 && Math.abs(deltaX) > Math.abs(deltaY)) {
-          isSwiping = true;
-          directionLocked = true;
-        } else if (Math.abs(deltaY) > 10) {
-          // Vertical — release capture so browser scrolls normally
-          el.releasePointerCapture(e.pointerId);
-          pointerId = null;
-          return;
+      const archivePos = dir === 'right' ? 0 : SWIPE_ZONE_PX;
+      const atArchive = Math.abs(el.scrollLeft - archivePos) < SWIPE_ZONE_PX * 0.3;
+
+      if (atArchive) {
+        if (canArchiveRef.current) {
+          triggered = true;
+          onArchiveRef.current();
         } else {
-          return; // Not enough movement yet
+          el.scrollTo({ left: home, behavior: 'smooth' });
+          onSwipeBlockedRef.current?.();
         }
       }
-
-      if (!isSwiping) return;
-
-      const isCorrectDirection = dir === 'right' ? deltaX > 0 : deltaX < 0;
-      if (!isCorrectDirection) {
-        el.style.transform = '';
-        currentDeltaX = 0;
-        return;
-      }
-
-      currentDeltaX = deltaX;
-      const absDelta = Math.abs(deltaX);
-      const translated = absDelta > THRESHOLD_PX
-        ? THRESHOLD_PX + (absDelta - THRESHOLD_PX) * 0.4
-        : absDelta;
-      const sign = dir === 'right' ? 1 : -1;
-
-      el.style.transform = `translate3d(${sign * translated}px, 0, 0)`;
-      if (bgRef.current) {
-        bgRef.current.style.opacity = `${Math.min(absDelta / THRESHOLD_PX, 1)}`;
-      }
     }
 
-    function handlePointerEnd(e: PointerEvent) {
-      if (pointerId === null || e.pointerId !== pointerId || !el) return;
-      pointerId = null;
-
-      if (!isSwiping) {
-        el.style.willChange = '';
-        if (bgRef.current) bgRef.current.style.willChange = '';
-        return;
-      }
-
-      const dir = directionRef.current;
-      const absDelta = Math.abs(currentDeltaX);
-      const elapsed = e.timeStamp - startTime;
-      const velocity = absDelta / Math.max(elapsed, 1);
-      const triggered = absDelta >= THRESHOLD_PX || (velocity > VELOCITY_THRESHOLD && absDelta > 40);
-
-      el.style.transition = 'transform 0.3s ease';
-
-      if (triggered && canArchiveRef.current) {
-        const sign = dir === 'right' ? 1 : -1;
-        el.style.transform = `translate3d(${sign * 120}%, 0, 0)`;
-        setTimeout(() => onArchiveRef.current(), 200);
-      } else if (triggered && !canArchiveRef.current) {
-        el.style.transform = '';
-        if (bgRef.current) bgRef.current.style.opacity = '0';
-        onSwipeBlockedRef.current?.();
-      } else {
-        el.style.transform = '';
-        if (bgRef.current) bgRef.current.style.opacity = '0';
-      }
-
-      isSwiping = false;
-      directionLocked = false;
-
-      setTimeout(() => {
-        el.style.willChange = '';
-        if (bgRef.current) bgRef.current.style.willChange = '';
-      }, 350);
-    }
-
-    function handlePointerCancel(e: PointerEvent) {
-      if (pointerId === null || e.pointerId !== pointerId || !el) return;
-      pointerId = null;
-      el.style.transform = '';
-      el.style.transition = '';
-      el.style.willChange = '';
-      if (bgRef.current) {
-        bgRef.current.style.opacity = '0';
-        bgRef.current.style.willChange = '';
-      }
-      isSwiping = false;
-      directionLocked = false;
-    }
-
-    el.addEventListener('pointerdown', handlePointerDown);
-    el.addEventListener('pointermove', handlePointerMove);
-    el.addEventListener('pointerup', handlePointerEnd);
-    el.addEventListener('pointercancel', handlePointerCancel);
+    el.addEventListener('scroll', handleScroll, { passive: true });
+    el.addEventListener('scrollend', checkScrollEnd);
 
     return () => {
-      el.removeEventListener('pointerdown', handlePointerDown);
-      el.removeEventListener('pointermove', handlePointerMove);
-      el.removeEventListener('pointerup', handlePointerEnd);
-      el.removeEventListener('pointercancel', handlePointerCancel);
+      clearTimeout(scrollEndTimer);
+      el.removeEventListener('scroll', handleScroll);
+      el.removeEventListener('scrollend', checkScrollEnd);
     };
   }, []);
 
-  return { ref, bgRef };
+  return { scrollRef, indicatorRef };
 }
