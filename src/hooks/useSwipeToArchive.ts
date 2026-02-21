@@ -3,7 +3,7 @@ import { useRef, useEffect, useState } from 'react';
 interface SwipeConfig {
   onArchive: () => void;
   canArchive: boolean;
-  direction?: 'right' | 'left'; 
+  direction?: 'right' | 'left'; //TODO get these with getPreferencesByUserId() 
 }
 
 export function useSwipeToArchive({ 
