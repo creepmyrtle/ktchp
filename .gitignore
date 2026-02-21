@@ -37,6 +37,9 @@ yarn-error.log*
 # database
 /data/
 
+# script output
+scripts/*-output.json
+
 # vercel
 .vercel
 

@@ -56,6 +56,16 @@
 - Feedback button order reverses based on swipe direction setting
 - Card archive animation: fade (400ms) → height collapse (300ms) → display:none, with scroll position preservation
 
+### Scoring Pipeline
+- Two-stage: embedding prefilter → LLM refinement
+- Embedding scores are weight-adjusted (`similarity * interest.weight`) and blended across multiple interests (configurable primary/secondary weights)
+- Exclusion penalties reduce scores for articles matching excluded topics (graduated, up to 80% reduction)
+- Source trust multipliers boost/penalize based on per-source sentiment history (0.8–1.2 range)
+- Semantic deduplication removes near-identical articles during ingestion (cosine similarity > 0.85)
+- Interest descriptions are auto-expanded via LLM for richer embeddings
+- Serendipity picks use weighted sampling (proximity 50%, interest diversity 30%, source diversity 20%)
+- Weekly affinity analysis (configurable day) discovers latent interests from feedback patterns
+
 ## File Organization
 
 - `src/app/` — Pages and API routes (Next.js App Router)
@@ -65,6 +75,9 @@
   - `lib/db/` — Database queries (one file per table/domain)
   - `lib/ingestion/` — RSS fetching and article storage
   - `lib/relevance/` — Scoring pipeline (prefilter → embed → LLM → digest)
+  - `lib/affinity.ts` — Weekly LLM-based interest discovery from feedback
+  - `lib/interest-expansion.ts` — LLM expansion of interest descriptions for embedding
+  - `lib/source-trust.ts` — Source trust factor computation from sentiment data
 - `src/types/` — Shared TypeScript interfaces
 - `scripts/` — Standalone CLI scripts (run via `npx tsx`)
 

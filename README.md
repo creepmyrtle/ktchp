@@ -10,21 +10,37 @@ Every ingestion run (triggered by a daily GitHub Actions cron or manually) execu
 
 1. **Fetch** — Fetches new articles from all enabled RSS sources across all active users, deduplicates against existing articles.
 2. **Prefilter** — Removes spam domains, very short titles, exact title duplicates, and stale articles (>7 days old).
-3. **Embed** — Generates vector embeddings for all new articles using OpenAI's `text-embedding-3-small` model. Each article is embedded once and shared across all users.
+3. **Embed** — Generates vector embeddings for all new articles using OpenAI's `text-embedding-3-small` model. Each article is embedded once and shared across all users. Near-duplicate articles are detected via semantic deduplication (cosine similarity > 0.85) and flagged so scoring can skip them.
 4. **Score (per user)** — Two-stage scoring for each active user:
-   - **Stage 1 — Embedding pre-filter**: Computes cosine similarity between article embeddings and user interest embeddings. Filters out ~60-80% of obviously irrelevant articles.
-   - **Stage 2 — LLM refinement**: Sends only the top embedding-matched candidates (plus a small serendipity pool) to the LLM for nuanced scoring, reason tagging, and serendipity detection.
+   - **Stage 1 — Embedding pre-filter**: Computes weight-adjusted cosine similarity between article embeddings and user interest embeddings, blended across multiple matching interests. Applies exclusion penalties for articles matching excluded topics, and source trust multipliers from per-source feedback history. Filters out ~60-80% of obviously irrelevant articles.
+   - **Stage 2 — LLM refinement**: Sends only the top embedding-matched candidates (plus a weighted serendipity pool) to the LLM with article titles, content snippets, and URLs for nuanced scoring, reason tagging, and serendipity detection.
 5. **Digest** — Selects all articles above the relevance threshold (default 0.5), plus up to 2 serendipity items, and groups them into a digest. Articles below the threshold are included as bonus articles.
 
 ### Scoring
 
 The two-stage pipeline cuts LLM API costs by 60-80% while maintaining digest quality.
 
-**Stage 1 (Embeddings):** Each article's embedding is compared against all of the user's interest embeddings via cosine similarity. The highest similarity score across all interests determines the article's embedding score. Articles above the LLM threshold (default 0.35) are candidates for LLM scoring. A small random sample from the "maybe relevant" range (0.20-0.35) is also included as serendipity candidates.
+**Stage 1 (Embeddings):** Each article's embedding is compared against all of the user's interest embeddings via cosine similarity. Similarities are weight-adjusted (`similarity × interest.weight`), then blended across multiple matching interests (configurable primary/secondary weights, default 70/30). The blended score is further modified by exclusion penalties (articles matching excluded topics get up to 80% reduction) and source trust multipliers (0.8–1.2 range based on per-source feedback history). Articles above the LLM threshold (default 0.28) are candidates for LLM scoring. A weighted sample from the "maybe relevant" range (0.20–0.35) is included as serendipity candidates, prioritizing proximity to interests and source diversity over pure randomness.
 
-**Stage 2 (LLM):** The LLM receives the user's explicit interests (with weights), learned preferences from feedback history, and article titles + URLs. It returns structured JSON with relevance scores, reason tags, and serendipity flags. Serendipity candidates get a special prompt note asking the LLM to evaluate them for unexpected cross-domain value.
+**Stage 2 (LLM):** The LLM receives the user's explicit interests (with weights), learned preferences from feedback history, and article titles + content snippets + URLs. It returns structured JSON with relevance scores, reason tags, and serendipity flags. Serendipity candidates get a special prompt note asking the LLM to evaluate them for unexpected cross-domain value.
 
 Articles scoring below the threshold are still stored — they just appear as bonus articles rather than in the main digest.
+
+### Interest Expansion
+
+When you create or update an interest, an LLM automatically generates a rich 150–200 word description covering related concepts, terminology, and adjacent topics. This expanded description is used for embedding generation, improving match quality without requiring you to write detailed descriptions manually.
+
+### Excluded Topics
+
+You can define topics you don't want to see (Settings → Exclusions). These are embedded and compared against articles during scoring — matching articles receive a graduated penalty that reduces their score. Strong matches to your positive interests can still come through, but borderline articles matching exclusions are filtered out.
+
+### Interest Discovery
+
+Once a week (configurable day, default Sunday), ketchup analyzes your liked and bookmarked articles to discover interest patterns you haven't explicitly added. If it finds potential new interests, they appear as suggestions in Settings → Interests. You can accept (auto-creates the interest) or dismiss each suggestion.
+
+### Source Trust
+
+Source trust factors are computed weekly from your feedback history per source. Sources you consistently like get a small scoring boost (up to 1.2×); sources you consistently dislike get a penalty (down to 0.8×). Trust indicators appear as dot ratings next to source names in Settings → Sources once you've rated 5+ articles from a source.
 
 ### Preference Learning
 
@@ -52,7 +68,7 @@ ketchup supports multiple users, each with their own personalized digest experie
 - **Independent digests** — Articles are fetched once but scored per-user against each user's interest profile.
 - **Independent engagement** — Likes, bookmarks, archives are all scoped to the user.
 - **Admin panel** — Admin can manage users (activate/deactivate/delete), generate invite codes (with claimed-by tracking), configure scoring settings, and view analytics.
-- **Role-based UI** — Non-admin users only see relevant settings tabs (Interests, Sources, Gestures, Preferences, Account). Admin-only tabs (Schedule, Logs, Admin) are hidden.
+- **Role-based UI** — Non-admin users only see relevant settings tabs (Interests, Sources, Exclusions, Gestures, Preferences, Account). Admin-only tabs (Schedule, Logs, Admin) are hidden.
 
 ### Architecture
 
@@ -73,7 +89,9 @@ src/
 │       ├── ingestion-logs/       # GET recent logs, GET log by ID
 │       ├── digests/              # GET recent, GET by ID, GET latest, POST clear
 │       ├── interests/            # CRUD for user interests (+ embedding generation)
-│       ├── sources/              # CRUD for RSS sources
+│       ├── exclusions/           # CRUD for excluded topics (+ embedding generation)
+│       ├── suggestions/          # Interest suggestions (accept/dismiss)
+│       ├── sources/              # CRUD for RSS sources + trust indicators
 │       ├── feedback/             # POST engagement actions (sentiment, read, bookmark, archive)
 │       ├── preferences/          # GET/DELETE learned preferences
 │       └── settings/             # provider, schedule, swipe direction, scoring thresholds
@@ -87,9 +105,13 @@ src/
 │   ├── FeedbackButtons.tsx       # Action bar: sentiment (order follows swipe direction), bookmark, share, archive
 │   ├── IngestionLogs.tsx         # Log viewer with expandable event timelines
 │   ├── InterestManager.tsx       # Add/edit/delete interests with discrete weight buttons
+│   ├── InterestSuggestions.tsx   # Weekly AI-discovered interest suggestions (accept/dismiss)
+│   ├── ExclusionManager.tsx      # Add/delete excluded topics
+│   ├── SuggestionBanner.tsx      # Digest banner linking to pending suggestions
+│   ├── SourceTrustIndicator.tsx  # 5-dot trust indicator for sources
 │   ├── PreferenceViewer.tsx      # View/delete learned preferences
 │   ├── ScheduleManager.tsx       # GitHub Actions schedule info
-│   ├── SourceManager.tsx         # Add/edit/delete RSS sources, OPML import, default source protection
+│   ├── SourceManager.tsx         # Add/edit/delete RSS sources, OPML import, trust indicators
 │   ├── SwipeSettings.tsx         # Configure swipe-to-archive direction
 │   ├── ScoringSettings.tsx       # Embedding/LLM threshold tuning (admin)
 │   ├── AdminPanel.tsx            # Admin tabs: users, invite codes, scoring, analytics
@@ -109,6 +131,9 @@ src/
 │   ├── auth.ts                   # Session management, cron auth, cookie handling
 │   ├── llm.ts                    # LLM client abstraction (Anthropic + Synthetic/Kimi)
 │   ├── embeddings.ts             # OpenAI embedding client, pgvector/JSONB storage, similarity
+│   ├── affinity.ts               # Weekly LLM-based interest discovery from feedback patterns
+│   ├── interest-expansion.ts     # LLM expansion of interest descriptions for richer embeddings
+│   ├── source-trust.ts           # Source trust factor computation from sentiment data
 │   ├── db/
 │   │   ├── index.ts              # DB connection + schema init
 │   │   ├── schema.ts             # Table definitions (pgvector detection, migration helpers)
@@ -118,6 +143,9 @@ src/
 │   │   ├── digests.ts            # Digest CRUD
 │   │   ├── sources.ts            # Source CRUD (default + private, per-user settings)
 │   │   ├── interests.ts          # Interest CRUD
+│   │   ├── exclusions.ts         # Excluded topic CRUD
+│   │   ├── suggestions.ts        # Interest suggestion CRUD (from affinity analysis)
+│   │   ├── source-trust.ts       # Per-user, per-source trust factor storage
 │   │   ├── feedback.ts           # Append-only event log, bookmarked articles query
 │   │   ├── preferences.ts        # Learned preference queries
 │   │   ├── settings.ts           # Key-value settings store (per-user + global)
@@ -125,7 +153,7 @@ src/
 │   │   ├── invite-codes.ts       # Invite code CRUD with username join
 │   │   └── ingestion-logs.ts     # Ingestion log CRUD
 │   ├── ingestion/
-│   │   ├── index.ts              # Fetch loop + article embedding generation
+│   │   ├── index.ts              # Fetch loop + article embedding generation + semantic dedup
 │   │   ├── rss.ts                # RSS feed parser
 │   │   ├── manual.ts             # Manual URL fetcher
 │   │   ├── logger.ts             # IngestionLogger class
@@ -149,11 +177,14 @@ Vercel Postgres (Neon) with pgvector extension.
 | `sessions` | Session tokens with expiry |
 | `sources` | RSS feed URLs with enable/disable, default flag, per-source max items |
 | `user_source_settings` | Per-user enable/disable toggle for default sources |
-| `articles` | Ingested articles (shared content only — title, URL, raw content, provider) |
+| `articles` | Ingested articles (shared content only — title, URL, raw content, provider, semantic duplicate flag) |
 | `user_articles` | Per-user article state: relevance score, embedding score, reason, serendipity flag, sentiment, read, bookmark, archive, digest assignment |
-| `embeddings` | Vector embeddings for articles and interests (pgvector VECTOR(512) + JSONB fallback) |
+| `embeddings` | Vector embeddings for articles, interests, and exclusions (pgvector VECTOR(512) + JSONB fallback) |
 | `digests` | Generated digests with timestamp and article count, scoped per user |
-| `interests` | User interest categories with descriptions and weights |
+| `interests` | User interest categories with descriptions, expanded descriptions, and weights |
+| `exclusions` | User-defined excluded topics with category, description, and expanded description |
+| `interest_suggestions` | AI-discovered interest suggestions from affinity analysis (pending/accepted/dismissed) |
+| `source_trust` | Per-user, per-source trust factors computed from sentiment feedback history |
 | `feedback` | Append-only event log of all user engagement actions |
 | `learned_preferences` | AI-derived preference statements from feedback patterns |
 | `settings` | Key-value store (per-user settings + global settings with user_id = 'global') |
@@ -165,7 +196,7 @@ Vercel Postgres (Neon) with pgvector extension.
 **Embedding storage**: Each 512-dimension vector uses ~2 KB. At ~200 articles/day, this would grow to ~190 MB/year if left unchecked. To manage this on the free tier (256 MB):
 
 - **Automatic pruning**: Article embeddings older than 7 days are automatically deleted after each scoring run. Once all users have been scored, the embedding has served its purpose.
-- **Interest embeddings** are never pruned (just a handful of rows).
+- **Interest and exclusion embeddings** are never pruned (just a handful of rows each).
 - **Potential optimization**: The `embedding_text` column stores the input text used for embedding generation (~0.5 KB/row). If storage becomes tight, this column can be dropped since the source data already exists in the `articles` table. This would save ~15% of embedding storage.
 
 ## Scripts
@@ -184,6 +215,7 @@ Standalone scripts run via `npx tsx scripts/<name>.ts`. All load `.env.local` au
 | `scripts/learn-prefs.ts` | Force-run preference learning for the admin user |
 | `scripts/test-scoring.ts` | Test the LLM scoring prompt with real data at different token limits |
 | `scripts/test-llm.ts` | Test LLM API connectivity |
+| `scripts/fetch-preview.ts` | Preview scoring pipeline: shows raw/weighted/blended scores, semantic dedup, before/after comparison |
 
 ## Stack
 
@@ -334,7 +366,6 @@ Create a `.env.local` with the variables from Step 3 above, plus `POSTGRES_URL` 
 
 ### Feedback & Learning
 - **Explicit preference tuning** — Let users write preference statements directly
-- **Source-level preferences** — Learn that you prefer long-form from Source A but skip listicles from Source B
 - **Decay old preferences** — Reduce confidence on preferences derived from old feedback
 
 ### Infrastructure
