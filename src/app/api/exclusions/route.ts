@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSessionFromCookies } from '@/lib/auth';
-import { getInterestsByUserId, createInterest, updateInterest } from '@/lib/db/interests';
+import { getExclusionsByUserId, createExclusion, updateExclusion } from '@/lib/db/exclusions';
 import { generateEmbedding, storeEmbedding, buildInterestEmbeddingText } from '@/lib/embeddings';
 import { expandInterestDescription } from '@/lib/interest-expansion';
 
@@ -11,10 +11,10 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const interests = await getInterestsByUserId(userId);
-    return NextResponse.json(interests);
+    const exclusions = await getExclusionsByUserId(userId);
+    return NextResponse.json(exclusions);
   } catch (error) {
-    console.error('Interests error:', error);
+    console.error('Exclusions error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -26,31 +26,31 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { category, description, weight } = await request.json();
+    const { category, description } = await request.json();
     if (!category) {
       return NextResponse.json({ error: 'Category required' }, { status: 400 });
     }
 
-    const interest = await createInterest(userId, category, description || null, weight || 1.0);
+    const exclusion = await createExclusion(userId, category, description || null);
 
-    // Expand description + generate embedding async (fire and forget)
+    // Expand + generate embedding async
     (async () => {
       try {
         const expanded = await expandInterestDescription(category, description || null);
         if (expanded) {
-          await updateInterest(interest.id, { expanded_description: expanded });
+          await updateExclusion(exclusion.id, { expanded_description: expanded });
         }
         const embeddingText = buildInterestEmbeddingText(category, description || null, expanded);
         const emb = await generateEmbedding(embeddingText);
-        await storeEmbedding('interest', interest.id, embeddingText, emb);
+        await storeEmbedding('exclusion', exclusion.id, embeddingText, emb);
       } catch (err) {
-        console.error('Interest expansion/embedding failed:', err);
+        console.error('Exclusion expansion/embedding failed:', err);
       }
     })();
 
-    return NextResponse.json(interest, { status: 201 });
+    return NextResponse.json(exclusion, { status: 201 });
   } catch (error) {
-    console.error('Create interest error:', error);
+    console.error('Create exclusion error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

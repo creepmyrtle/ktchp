@@ -75,7 +75,7 @@ export function cosineSimilarity(a: number[], b: number[]): number {
 // --- Storage layer (pgvector or JSONB, auto-detected) ---
 
 export async function storeEmbedding(
-  refType: 'article' | 'interest',
+  refType: 'article' | 'interest' | 'exclusion',
   refId: string,
   embeddingText: string,
   embedding: number[]
@@ -107,7 +107,7 @@ export async function storeEmbedding(
 }
 
 export async function getEmbedding(
-  refType: 'article' | 'interest',
+  refType: 'article' | 'interest' | 'exclusion',
   refId: string
 ): Promise<number[] | null> {
   const usePgvector = await detectPgvector();
@@ -129,7 +129,7 @@ export async function getEmbedding(
 }
 
 export async function getEmbeddingsByType(
-  refType: 'article' | 'interest',
+  refType: 'article' | 'interest' | 'exclusion',
   refIds: string[]
 ): Promise<Map<string, number[]>> {
   if (refIds.length === 0) return new Map();
@@ -160,7 +160,7 @@ export async function getEmbeddingsByType(
 }
 
 export async function deleteEmbedding(
-  refType: 'article' | 'interest',
+  refType: 'article' | 'interest' | 'exclusion',
   refId: string
 ): Promise<void> {
   await sql`DELETE FROM embeddings WHERE ref_type = ${refType} AND ref_id = ${refId}`;
@@ -190,7 +190,8 @@ export async function pruneOldArticleEmbeddings(daysOld: number = 7): Promise<nu
 
 // --- Interest embedding text builder ---
 
-export function buildInterestEmbeddingText(category: string, description: string | null): string {
+export function buildInterestEmbeddingText(category: string, description: string | null, expandedDescription?: string | null): string {
+  if (expandedDescription) return expandedDescription;
   return description ? `${category}: ${description}` : category;
 }
 

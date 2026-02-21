@@ -20,18 +20,23 @@ import {
   storeEmbedding,
   buildInterestEmbeddingText,
 } from '../embeddings';
+import { getExclusionsByUserId } from '../db/exclusions';
 import { prefilterArticles } from './prefilter';
 import { scoreArticles } from './scorer';
 import { shouldRunLearning, runPreferenceLearning } from './learner';
+import { getSourceTrustFactors } from '../db/source-trust';
+import { runAffinityAnalysis } from '../affinity';
+import { recomputeSourceTrust } from '../source-trust';
 import type { IngestionLogger } from '../ingestion/logger';
 import type { Article } from '@/types';
 
 // Default thresholds (overridden by global settings)
-const DEFAULT_EMBEDDING_LLM_THRESHOLD = 0.35;
+const DEFAULT_EMBEDDING_LLM_THRESHOLD = 0.28;
 const DEFAULT_EMBEDDING_SERENDIPITY_MIN = 0.20;
 const DEFAULT_EMBEDDING_SERENDIPITY_MAX = 0.35;
 const DEFAULT_SERENDIPITY_SAMPLE_SIZE = 5;
 const DEFAULT_MAX_LLM_CANDIDATES = 40;
+const DEFAULT_EXCLUSION_PENALTY_THRESHOLD = 0.40;
 
 interface EmbeddingThresholds {
   llmThreshold: number;
@@ -39,15 +44,19 @@ interface EmbeddingThresholds {
   serendipityMax: number;
   serendipitySampleSize: number;
   maxLlmCandidates: number;
+  blendedPrimaryWeight: number;
+  blendedSecondaryWeight: number;
 }
 
 async function getThresholds(): Promise<EmbeddingThresholds> {
-  const [t1, t2, t3, t4, t5] = await Promise.all([
+  const [t1, t2, t3, t4, t5, t6, t7] = await Promise.all([
     getGlobalSetting('embedding_llm_threshold'),
     getGlobalSetting('embedding_serendipity_min'),
     getGlobalSetting('embedding_serendipity_max'),
     getGlobalSetting('serendipity_sample_size'),
     getGlobalSetting('max_llm_candidates'),
+    getGlobalSetting('blended_primary_weight'),
+    getGlobalSetting('blended_secondary_weight'),
   ]);
   return {
     llmThreshold: t1 ? parseFloat(t1) : DEFAULT_EMBEDDING_LLM_THRESHOLD,
@@ -55,6 +64,8 @@ async function getThresholds(): Promise<EmbeddingThresholds> {
     serendipityMax: t3 ? parseFloat(t3) : DEFAULT_EMBEDDING_SERENDIPITY_MAX,
     serendipitySampleSize: t4 ? parseInt(t4, 10) : DEFAULT_SERENDIPITY_SAMPLE_SIZE,
     maxLlmCandidates: t5 ? parseInt(t5, 10) : DEFAULT_MAX_LLM_CANDIDATES,
+    blendedPrimaryWeight: t6 ? parseFloat(t6) : 0.7,
+    blendedSecondaryWeight: t7 ? parseFloat(t7) : 0.3,
   };
 }
 
@@ -100,6 +111,29 @@ export async function runRelevanceForAllUsers(provider: string, logger?: Ingesti
         llmOutputTokens: 0,
         llmApiCalls: 0,
       };
+    }
+  }
+
+  // Weekly analysis: affinity mapping + source trust (runs on configurable day, default Sunday)
+  const affinityDaySetting = await getGlobalSetting('affinity_analysis_day');
+  const affinityDay = affinityDaySetting !== null ? parseInt(affinityDaySetting, 10) : 0;
+  const today = new Date();
+  if (today.getUTCDay() === affinityDay) {
+    logger?.log('weekly', 'Running weekly analysis (affinity + source trust)');
+    for (const user of users) {
+      try {
+        const count = await runAffinityAnalysis(user.id, logger);
+        if (count > 0) {
+          logger?.log('affinity', `User ${user.username}: ${count} suggestion(s) created`);
+        }
+      } catch (err) {
+        logger?.warn('affinity', `Affinity analysis failed for ${user.username}: ${err}`);
+      }
+      try {
+        await recomputeSourceTrust(user.id, logger);
+      } catch (err) {
+        logger?.warn('source_trust', `Source trust update failed for ${user.username}: ${err}`);
+      }
     }
   }
 
@@ -182,7 +216,7 @@ export async function runRelevanceEngine(userId: string, provider: string, logge
     logger?.log('embedding', `Generating embeddings for ${missingInterests.length} interest(s)`);
     for (const interest of missingInterests) {
       try {
-        const text = buildInterestEmbeddingText(interest.category, interest.description);
+        const text = buildInterestEmbeddingText(interest.category, interest.description, interest.expanded_description);
         const emb = await generateEmbedding(text);
         await storeEmbedding('interest', interest.id, text, emb);
         existingInterestEmbeddings.set(interest.id, emb);
@@ -191,6 +225,22 @@ export async function runRelevanceEngine(userId: string, provider: string, logge
       }
     }
   }
+
+  // --- Load exclusion embeddings ---
+  const exclusions = await getExclusionsByUserId(userId);
+  const exclusionEmbeddings = exclusions.length > 0
+    ? await getEmbeddingsByType('exclusion', exclusions.map(e => e.id))
+    : new Map<string, number[]>();
+
+  const exclusionThresholdSetting = await getGlobalSetting('exclusion_penalty_threshold');
+  const exclusionThreshold = exclusionThresholdSetting ? parseFloat(exclusionThresholdSetting) : DEFAULT_EXCLUSION_PENALTY_THRESHOLD;
+
+  if (exclusionEmbeddings.size > 0) {
+    logger?.log('embedding_scoring', `Loaded ${exclusionEmbeddings.size} exclusion embedding(s)`);
+  }
+
+  // --- Load source trust factors ---
+  const sourceTrustFactors = await getSourceTrustFactors(userId);
 
   // --- Stage 1: Embedding pre-filter ---
   const interestEmbeddings = existingInterestEmbeddings;
@@ -214,18 +264,42 @@ export async function runRelevanceEngine(userId: string, provider: string, logge
         continue;
       }
 
-      let maxSimilarity = 0;
+      // Compute weight-adjusted similarities per interest
+      const weightedSims: number[] = [];
       for (const interest of interests) {
+        if (interest.weight === 0) continue;
         const interestEmb = interestEmbeddings.get(interest.id);
         if (!interestEmb) continue;
         const similarity = cosineSimilarity(articleEmb, interestEmb);
-        if (similarity > maxSimilarity) {
-          maxSimilarity = similarity;
-        }
+        weightedSims.push(similarity * interest.weight);
       }
 
-      embeddingScores.push({ article, score: maxSimilarity });
-      await setEmbeddingScore(userId, article.id, maxSimilarity);
+      // Blended scoring: 0.7 * primary + 0.3 * avg(top 3)
+      weightedSims.sort((a, b) => b - a);
+      const primary = weightedSims[0] ?? 0;
+      const topN = weightedSims.slice(0, 3);
+      const secondary = topN.length > 0 ? topN.reduce((s, v) => s + v, 0) / topN.length : 0;
+      let blended = thresholds.blendedPrimaryWeight * primary + thresholds.blendedSecondaryWeight * secondary;
+
+      // Apply exclusion penalties
+      if (exclusionEmbeddings.size > 0) {
+        let penaltyMultiplier = 1.0;
+        for (const [, excEmb] of exclusionEmbeddings) {
+          const sim = cosineSimilarity(articleEmb, excEmb);
+          if (sim >= exclusionThreshold) {
+            const penaltyStrength = (sim - exclusionThreshold) / (1.0 - exclusionThreshold);
+            penaltyMultiplier = Math.min(penaltyMultiplier, 1.0 - (penaltyStrength * 0.8));
+          }
+        }
+        blended *= penaltyMultiplier;
+      }
+
+      // Apply source trust multiplier
+      const trustFactor = sourceTrustFactors.get(article.source_id) ?? 1.0;
+      blended *= trustFactor;
+
+      embeddingScores.push({ article, score: blended });
+      await setEmbeddingScore(userId, article.id, blended);
     }
 
     result.embeddingScored = embeddingScores.length;
@@ -258,20 +332,81 @@ export async function runRelevanceEngine(userId: string, provider: string, logge
       .slice(0, thresholds.maxLlmCandidates)
       .map(e => e.article);
 
-    // Serendipity pool: random sample from below-threshold, above-floor articles
+    // Serendipity pool: weighted sample biased toward threshold proximity and diversity
     const serendipityEligible = embeddingScores.filter(
       e => e.score >= thresholds.serendipityMin && e.score < thresholds.serendipityMax
     );
 
-    // Fisher-Yates shuffle for random sample
-    for (let i = serendipityEligible.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [serendipityEligible[i], serendipityEligible[j]] = [serendipityEligible[j], serendipityEligible[i]];
-    }
+    if (serendipityEligible.length > 0) {
+      // Count interest/source coverage in LLM candidates for diversity bias
+      const interestCoverage = new Map<string, number>();
+      const sourceCoverage = new Map<string, number>();
+      for (const candidate of llmCandidates) {
+        // Best matching interest for this candidate
+        let bestInterest = '';
+        let bestSim = 0;
+        for (const interest of interests) {
+          const interestEmb = interestEmbeddings.get(interest.id);
+          const articleEmb = articleEmbeddings.get(candidate.id);
+          if (!interestEmb || !articleEmb) continue;
+          const sim = cosineSimilarity(articleEmb, interestEmb);
+          if (sim > bestSim) { bestSim = sim; bestInterest = interest.id; }
+        }
+        if (bestInterest) interestCoverage.set(bestInterest, (interestCoverage.get(bestInterest) || 0) + 1);
+        sourceCoverage.set(candidate.source_id, (sourceCoverage.get(candidate.source_id) || 0) + 1);
+      }
 
-    serendipityPool = serendipityEligible
-      .slice(0, thresholds.serendipitySampleSize)
-      .map(e => e.article);
+      const range = thresholds.serendipityMax - thresholds.serendipityMin;
+
+      // Compute selection weights
+      const weighted = serendipityEligible.map(e => {
+        // A. Score proximity to threshold (quadratic bias)
+        const position = range > 0 ? (e.score - thresholds.serendipityMin) / range : 0;
+        const proximityWeight = position * position;
+
+        // B. Interest diversity
+        let bestInterest = '';
+        let bestSim = 0;
+        const articleEmb = articleEmbeddings.get(e.article.id);
+        if (articleEmb) {
+          for (const interest of interests) {
+            const interestEmb = interestEmbeddings.get(interest.id);
+            if (!interestEmb) continue;
+            const sim = cosineSimilarity(articleEmb, interestEmb);
+            if (sim > bestSim) { bestSim = sim; bestInterest = interest.id; }
+          }
+        }
+        const coverage = interestCoverage.get(bestInterest) || 0;
+        const diversityWeight = 1.0 / (1 + coverage);
+
+        // C. Source diversity
+        const sourceCount = sourceCoverage.get(e.article.source_id) || 0;
+        const sourceWeight = 1.0 / (1 + sourceCount);
+
+        const selectionWeight = (0.5 * proximityWeight) + (0.3 * diversityWeight) + (0.2 * sourceWeight);
+        return { ...e, selectionWeight };
+      });
+
+      // Weighted random sampling (roulette wheel)
+      const selected: typeof serendipityEligible = [];
+      const remaining = [...weighted];
+      const sampleSize = Math.min(thresholds.serendipitySampleSize, remaining.length);
+
+      for (let s = 0; s < sampleSize; s++) {
+        const totalWeight = remaining.reduce((sum, e) => sum + e.selectionWeight, 0);
+        if (totalWeight <= 0) break;
+        let r = Math.random() * totalWeight;
+        let picked = remaining.length - 1;
+        for (let i = 0; i < remaining.length; i++) {
+          r -= remaining[i].selectionWeight;
+          if (r <= 0) { picked = i; break; }
+        }
+        selected.push(remaining[picked]);
+        remaining.splice(picked, 1);
+      }
+
+      serendipityPool = selected.map(e => e.article);
+    }
 
     result.serendipityCandidates = serendipityPool.length;
     result.sentToLlm = llmCandidates.length + serendipityPool.length;
@@ -314,19 +449,43 @@ export async function runRelevanceEngine(userId: string, provider: string, logge
       const articleEmb = articleEmbeddings.get(article.id);
       if (!articleEmb) continue;
 
-      // Use the article's best embedding similarity as its relevance score
-      let maxSimilarity = 0;
+      // Use weight-adjusted blended embedding similarity as fallback relevance score
+      const weightedSims: number[] = [];
       for (const interest of interests) {
+        if (interest.weight === 0) continue;
         const interestEmb = interestEmbeddings.get(interest.id);
         if (!interestEmb) continue;
         const sim = cosineSimilarity(articleEmb, interestEmb);
-        if (sim > maxSimilarity) maxSimilarity = sim;
+        weightedSims.push(sim * interest.weight);
       }
+
+      weightedSims.sort((a, b) => b - a);
+      const primary = weightedSims[0] ?? 0;
+      const topN = weightedSims.slice(0, 3);
+      const secondary = topN.length > 0 ? topN.reduce((s, v) => s + v, 0) / topN.length : 0;
+      let blended = thresholds.blendedPrimaryWeight * primary + thresholds.blendedSecondaryWeight * secondary;
+
+      // Apply exclusion penalties
+      if (exclusionEmbeddings.size > 0) {
+        let penaltyMultiplier = 1.0;
+        for (const [, excEmb] of exclusionEmbeddings) {
+          const sim = cosineSimilarity(articleEmb, excEmb);
+          if (sim >= exclusionThreshold) {
+            const penaltyStrength = (sim - exclusionThreshold) / (1.0 - exclusionThreshold);
+            penaltyMultiplier = Math.min(penaltyMultiplier, 1.0 - (penaltyStrength * 0.8));
+          }
+        }
+        blended *= penaltyMultiplier;
+      }
+
+      // Apply source trust multiplier
+      const trustFactor = sourceTrustFactors.get(article.source_id) ?? 1.0;
+      blended *= trustFactor;
 
       await createUserArticleScoring(
         userId,
         article.id,
-        parseFloat(maxSimilarity.toFixed(4)),
+        parseFloat(blended.toFixed(4)),
         'Embedding score (not sent to LLM)',
         false
       );

@@ -29,6 +29,13 @@ export async function getRecentArticleExternalIds(sourceId: string, provider: st
   return new Set(rows.map(r => r.external_id));
 }
 
+export async function markSemanticDuplicate(articleId: string, duplicateOfId: string): Promise<void> {
+  await sql`
+    UPDATE articles SET is_semantic_duplicate = TRUE, duplicate_of = ${duplicateOfId}
+    WHERE id = ${articleId}
+  `;
+}
+
 export async function clearArticlesByProvider(provider: string): Promise<void> {
   // Delete user_articles first (foreign key)
   await sql`

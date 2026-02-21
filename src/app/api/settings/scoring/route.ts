@@ -12,6 +12,13 @@ const SCORING_KEYS = [
   'bonus_digest_enabled',
   'bonus_min_score',
   'bonus_max_articles',
+  'blended_primary_weight',
+  'blended_secondary_weight',
+  'semantic_dedup_threshold',
+  'exclusion_penalty_threshold',
+  'affinity_analysis_day',
+  'source_trust_min',
+  'source_trust_max',
 ] as const;
 
 export async function GET() {

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSessionFromCookies } from '@/lib/auth';
-import { getInterestById, updateInterest, deleteInterest } from '@/lib/db/interests';
+import { getExclusionById, updateExclusion, deleteExclusion } from '@/lib/db/exclusions';
 import { generateEmbedding, storeEmbedding, deleteEmbedding, buildInterestEmbeddingText } from '@/lib/embeddings';
 import { expandInterestDescription } from '@/lib/interest-expansion';
 
@@ -12,40 +12,37 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     }
 
     const { id } = await params;
-
-    // Ownership check
-    const existing = await getInterestById(id);
+    const existing = await getExclusionById(id);
     if (!existing || existing.user_id !== userId) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
     const updates = await request.json();
-    const interest = await updateInterest(id, updates);
-
-    if (!interest) {
+    const exclusion = await updateExclusion(id, updates);
+    if (!exclusion) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
-    // Re-expand + re-embed if text changed (category or description)
+    // Re-expand + re-embed if text changed
     if (updates.category !== undefined || updates.description !== undefined) {
       (async () => {
         try {
-          const expanded = await expandInterestDescription(interest.category, interest.description);
+          const expanded = await expandInterestDescription(exclusion.category, exclusion.description);
           if (expanded) {
-            await updateInterest(id, { expanded_description: expanded });
+            await updateExclusion(id, { expanded_description: expanded });
           }
-          const embeddingText = buildInterestEmbeddingText(interest.category, interest.description, expanded);
+          const embeddingText = buildInterestEmbeddingText(exclusion.category, exclusion.description, expanded);
           const emb = await generateEmbedding(embeddingText);
-          await storeEmbedding('interest', id, embeddingText, emb);
+          await storeEmbedding('exclusion', id, embeddingText, emb);
         } catch (err) {
-          console.error('Interest expansion/embedding update failed:', err);
+          console.error('Exclusion expansion/embedding update failed:', err);
         }
       })();
     }
 
-    return NextResponse.json(interest);
+    return NextResponse.json(exclusion);
   } catch (error) {
-    console.error('Update interest error:', error);
+    console.error('Update exclusion error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -58,24 +55,20 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     }
 
     const { id } = await params;
-
-    // Ownership check
-    const existing = await getInterestById(id);
+    const existing = await getExclusionById(id);
     if (!existing || existing.user_id !== userId) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
-    const deleted = await deleteInterest(id);
+    const deleted = await deleteExclusion(id);
     if (!deleted) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
-    // Clean up embedding
-    deleteEmbedding('interest', id).catch(err => console.error('Interest embedding delete failed:', err));
-
+    deleteEmbedding('exclusion', id).catch(err => console.error('Exclusion embedding delete failed:', err));
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Delete interest error:', error);
+    console.error('Delete exclusion error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

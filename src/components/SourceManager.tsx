@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import SourceTrustIndicator from './SourceTrustIndicator';
 
 interface Source {
   id: string;
@@ -11,6 +12,12 @@ interface Source {
   is_default?: boolean;
   last_fetch_error?: string | null;
   last_fetched_at?: string | null;
+}
+
+interface TrustData {
+  source_id: string;
+  trust_factor: number;
+  sample_size: number;
 }
 
 interface OpmlFeed {
@@ -53,6 +60,7 @@ function parseOpml(xml: string): OpmlFeed[] {
 
 export default function SourceManager() {
   const [sources, setSources] = useState<Source[]>([]);
+  const [trustMap, setTrustMap] = useState<Map<string, TrustData>>(new Map());
   const [loading, setLoading] = useState(true);
   const [feedUrl, setFeedUrl] = useState('');
   const [feedName, setFeedName] = useState('');
@@ -69,6 +77,17 @@ export default function SourceManager() {
   }, []);
 
   useEffect(() => { fetchSources(); }, [fetchSources]);
+
+  useEffect(() => {
+    fetch('/api/sources/trust')
+      .then(res => res.ok ? res.json() : [])
+      .then((data: TrustData[]) => {
+        const map = new Map<string, TrustData>();
+        for (const t of data) map.set(t.source_id, t);
+        setTrustMap(map);
+      })
+      .catch(() => {});
+  }, []);
 
   async function addFeed(e: React.FormEvent) {
     e.preventDefault();
@@ -315,10 +334,15 @@ export default function SourceManager() {
       {sources.filter(s => s.enabled).length > 0 && (
         <div>
           <p className="text-xs text-muted mb-2 uppercase tracking-wide">Active Sources</p>
-          {sources.filter(s => s.enabled).map(source => (
+          {sources.filter(s => s.enabled).map(source => {
+            const trust = trustMap.get(source.id);
+            return (
             <div key={source.id} className="p-3 rounded-lg bg-card border border-card-border mb-2 flex items-center justify-between gap-2">
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{source.name}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium truncate">{source.name}</p>
+                  {trust && <SourceTrustIndicator trustFactor={trust.trust_factor} sampleSize={trust.sample_size} />}
+                </div>
                 <p className="text-xs text-muted truncate">{(source.config.url as string) || source.type}</p>
                 {source.last_fetch_error && (
                   <p className="text-xs text-danger truncate" title={source.last_fetch_error}>
@@ -345,7 +369,8 @@ export default function SourceManager() {
                 )}
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

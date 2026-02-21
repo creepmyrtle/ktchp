@@ -6,7 +6,7 @@ const SPAM_DOMAINS = [
 ];
 
 const MIN_TITLE_LENGTH = 10;
-const FRESHNESS_CUTOFF_HOURS = 7 * 24; // 7 days
+const FRESHNESS_CUTOFF_HOURS = 14 * 24; // 14 days
 
 export interface PrefilterRemoval {
   title: string;

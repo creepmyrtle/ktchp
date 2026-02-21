@@ -8,10 +8,11 @@ import PreferenceViewer from '@/components/PreferenceViewer';
 import ScheduleManager from '@/components/ScheduleManager';
 import IngestionLogs from '@/components/IngestionLogs';
 import SwipeSettings from '@/components/SwipeSettings';
+import ExclusionManager from '@/components/ExclusionManager';
 import AdminPanel from '@/components/AdminPanel';
 import AccountSettings from '@/components/AccountSettings';
 
-const USER_TABS = ['Interests', 'Sources', 'Gestures', 'Preferences', 'Account'];
+const USER_TABS = ['Interests', 'Sources', 'Exclusions', 'Gestures', 'Preferences', 'Account'];
 type Tab = string;
 
 export default function SettingsPage() {
@@ -59,6 +60,7 @@ export default function SettingsPage() {
 
         {activeTab === 'Interests' && <InterestManager />}
         {activeTab === 'Sources' && <SourceManager />}
+        {activeTab === 'Exclusions' && <ExclusionManager />}
         {activeTab === 'Schedule' && isAdmin && <ScheduleManager />}
         {activeTab === 'Gestures' && <SwipeSettings />}
         {activeTab === 'Preferences' && <PreferenceViewer />}

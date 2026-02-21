@@ -70,13 +70,47 @@ export interface UserArticle {
   scored_at: string | null;
 }
 
-// Embedding (article or interest vector)
+// Embedding (article, interest, or exclusion vector)
 export interface Embedding {
   id: string;
-  ref_type: 'article' | 'interest';
+  ref_type: 'article' | 'interest' | 'exclusion';
   ref_id: string;
   embedding_text: string;
   created_at: string;
+}
+
+// Excluded topic (negative interest)
+export interface Exclusion {
+  id: string;
+  user_id: string;
+  category: string;
+  description: string | null;
+  expanded_description: string | null;
+  created_at: string;
+}
+
+// Interest suggestion from affinity analysis
+export interface InterestSuggestion {
+  id: string;
+  user_id: string;
+  category: string;
+  description: string | null;
+  related_interests: string[];
+  reasoning: string | null;
+  confidence: number;
+  status: 'pending' | 'accepted' | 'dismissed';
+  created_at: string;
+  resolved_at: string | null;
+}
+
+// Source trust factor cache
+export interface SourceTrust {
+  id: string;
+  user_id: string;
+  source_id: string;
+  trust_factor: number;
+  sample_size: number;
+  updated_at: string;
 }
 
 // User article joined with article content and source info (replaces ArticleWithSource)
@@ -125,6 +159,7 @@ export interface Interest {
   user_id: string;
   category: string;
   description: string | null;
+  expanded_description: string | null;
   weight: number;
   active: boolean;
   created_at: string;

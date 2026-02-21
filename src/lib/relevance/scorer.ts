@@ -37,13 +37,13 @@ function buildScoringPrompt(
     : [];
 
   let articleSection = mainArticles
-    .map(a => `ID: ${a.id}\nTitle: ${a.title}\nURL: ${a.url}`)
+    .map(a => `ID: ${a.id}\nTitle: ${a.title}\nContent: ${a.raw_content?.slice(0, 500) || '(no content)'}\nURL: ${a.url}`)
     .join('\n---\n');
 
   if (serendipityArticles.length > 0) {
     articleSection += '\n\n## Serendipity Candidates\nThe following articles did not score highly on topic similarity but are included as serendipity candidates. Evaluate whether they would be unexpectedly valuable to this user due to cross-domain connections, emerging trends, or adjacent relevance. Score them honestly — most will score low, but flag any genuine discoveries.\n\n';
     articleSection += serendipityArticles
-      .map(a => `ID: ${a.id}\nTitle: ${a.title}\nURL: ${a.url}`)
+      .map(a => `ID: ${a.id}\nTitle: ${a.title}\nContent: ${a.raw_content?.slice(0, 500) || '(no content)'}\nURL: ${a.url}`)
       .join('\n---\n');
   }
 
@@ -61,7 +61,7 @@ ${recentFeedback || 'No recent feedback data.'}
 ## Instructions
 
 For each article, provide:
-1. **relevance_score** (0.0 to 1.0): How relevant to the user
+1. **relevance_score** (0.0 to 1.0): How relevant to the user. Use the article's content snippet (when available) to assess topical depth and relevance beyond the title alone.
 2. **relevance_reason**: MUST be one of these exact formats:
    - "Matches: [Interest Name]" — where [Interest Name] is one of: ${interestNames.join(', ')}
    - "Serendipity" — ONLY for true serendipity items (see below)

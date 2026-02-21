@@ -7,13 +7,16 @@ import {
   storeEmbedding,
   getArticleIdsWithEmbeddings,
   buildArticleEmbeddingText,
+  cosineSimilarity,
 } from '../embeddings';
+import { markSemanticDuplicate } from '../db/articles';
 import type { IngestionLogger } from './logger';
 
 interface IngestionResult {
   totalFetched: number;
   newArticles: number;
   duplicates: number;
+  semanticDuplicates: number;
   articlesEmbedded: number;
   embeddingTokens: number;
   errors: string[];
@@ -37,6 +40,7 @@ export async function runIngestion(provider: string, logger?: IngestionLogger): 
     totalFetched: 0,
     newArticles: 0,
     duplicates: 0,
+    semanticDuplicates: 0,
     articlesEmbedded: 0,
     embeddingTokens: 0,
     errors: [],
@@ -107,15 +111,45 @@ export async function runIngestion(provider: string, logger?: IngestionLogger): 
     const embedResult = await embedNewArticles(newArticleData, logger);
     result.articlesEmbedded = embedResult.count;
     result.embeddingTokens = embedResult.tokens;
+    result.semanticDuplicates = embedResult.semanticDuplicates;
   }
 
   return result;
 }
 
+const SEMANTIC_DEDUP_THRESHOLD = 0.85;
+
+function semanticDedup(
+  articles: { id: string; title: string; rawContent: string | null }[],
+  embeddings: number[][],
+  threshold: number
+): { keptIndices: number[]; duplicates: { index: number; duplicateOfIndex: number; similarity: number }[] } {
+  const duplicates: { index: number; duplicateOfIndex: number; similarity: number }[] = [];
+  const duplicateIndices = new Set<number>();
+
+  for (let i = 0; i < embeddings.length; i++) {
+    if (duplicateIndices.has(i)) continue;
+    for (let j = i + 1; j < embeddings.length; j++) {
+      if (duplicateIndices.has(j)) continue;
+      const sim = cosineSimilarity(embeddings[i], embeddings[j]);
+      if (sim >= threshold) {
+        duplicateIndices.add(j);
+        duplicates.push({ index: j, duplicateOfIndex: i, similarity: sim });
+      }
+    }
+  }
+
+  const keptIndices = [];
+  for (let i = 0; i < articles.length; i++) {
+    if (!duplicateIndices.has(i)) keptIndices.push(i);
+  }
+  return { keptIndices, duplicates };
+}
+
 async function embedNewArticles(
   articles: { id: string; title: string; rawContent: string | null }[],
   logger?: IngestionLogger
-): Promise<{ count: number; tokens: number }> {
+): Promise<{ count: number; tokens: number; semanticDuplicates: number }> {
   try {
     // Filter out articles that already have embeddings (shouldn't happen for new articles, but be safe)
     const existingIds = await getArticleIdsWithEmbeddings(articles.map(a => a.id));
@@ -123,7 +157,7 @@ async function embedNewArticles(
 
     if (toEmbed.length === 0) {
       logger?.log('embedding', 'All articles already have embeddings');
-      return { count: 0, tokens: 0 };
+      return { count: 0, tokens: 0, semanticDuplicates: 0 };
     }
 
     logger?.log('embedding', `Generating embeddings for ${toEmbed.length} new articles`);
@@ -131,14 +165,28 @@ async function embedNewArticles(
     const texts = toEmbed.map(a => buildArticleEmbeddingText(a.title, a.rawContent));
     const { embeddings, totalTokens } = await generateEmbeddings(texts);
 
+    // Store all embeddings (duplicates still get embeddings)
     for (let i = 0; i < toEmbed.length; i++) {
       await storeEmbedding('article', toEmbed[i].id, texts[i], embeddings[i]);
     }
 
+    // Semantic dedup: mark later articles as duplicates of earlier ones
+    const { duplicates } = semanticDedup(toEmbed, embeddings, SEMANTIC_DEDUP_THRESHOLD);
+    for (const dup of duplicates) {
+      await markSemanticDuplicate(toEmbed[dup.index].id, toEmbed[dup.duplicateOfIndex].id);
+    }
+
+    if (duplicates.length > 0) {
+      logger?.log('dedup', `Marked ${duplicates.length} semantic duplicate(s)`);
+      for (const dup of duplicates) {
+        logger?.log('dedup', `  "${toEmbed[dup.index].title.slice(0, 60)}" ≈ "${toEmbed[dup.duplicateOfIndex].title.slice(0, 60)}" (${dup.similarity.toFixed(3)})`);
+      }
+    }
+
     logger?.log('embedding', `Embedded ${toEmbed.length} articles (${totalTokens.toLocaleString()} tokens)`);
-    return { count: toEmbed.length, tokens: totalTokens };
+    return { count: toEmbed.length, tokens: totalTokens, semanticDuplicates: duplicates.length };
   } catch (error) {
     logger?.warn('embedding', `Article embedding failed (will fall back to LLM-only scoring): ${error}`);
-    return { count: 0, tokens: 0 };
+    return { count: 0, tokens: 0, semanticDuplicates: 0 };
   }
 }

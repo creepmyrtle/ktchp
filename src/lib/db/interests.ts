@@ -29,13 +29,16 @@ export async function getActiveInterestsByUserId(userId: string): Promise<Intere
 
 export async function updateInterest(
   id: string,
-  updates: Partial<Pick<Interest, 'category' | 'description' | 'weight' | 'active'>>
+  updates: Partial<Pick<Interest, 'category' | 'description' | 'weight' | 'active' | 'expanded_description'>>
 ): Promise<Interest | null> {
   if (updates.category !== undefined) {
     await sql`UPDATE interests SET category = ${updates.category} WHERE id = ${id}`;
   }
   if (updates.description !== undefined) {
     await sql`UPDATE interests SET description = ${updates.description} WHERE id = ${id}`;
+  }
+  if (updates.expanded_description !== undefined) {
+    await sql`UPDATE interests SET expanded_description = ${updates.expanded_description} WHERE id = ${id}`;
   }
   if (updates.weight !== undefined) {
     await sql`UPDATE interests SET weight = ${updates.weight} WHERE id = ${id}`;

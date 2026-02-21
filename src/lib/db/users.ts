@@ -91,8 +91,11 @@ export async function deleteUser(id: string): Promise<boolean> {
   await sql`DELETE FROM user_articles WHERE user_id = ${id}`;
   await sql`DELETE FROM digests WHERE user_id = ${id}`;
   await sql`DELETE FROM user_source_settings WHERE user_id = ${id}`;
+  await sql`DELETE FROM source_trust WHERE user_id = ${id}`;
   await sql`DELETE FROM sources WHERE user_id = ${id}`;
   await sql`DELETE FROM interests WHERE user_id = ${id}`;
+  await sql`DELETE FROM exclusions WHERE user_id = ${id}`;
+  await sql`DELETE FROM interest_suggestions WHERE user_id = ${id}`;
   await sql`DELETE FROM learned_preferences WHERE user_id = ${id}`;
   await sql`DELETE FROM settings WHERE user_id = ${id}`;
   await sql`DELETE FROM sessions WHERE user_id = ${id}`;

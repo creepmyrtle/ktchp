@@ -167,6 +167,55 @@ export async function ensureSchema(): Promise<void> {
     )
   `;
 
+  // Exclusions table (negative interests)
+  await sql`
+    CREATE TABLE IF NOT EXISTS exclusions (
+      id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      category TEXT NOT NULL,
+      description TEXT,
+      expanded_description TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+
+  try {
+    await sql`CREATE INDEX IF NOT EXISTS idx_exclusions_user ON exclusions(user_id)`;
+  } catch { /* index may already exist */ }
+
+  // Interest suggestions table (affinity mapping)
+  await sql`
+    CREATE TABLE IF NOT EXISTS interest_suggestions (
+      id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      category TEXT NOT NULL,
+      description TEXT,
+      related_interests JSONB DEFAULT '[]',
+      reasoning TEXT,
+      confidence REAL DEFAULT 0.5,
+      status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'dismissed')),
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      resolved_at TIMESTAMPTZ
+    )
+  `;
+
+  try {
+    await sql`CREATE INDEX IF NOT EXISTS idx_suggestions_user_status ON interest_suggestions(user_id, status)`;
+  } catch { /* index may already exist */ }
+
+  // Source trust factor cache
+  await sql`
+    CREATE TABLE IF NOT EXISTS source_trust (
+      id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      source_id TEXT NOT NULL REFERENCES sources(id) ON DELETE CASCADE,
+      trust_factor REAL DEFAULT 1.0,
+      sample_size INTEGER DEFAULT 0,
+      updated_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(user_id, source_id)
+    )
+  `;
+
   // Embeddings table — try pgvector first, fall back to JSONB
   await ensureEmbeddingsTable();
 
@@ -175,6 +224,17 @@ export async function ensureSchema(): Promise<void> {
     await sql`ALTER TABLE user_articles ADD COLUMN IF NOT EXISTS embedding_score REAL`;
     await sql`ALTER TABLE user_articles ADD COLUMN IF NOT EXISTS digest_tier TEXT CHECK (digest_tier IN ('recommended', 'serendipity', 'bonus'))`;
   } catch { /* columns may already exist */ }
+
+  // Add semantic dedup columns to articles
+  try {
+    await sql`ALTER TABLE articles ADD COLUMN IF NOT EXISTS is_semantic_duplicate BOOLEAN DEFAULT FALSE`;
+    await sql`ALTER TABLE articles ADD COLUMN IF NOT EXISTS duplicate_of TEXT`;
+  } catch { /* columns may already exist */ }
+
+  // Add expanded_description to interests
+  try {
+    await sql`ALTER TABLE interests ADD COLUMN IF NOT EXISTS expanded_description TEXT`;
+  } catch { /* column may already exist */ }
 
   // Add fetch error tracking to sources
   try {
@@ -196,7 +256,7 @@ async function ensureEmbeddingsTable(): Promise<void> {
   await sql`
     CREATE TABLE IF NOT EXISTS embeddings (
       id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-      ref_type TEXT NOT NULL CHECK (ref_type IN ('article', 'interest')),
+      ref_type TEXT NOT NULL CHECK (ref_type IN ('article', 'interest', 'exclusion')),
       ref_id TEXT NOT NULL,
       embedding_text TEXT NOT NULL,
       embedding_json JSONB,

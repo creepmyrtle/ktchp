@@ -123,6 +123,7 @@ export async function getUnscoredArticlesForUser(
     `SELECT a.id, a.source_id, a.title, a.url, a.raw_content, a.published_at
      FROM articles a
      WHERE a.source_id IN (${placeholders})
+       AND (a.is_semantic_duplicate IS NOT TRUE)
        AND (
          NOT EXISTS (
            SELECT 1 FROM user_articles ua WHERE ua.article_id = a.id AND ua.user_id = $1

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import InterestSuggestions from './InterestSuggestions';
 
 interface Interest {
   id: string;
@@ -60,6 +61,8 @@ export default function InterestManager() {
 
   return (
     <div className="space-y-4">
+      <InterestSuggestions onAccepted={fetchInterests} />
+
       <form onSubmit={addInterest} className="flex flex-col gap-2 p-4 rounded-lg bg-card border border-card-border">
         <input
           type="text"

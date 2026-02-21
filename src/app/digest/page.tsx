@@ -6,6 +6,7 @@ import { getActiveProvider } from '@/lib/llm';
 import { getUserById } from '@/lib/db/users';
 import DigestContent from '@/components/DigestContent';
 import DigestSelector from '@/components/DigestSelector';
+import SuggestionBanner from '@/components/SuggestionBanner';
 import Link from 'next/link';
 
 export default async function DigestPage() {
@@ -71,6 +72,7 @@ export default async function DigestPage() {
             Add interests and sources &rarr;
           </Link>
         </div>
+        <SuggestionBanner />
         {latestDigest ? (
           <>
             <DigestContent

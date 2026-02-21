@@ -4,6 +4,7 @@ import { getDigestById, getRecentDigests } from '@/lib/db/digests';
 import { getUserArticlesByDigestId, getDigestCompletionStats } from '@/lib/db/user-articles';
 import DigestContent from '@/components/DigestContent';
 import DigestSelector from '@/components/DigestSelector';
+import SuggestionBanner from '@/components/SuggestionBanner';
 import Link from 'next/link';
 
 export default async function DigestByIdPage({ params }: { params: Promise<{ id: string }> }) {
@@ -60,6 +61,7 @@ export default async function DigestByIdPage({ params }: { params: Promise<{ id:
       </nav>
 
       <main className="max-w-5xl mx-auto px-4 py-8 animate-fade-up">
+        <SuggestionBanner />
         <DigestContent
           digestId={digest.id}
           date={digest.generated_at}
