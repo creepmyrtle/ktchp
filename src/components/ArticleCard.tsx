@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from 'react';
 import type { UserArticleWithSource, Sentiment, DigestTier } from '@/types';
 import ActionBar from './FeedbackButtons';
-import { useSwipeToArchive, SWIPE_ZONE_PX } from '@/hooks/useSwipeToArchive';
+import { useSwipeToArchive } from '@/hooks/useSwipeToArchive';
 
 interface ArticleCardProps {
   article: UserArticleWithSource;
@@ -61,16 +61,10 @@ export default function ArticleCard({ article, swipeDirection = 'right', tier, o
     }, 400);
   }, [article.article_id, onArchived]);
 
-  function handleSwipeBlocked() {
-    // Shake the sentiment buttons — handled by ActionBar's pulse
-  }
-
   const { scrollRef, indicatorRef } = useSwipeToArchive({
     onArchive: handleArchive,
     canArchive: !!sentiment,
-    onSwipeBlocked: handleSwipeBlocked,
     direction: swipeDirection,
-    enabled: !archiving && !archived,
   });
 
   // Auto-track read on link click
@@ -87,7 +81,7 @@ export default function ArticleCard({ article, swipeDirection = 'right', tier, o
     if (!dateStr) return '';
     const str = typeof dateStr === 'string' ? dateStr : dateStr.toISOString();
     const utcDate = str.endsWith('Z') ? str : str + 'Z';
-    const diff = Date.now() - new Date(utcDate).getTime();
+    const diff = Date.now() - new Date(utcDate).getTime(); //TODO `Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
     const hours = Math.floor(diff / (1000 * 60 * 60));
     if (hours < 1) return 'Just now';
     if (hours < 24) return `${hours}h ago`;
@@ -101,7 +95,7 @@ export default function ArticleCard({ article, swipeDirection = 'right', tier, o
       className={`flex-shrink-0 flex items-center rounded-lg opacity-0 ${
         swipeDirection === 'right' ? 'justify-end pr-6' : 'justify-start pl-6'
       } ${sentiment ? 'bg-success/20' : 'bg-serendipity/20'}`}
-      style={{ width: `${SWIPE_ZONE_PX}px` }}
+      style={{ width: `50px` }} //TODO don't hardcode this
     >
       <span className="text-xl">{sentiment ? '\u2713' : '\u26A0'}</span>
     </div>

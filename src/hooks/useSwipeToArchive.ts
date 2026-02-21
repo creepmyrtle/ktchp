@@ -1,103 +1,76 @@
-import { useRef, useEffect, type RefObject } from 'react';
+import { useRef, useEffect, useState } from 'react';
 
 interface SwipeConfig {
   onArchive: () => void;
   canArchive: boolean;
-  onSwipeBlocked?: () => void;
-  direction?: 'right' | 'left';
-  enabled?: boolean;
+  direction?: 'right' | 'left'; 
 }
 
-interface SwipeState {
-  scrollRef: RefObject<HTMLDivElement | null>;
-  indicatorRef: RefObject<HTMLDivElement | null>;
-}
-
-// Width of the archive zone — snap triggers at roughly half this distance
-export const SWIPE_ZONE_PX = 150;
-
-export function useSwipeToArchive({
-  onArchive,
-  canArchive,
-  onSwipeBlocked,
-  direction = 'right',
-  enabled = true,
-}: SwipeConfig): SwipeState {
+export function useSwipeToArchive({ 
+  onArchive, 
+  canArchive, 
+  direction = 'right' 
+}: SwipeConfig) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const indicatorRef = useRef<HTMLDivElement>(null);
-
-  const enabledRef = useRef(enabled);
-  const canArchiveRef = useRef(canArchive);
-  const directionRef = useRef(direction);
-  const onArchiveRef = useRef(onArchive);
-  const onSwipeBlockedRef = useRef(onSwipeBlocked);
-
-  useEffect(() => { enabledRef.current = enabled; }, [enabled]);
-  useEffect(() => { canArchiveRef.current = canArchive; }, [canArchive]);
-  useEffect(() => { directionRef.current = direction; }, [direction]);
-  useEffect(() => { onArchiveRef.current = onArchive; }, [onArchive]);
-  useEffect(() => { onSwipeBlockedRef.current = onSwipeBlocked; }, [onSwipeBlocked]);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     const el = scrollRef.current;
-    if (!el) return;
+    const indicator = indicatorRef.current;
+    if (!el || !indicator) return;
 
-    const dir = directionRef.current;
-    // Home scroll position: show card, hide archive zone
-    const home = dir === 'right' ? SWIPE_ZONE_PX : 0;
+    // STRUCTURE  "Home" vs "Action" zones change depending if we are r-t-l or l-t-r.
+    const indicatorWidth = indicator.offsetWidth || 120; 
+    const home = direction === 'right' ? indicatorWidth : 0;
 
-    // Set initial position without animation
-    el.style.scrollBehavior = 'auto';
-    el.scrollLeft = home;
-    el.style.scrollBehavior = '';
-
-    let triggered = false;
-    let scrollEndTimer: ReturnType<typeof setTimeout>;
-
-    function handleScroll() {
-      if (!el || triggered) return;
-
-      // Compute how far the user has scrolled away from home
-      const scrolled = dir === 'right'
-        ? home - el.scrollLeft
-        : el.scrollLeft;
-      const progress = Math.max(0, Math.min(1, scrolled / SWIPE_ZONE_PX));
-
-      if (indicatorRef.current) {
-        indicatorRef.current.style.opacity = `${progress}`;
+    // STRUCTURE Set initial scroll position and use requestAnimationFrame to prevent DOM thrashing
+    requestAnimationFrame(() => {
+      if (el.scrollLeft === 0 && direction === 'right') {
+         el.style.scrollBehavior = 'auto'; //NOTE snapping toggle
+         el.scrollLeft = home;
+         el.style.scrollBehavior = ''; 
       }
+    });
 
-      // Debounced scroll-end fallback
-      clearTimeout(scrollEndTimer);
-      scrollEndTimer = setTimeout(checkScrollEnd, 150);
-    }
+    // STRUCTURE update opacity based on scroll
+    const handleScroll = () => {
+      const current = el.scrollLeft;
+      const distance = direction === 'right' ? home - current : current;
+      // Opacity is 0-1
+      const progress = Math.max(0, Math.min(1, distance / indicatorWidth));
+      
+      indicator.style.opacity = `${progress}`;
 
-    function checkScrollEnd() {
-      if (!el || triggered || !enabledRef.current) return;
+    };
 
-      const archivePos = dir === 'right' ? 0 : SWIPE_ZONE_PX;
-      const atArchive = Math.abs(el.scrollLeft - archivePos) < SWIPE_ZONE_PX * 0.3;
+    // STRUCTURE commit this chang!
+    const handleTouchEnd = () => {
+      setIsDragging(false);
+      
+      if (!canArchive) return;
 
-      if (atArchive) {
-        if (canArchiveRef.current) {
-          triggered = true;
-          onArchiveRef.current();
-        } else {
-          el.scrollTo({ left: home, behavior: 'smooth' });
-          onSwipeBlockedRef.current?.();
-        }
+      const current = el.scrollLeft;
+      const distance = direction === 'right' ? home - current : current;
+      
+      // NOTE Snapping threshold, 0-1
+      if (distance > indicatorWidth * 0.4) {
+        onArchive();
       }
-    }
+    };
+
+    const handleTouchStart = () => setIsDragging(true);
 
     el.addEventListener('scroll', handleScroll, { passive: true });
-    el.addEventListener('scrollend', checkScrollEnd);
+    el.addEventListener('touchstart', handleTouchStart, { passive: true });
+    el.addEventListener('touchend', handleTouchEnd);
 
     return () => {
-      clearTimeout(scrollEndTimer);
       el.removeEventListener('scroll', handleScroll);
-      el.removeEventListener('scrollend', checkScrollEnd);
+      el.removeEventListener('touchstart', handleTouchStart);
+      el.removeEventListener('touchend', handleTouchEnd);
     };
-  }, []);
+  }, [onArchive, canArchive, direction]);
 
-  return { scrollRef, indicatorRef };
+  return { scrollRef, indicatorRef, isDragging };
 }
