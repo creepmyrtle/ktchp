@@ -12,13 +12,13 @@ export default function SourceTrustIndicator({ trustFactor, sampleSize }: Source
   const normalized = Math.max(0, Math.min(1, (trustFactor - 0.8) / 0.4));
   const dots = Math.round(normalized * 4) + 1;
 
-  const label = trustFactor >= 1.1 ? 'highly liked'
-    : trustFactor >= 1.0 ? 'mostly liked'
-    : trustFactor >= 0.95 ? 'mixed'
-    : 'mostly disliked';
+  const label = trustFactor >= 1.1 ? 'You tend to like articles from here'
+    : trustFactor >= 1.0 ? 'You like most articles from here'
+    : trustFactor >= 0.95 ? 'Mixed feedback on this source'
+    : 'You tend to dislike articles from here';
 
   return (
-    <span className="inline-flex items-center gap-0.5" title={`Trust: ${trustFactor.toFixed(2)} (${label}, ${sampleSize} articles)`}>
+    <span className="inline-flex items-center gap-0.5" title={`${label} (based on ${sampleSize} rated articles)`}>
       {[1, 2, 3, 4, 5].map(i => (
         <span
           key={i}

@@ -136,11 +136,48 @@ export async function setUserSourceSetting(userId: string, sourceId: string, ena
   `;
 }
 
-export async function updateSourceFetchStatus(id: string, error: string | null): Promise<void> {
+export async function updateSourceFetchStatus(
+  id: string,
+  error: string | null,
+  fetchStatus?: string,
+  newArticleCount?: number
+): Promise<void> {
+  // Compute articles_14d and latest article timestamp from actual data
+  const { rows: statsRows } = await sql`
+    SELECT
+      COUNT(*)::int AS cnt,
+      MAX(ingested_at) AS latest_ingested
+    FROM articles
+    WHERE source_id = ${id} AND ingested_at > NOW() - INTERVAL '14 days'
+  `;
+  const articles14d = statsRows[0]?.cnt ?? 0;
+  const latestIngested: string | null = statsRows[0]?.latest_ingested ?? null;
+
   if (error) {
-    await sql`UPDATE sources SET last_fetched_at = NOW(), last_fetch_error = ${error} WHERE id = ${id}`;
+    await sql`
+      UPDATE sources SET
+        last_fetched_at = NOW(),
+        last_fetch_error = ${error},
+        last_fetch_status = ${fetchStatus || 'unknown_error'},
+        consecutive_errors = COALESCE(consecutive_errors, 0) + 1,
+        articles_14d = ${articles14d}
+      WHERE id = ${id}
+    `;
   } else {
-    await sql`UPDATE sources SET last_fetched_at = NOW(), last_fetch_error = NULL WHERE id = ${id}`;
+    await sql`
+      UPDATE sources SET
+        last_fetched_at = NOW(),
+        last_fetch_error = NULL,
+        last_fetch_status = 'ok',
+        consecutive_errors = 0,
+        last_new_article_at = CASE
+          WHEN ${newArticleCount ?? 0} > 0 THEN NOW()
+          WHEN last_new_article_at IS NULL AND ${latestIngested}::timestamptz IS NOT NULL THEN ${latestIngested}::timestamptz
+          ELSE last_new_article_at
+        END,
+        articles_14d = ${articles14d}
+      WHERE id = ${id}
+    `;
   }
 }
 

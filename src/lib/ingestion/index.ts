@@ -1,7 +1,7 @@
 import type { Source, RawArticle } from '@/types';
 import { getAllFetchableSources, updateSourceFetchStatus } from '../db/sources';
 import { createArticle, getRecentArticleExternalIds } from '../db/articles';
-import { fetchRssFeed } from './rss';
+import { fetchRssFeed, categorizeRssError } from './rss';
 import {
   generateEmbeddings,
   storeEmbedding,
@@ -54,12 +54,11 @@ export async function runIngestion(provider: string, logger?: IngestionLogger): 
       try {
         const existingIds = await getRecentArticleExternalIds(source.id, provider);
         const rawArticles = await fetchFromSource(source);
-        await updateSourceFetchStatus(source.id, null);
         return { source, rawArticles, existingIds, error: null as string | null };
       } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        await updateSourceFetchStatus(source.id, msg);
-        return { source, rawArticles: [] as RawArticle[], existingIds: new Set<string>(), error: msg };
+        const { status, message } = categorizeRssError(err);
+        await updateSourceFetchStatus(source.id, message, status);
+        return { source, rawArticles: [] as RawArticle[], existingIds: new Set<string>(), error: message };
       }
     })
   );
@@ -101,6 +100,7 @@ export async function runIngestion(provider: string, logger?: IngestionLogger): 
       }
     }
 
+    await updateSourceFetchStatus(source.id, null, 'ok', sourceNew);
     logger?.log('fetch', `${source.name}: ${sourceNew} new, ${sourceDupes} dupes (${rawArticles.length} fetched)`);
   }
 

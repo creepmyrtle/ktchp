@@ -10,6 +10,33 @@ const parser = new Parser({
   },
 });
 
+export function categorizeRssError(error: unknown): { status: string; message: string } {
+  const msg = error instanceof Error ? error.message : String(error);
+
+  // HTTP status code errors (e.g., "Status code 403")
+  const statusMatch = msg.match(/status\s*code\s*(\d{3})/i);
+  if (statusMatch) {
+    return { status: `error_${statusMatch[1]}`, message: msg };
+  }
+
+  // Timeout errors
+  if (/ETIMEDOUT|ECONNABORTED|timeout/i.test(msg)) {
+    return { status: 'timeout', message: msg };
+  }
+
+  // Connection errors
+  if (/ECONNREFUSED|ENOTFOUND/i.test(msg)) {
+    return { status: 'connection_error', message: msg };
+  }
+
+  // Parse errors
+  if (/parse|invalid xml|not a valid/i.test(msg)) {
+    return { status: 'parse_error', message: msg };
+  }
+
+  return { status: 'unknown_error', message: msg };
+}
+
 export async function fetchRssFeed(
   sourceId: string,
   feedUrl: string,
@@ -33,4 +60,45 @@ export async function fetchRssFeed(
   }
 
   return articles;
+}
+
+export interface FeedValidationResult {
+  valid: boolean;
+  title: string | null;
+  articles: Array<{
+    title: string;
+    url: string;
+    content: string | null;
+    published_at: string | null;
+  }>;
+  error: string | null;
+}
+
+export async function validateRssFeed(feedUrl: string): Promise<FeedValidationResult> {
+  try {
+    const feed = await parser.parseURL(feedUrl);
+    const articles = feed.items
+      .filter(item => item.title && item.link)
+      .map(item => ({
+        title: item.title!,
+        url: item.link!,
+        content: item.contentSnippet || item.content || item.summary || null,
+        published_at: item.isoDate || item.pubDate || null,
+      }));
+
+    return {
+      valid: true,
+      title: feed.title || null,
+      articles,
+      error: null,
+    };
+  } catch (err) {
+    const { message } = categorizeRssError(err);
+    return {
+      valid: false,
+      title: null,
+      articles: [],
+      error: message,
+    };
+  }
 }

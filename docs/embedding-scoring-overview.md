@@ -50,11 +50,11 @@ Query `user_articles` for articles from the user's enabled sources that haven't 
 
 ### Step 1: Prefilter (non-embedding)
 Before any embedding work, articles are filtered by `prefilterArticles()`:
-- Remove titles < 10 characters
-- Remove known spam domains
+- Remove titles < 4 characters (genuinely broken data)
+- Remove known spam domains (exact domain match — `bit.ly`, `t.co`, `tinyurl.com`)
 - Remove invalid URLs
 - Exact title deduplication (case-insensitive)
-- Remove articles older than 14 days
+- Remove articles older than 14 days (for new users <14 days old, the window extends to 14 days before their account creation date)
 
 ### Step 2: Ensure interest embeddings exist
 Load all interest embeddings from DB. For any interest without one, generate and store it on the fly.
@@ -63,13 +63,16 @@ Load all interest embeddings from DB. For any interest without one, generate and
 For each article that survived prefiltering:
 
 ```
-score = MAX(cosineSimilarity(articleEmbedding, interestEmbedding))
-        across ALL user interests
+weightedSimilarity = cosineSimilarity(articleEmbedding, interestEmbedding) × interest.weight
+blendedScore = 0.7 × primary (top match) + 0.3 × secondary (avg of top 3)
+finalScore = blendedScore × exclusionPenalty × sourceTrustMultiplier
 ```
 
 Key behaviors:
-- Each article gets a single score = its **best match** against any interest
-- Interest weights are **not used** — all interests are treated equally
+- Each article gets a **blended** score across multiple matching interests (configurable primary/secondary weights)
+- Interest weights **are used** — similarity is multiplied by the interest's weight (0.0–1.0). Zero-weight interests are skipped
+- Exclusion penalties reduce scores for articles matching excluded topics (graduated, up to 80% reduction)
+- Source trust multipliers adjust scores based on per-source feedback history (0.8–1.2 range)
 - Articles **without embeddings** (e.g., embedding generation failed) get score `1.0` (always sent to LLM)
 - Scores are persisted to `user_articles.embedding_score`
 
@@ -77,28 +80,28 @@ Key behaviors:
 
 | Score Range | Route | Count Cap |
 |---|---|---|
-| `≥ 0.35` (LLM threshold) | Sent to LLM for full scoring | Top 40 by score |
-| `0.20 – 0.35` (serendipity range) | Random sample sent to LLM | 5 random (Fisher-Yates shuffle) |
-| `< 0.20` (floor) | Skipped entirely | — |
+| `≥ LLM threshold` | Sent to LLM for full scoring | Top N by score |
+| `serendipity min – max` | Weighted sample sent to LLM | Sample size (weighted roulette) |
+| `< serendipity min` | Skipped entirely | — |
 
-All thresholds are configurable via the `settings` table:
-- `embedding_llm_threshold` (default 0.35)
-- `embedding_serendipity_min` (default 0.20)
-- `embedding_serendipity_max` (default 0.35)
-- `serendipity_sample_size` (default 5)
-- `max_llm_candidates` (default 40)
+All thresholds are configurable via the admin scoring settings panel (Settings → Admin → Scoring):
+- `embedding_llm_threshold` — minimum blended score to send to LLM
+- `embedding_serendipity_min` — floor for serendipity pool
+- `embedding_serendipity_max` — ceiling for serendipity pool
+- `serendipity_sample_size` — how many serendipity candidates to sample
+- `max_llm_candidates` — max articles sent to LLM per user
 
 ### Step 5: LLM scoring (Stage 2)
 Articles routed to the LLM receive the full scoring treatment:
-- **Input to LLM**: article title + URL only (no raw_content, no embedding text)
-- **Context given to LLM**: user interests (with weights and descriptions), learned preferences, recent feedback patterns
+- **Input to LLM**: article title, content snippet (first 500 chars of `raw_content`), and URL
+- **Context given to LLM**: user interests (with weights and expanded descriptions), learned preferences, recent feedback patterns
 - **Output from LLM**: relevance_score (0.0–1.0), relevance_reason, is_serendipity flag
 - **Batch size**: 10 articles per LLM call
 - **LLM**: Kimi K2.5 via Synthetic API (OpenAI-compatible)
 
 ### Step 6: Fallback scoring for non-LLM articles
-Articles that were NOT sent to the LLM (scored below 0.35 and not randomly selected for serendipity) still get a relevance score:
-- Their **embedding similarity** (max across interests) becomes their relevance score
+Articles that were NOT sent to the LLM (scored below the LLM threshold and not selected for serendipity) still get a relevance score:
+- Their **blended embedding score** (weight-adjusted, multi-interest blended) becomes their relevance score
 - Reason is set to `"Embedding score (not sent to LLM)"`
 - `is_serendipity = false`
 
@@ -129,21 +132,21 @@ The system logs a histogram of embedding scores per run:
 
 ## Current Limitations & Design Choices
 
-1. **No interest weighting in embeddings**: A weight-1.0 interest and a weight-0.2 interest contribute equally to an article's embedding score. Weights only matter at the LLM stage.
+1. ~~**No interest weighting in embeddings**~~ — **Resolved.** Embedding scores are now weight-adjusted (`similarity × interest.weight`).
 
-2. **Max-only similarity**: An article's score is its best single-interest match. There's no consideration of how many interests it matches, or average similarity.
+2. ~~**Max-only similarity**~~ — **Resolved.** Blended scoring combines the top match (70%) with the average of the top 3 matches (30%).
 
 3. **Fixed embedding text**: Article embedding text is `title + first 500 chars of content`. There's no adaptive windowing, no extraction of key sentences, no consideration of article structure.
 
-4. **Interest embedding text is minimal**: Just `"category: description"` — often a few words total. This gives the embedding limited semantic range to match against.
+4. ~~**Interest embedding text is minimal**~~ — **Partially resolved.** Interest descriptions are now auto-expanded via LLM to 150–200 words covering related concepts and terminology.
 
 5. **Binary routing**: An article either goes to the LLM or it doesn't (aside from serendipity sampling). There's no "medium confidence" path.
 
-6. **No negative signals**: There's no way to embed "things the user doesn't want" — learned preferences like "Skip opinion pieces" only exist at the LLM layer.
+6. ~~**No negative signals**~~ — **Partially resolved.** Excluded topics are embedded and applied as graduated penalties at the embedding stage. Learned preferences still only exist at the LLM layer.
 
-7. **No cross-article deduplication by embedding**: Title dedup is exact-match only. Semantically similar articles from different sources can both make it through.
+7. ~~**No cross-article deduplication by embedding**~~ — **Resolved.** Semantic deduplication flags near-identical articles (cosine similarity > 0.85) during ingestion.
 
-8. **Serendipity is random**: The serendipity pool is a random sample, not intelligently selected. An article at 0.34 (just below threshold) and one at 0.21 (near floor) have equal chance.
+8. ~~**Serendipity is random**~~ — **Resolved.** Serendipity uses weighted sampling: proximity to interests (50%), interest diversity (30%), source diversity (20%).
 
 ---
 

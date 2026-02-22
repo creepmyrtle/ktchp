@@ -47,24 +47,27 @@
 - All colors use CSS custom properties (defined in globals.css): `text-foreground`, `text-muted`, `bg-card`, `border-card-border`, `text-accent`, `bg-accent-light`, `text-danger`, etc.
 - Pill buttons: `px-3 py-1.5 text-sm rounded-full border` with active/inactive states
 - Cards: `p-4 rounded-lg bg-card border border-card-border`
-- Animations: `card-archiving` class for fade-out, manual height collapse via JS
+- Animations: `card-archiving` class for opacity fade-out only (300ms), manual height collapse via JS with `requestAnimationFrame` batching
 
 ### UI Patterns
 - Settings tabs are role-gated: non-admin users see only user-facing tabs
 - Default sources show "Default" label instead of delete button
 - Interest weights use discrete pill buttons (0, 0.2, 0.4, 0.6, 0.8, 1.0) — not sliders
 - Feedback button order reverses based on swipe direction setting
-- Card archive animation: fade (400ms) → height collapse (300ms) → display:none, with scroll position preservation
+- Card archive animation: opacity fade (300ms) → height collapse (300ms) → display:none, with scroll position preservation. CSS handles opacity only; JS handles all spatial collapse via `requestAnimationFrame`
 
 ### Scoring Pipeline
 - Two-stage: embedding prefilter → LLM refinement
-- Embedding scores are weight-adjusted (`similarity * interest.weight`) and blended across multiple interests (configurable primary/secondary weights)
-- Exclusion penalties reduce scores for articles matching excluded topics (graduated, up to 80% reduction)
-- Source trust multipliers boost/penalize based on per-source sentiment history (0.8–1.2 range)
-- Semantic deduplication removes near-identical articles during ingestion (cosine similarity > 0.85)
-- Interest descriptions are auto-expanded via LLM for richer embeddings
-- Serendipity picks use weighted sampling (proximity 50%, interest diversity 30%, source diversity 20%)
-- Weekly affinity analysis (configurable day) discovers latent interests from feedback patterns
+- **Prefilter**: removes spam domains (exact domain match), short titles (<4 chars), exact title dupes, stale articles (>14 days). New users (<14 days old) get an extended window back to 14 days before account creation
+- **Embedding scores**: weight-adjusted (`similarity * interest.weight`) and blended across multiple interests (configurable primary/secondary weights)
+- **Exclusion penalties**: reduce scores for articles matching excluded topics (graduated, up to 80% reduction)
+- **Source trust multipliers**: boost/penalize based on per-source sentiment history (0.8–1.2 range)
+- **Semantic dedup**: removes near-identical articles during ingestion (cosine similarity > 0.85)
+- **LLM scoring**: receives article titles + content snippets (first 500 chars) for nuanced relevance assessment
+- **Interest expansion**: descriptions auto-expanded via LLM for richer embeddings
+- **Serendipity**: weighted sampling (proximity 50%, interest diversity 30%, source diversity 20%)
+- **Affinity analysis**: weekly (configurable day) LLM-based interest discovery from feedback patterns
+- **All thresholds** are configurable via admin panel (Settings → Admin → Scoring). Code defaults serve as fallbacks; DB values are the single source of truth
 
 ## File Organization
 
@@ -80,6 +83,7 @@
   - `lib/source-trust.ts` — Source trust factor computation from sentiment data
 - `src/types/` — Shared TypeScript interfaces
 - `scripts/` — Standalone CLI scripts (run via `npx tsx`)
+  - `scripts/prefilter-debug.ts` — Dry-run prefilter analysis per user (read-only, no DB changes)
 
 ## Environment
 

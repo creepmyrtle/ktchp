@@ -22,6 +22,7 @@ import 'tsconfig-paths/register';
 import { getDefaultUser } from '@/lib/db/users';
 import { getEnabledSourcesForUser } from '@/lib/db/sources';
 import { getActiveInterestsByUserId } from '@/lib/db/interests';
+import { getGlobalSetting } from '@/lib/db/settings';
 import { fetchRssFeed } from '@/lib/ingestion/rss';
 import { prefilterArticles } from '@/lib/relevance/prefilter';
 import {
@@ -117,6 +118,17 @@ async function main() {
   }
   console.log(`User: ${admin.username}\n`);
 
+  // ── Load thresholds from DB (or code defaults) ──
+  const [tLlm, tSerMin, tSerMax] = await Promise.all([
+    getGlobalSetting('embedding_llm_threshold'),
+    getGlobalSetting('embedding_serendipity_min'),
+    getGlobalSetting('embedding_serendipity_max'),
+  ]);
+  const llmThreshold = tLlm ? parseFloat(tLlm) : 0.25;
+  const serendipityMin = tSerMin ? parseFloat(tSerMin) : 0.12;
+  const serendipityMax = tSerMax ? parseFloat(tSerMax) : 0.25;
+  console.log(`Thresholds: LLM=${llmThreshold}, Serendipity=${serendipityMin}-${serendipityMax}\n`);
+
   // ── Step 1: Fetch ──
   console.log('─── STEP 1: FETCH ───');
   const sources = await getEnabledSourcesForUser(admin.id);
@@ -162,7 +174,9 @@ async function main() {
     sourceName: r.sourceName,
   }));
 
-  const { kept, removed } = prefilterArticles(asArticles);
+  const { kept, removed } = prefilterArticles(asArticles, {
+    userCreatedAt: admin.created_at ? new Date(admin.created_at) : undefined,
+  });
 
   const reasonCounts = new Map<string, number>();
   for (const r of removed) {
@@ -183,7 +197,7 @@ async function main() {
 
   if (kept.length === 0) {
     console.log('No articles survived prefilter. Saving output and exiting.');
-    await saveOutput({ fetchResults, prefilterSummary, interests: [], scored: [], dedupPairs: [], embeddingTokens: 0 });
+    await saveOutput({ fetchResults, prefilterSummary, interests: [], scored: [], dedupPairs: [], embeddingTokens: 0, llmThreshold, serendipityMin });
     process.exit(0);
   }
 
@@ -306,13 +320,13 @@ async function main() {
   }
 
   // Print threshold breakdown (using blended scores)
-  const aboveLlm = scored.filter((a) => a.blendedScore >= 0.28).length;
-  const serendipityPool = scored.filter((a) => a.blendedScore >= 0.20 && a.blendedScore < 0.28).length;
-  const belowFloor = scored.filter((a) => a.blendedScore < 0.20).length;
+  const aboveLlm = scored.filter((a) => a.blendedScore >= llmThreshold).length;
+  const serendipityPool = scored.filter((a) => a.blendedScore >= serendipityMin && a.blendedScore < llmThreshold).length;
+  const belowFloor = scored.filter((a) => a.blendedScore < serendipityMin).length;
 
-  console.log(`\n  Above LLM threshold (>=0.28): ${aboveLlm} -> would go to LLM scoring`);
-  console.log(`  Serendipity pool (0.20-0.28): ${serendipityPool} -> random 5 would go to LLM`);
-  console.log(`  Below floor (<0.20): ${belowFloor} -> skipped`);
+  console.log(`\n  Above LLM threshold (>=${llmThreshold}): ${aboveLlm} -> would go to LLM scoring`);
+  console.log(`  Serendipity pool (${serendipityMin}-${llmThreshold}): ${serendipityPool} -> random 5 would go to LLM`);
+  console.log(`  Below floor (<${serendipityMin}): ${belowFloor} -> skipped`);
 
   // ── Before/After comparison ──
   console.log('\n─── BEFORE/AFTER COMPARISON (top 15) ───');
@@ -340,7 +354,7 @@ async function main() {
     );
   }
 
-  await saveOutput({ fetchResults, prefilterSummary, interests: interestInfos, scored, dedupPairs, embeddingTokens: totalTokens });
+  await saveOutput({ fetchResults, prefilterSummary, interests: interestInfos, scored, dedupPairs, embeddingTokens: totalTokens, llmThreshold, serendipityMin });
 }
 
 async function saveOutput(data: {
@@ -350,6 +364,8 @@ async function saveOutput(data: {
   scored: ScoredArticle[];
   dedupPairs: DedupPair[];
   embeddingTokens: number;
+  llmThreshold: number;
+  serendipityMin: number;
 }) {
   const output = {
     generatedAt: new Date().toISOString(),
@@ -361,8 +377,8 @@ async function saveOutput(data: {
       semanticDuplicatesFound: data.dedupPairs.length,
       afterDedup: data.scored.length,
       embeddingTokensUsed: data.embeddingTokens,
-      aboveLlmThreshold: data.scored.filter((a) => a.blendedScore >= 0.28).length,
-      serendipityPool: data.scored.filter((a) => a.blendedScore >= 0.20 && a.blendedScore < 0.28).length,
+      aboveLlmThreshold: data.scored.filter((a) => a.blendedScore >= data.llmThreshold).length,
+      serendipityPool: data.scored.filter((a) => a.blendedScore >= data.serendipityMin && a.blendedScore < data.llmThreshold).length,
     },
     fetchResults: data.fetchResults,
     prefilter: data.prefilterSummary,

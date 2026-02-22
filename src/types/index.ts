@@ -32,6 +32,10 @@ export interface Source {
   created_at: string;
   last_fetch_error?: string | null;
   last_fetched_at?: string | null;
+  last_fetch_status?: string | null;
+  last_new_article_at?: string | null;
+  consecutive_errors?: number;
+  articles_14d?: number;
 }
 
 // Ingested Article (shared content only — no per-user scoring/engagement)

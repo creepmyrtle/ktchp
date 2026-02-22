@@ -9,7 +9,7 @@ A multi-user, AI-curated daily digest app. Aggregates articles from RSS feeds, s
 Every ingestion run (triggered by a daily GitHub Actions cron or manually) executes this pipeline:
 
 1. **Fetch** — Fetches new articles from all enabled RSS sources across all active users, deduplicates against existing articles.
-2. **Prefilter** — Removes spam domains, very short titles, exact title duplicates, and stale articles (>7 days old).
+2. **Prefilter** — Removes spam domains (exact domain match), very short titles (<4 chars), exact title duplicates, and stale articles (>14 days old). New users get an extended freshness window dating back to 14 days before their account creation.
 3. **Embed** — Generates vector embeddings for all new articles using OpenAI's `text-embedding-3-small` model. Each article is embedded once and shared across all users. Near-duplicate articles are detected via semantic deduplication (cosine similarity > 0.85) and flagged so scoring can skip them.
 4. **Score (per user)** — Two-stage scoring for each active user:
    - **Stage 1 — Embedding pre-filter**: Computes weight-adjusted cosine similarity between article embeddings and user interest embeddings, blended across multiple matching interests. Applies exclusion penalties for articles matching excluded topics, and source trust multipliers from per-source feedback history. Filters out ~60-80% of obviously irrelevant articles.
@@ -20,7 +20,7 @@ Every ingestion run (triggered by a daily GitHub Actions cron or manually) execu
 
 The two-stage pipeline cuts LLM API costs by 60-80% while maintaining digest quality.
 
-**Stage 1 (Embeddings):** Each article's embedding is compared against all of the user's interest embeddings via cosine similarity. Similarities are weight-adjusted (`similarity × interest.weight`), then blended across multiple matching interests (configurable primary/secondary weights, default 70/30). The blended score is further modified by exclusion penalties (articles matching excluded topics get up to 80% reduction) and source trust multipliers (0.8–1.2 range based on per-source feedback history). Articles above the LLM threshold (default 0.28) are candidates for LLM scoring. A weighted sample from the "maybe relevant" range (0.20–0.35) is included as serendipity candidates, prioritizing proximity to interests and source diversity over pure randomness.
+**Stage 1 (Embeddings):** Each article's embedding is compared against all of the user's interest embeddings via cosine similarity. Similarities are weight-adjusted (`similarity × interest.weight`), then blended across multiple matching interests (configurable primary/secondary weights, default 70/30). The blended score is further modified by exclusion penalties (articles matching excluded topics get up to 80% reduction) and source trust multipliers (0.8–1.2 range based on per-source feedback history). Articles above the LLM threshold are candidates for LLM scoring. A weighted sample from the serendipity range is included as serendipity candidates, prioritizing proximity to interests and source diversity over pure randomness.
 
 **Stage 2 (LLM):** The LLM receives the user's explicit interests (with weights), learned preferences from feedback history, and article titles + content snippets + URLs. It returns structured JSON with relevance scores, reason tags, and serendipity flags. Serendipity candidates get a special prompt note asking the LLM to evaluate them for unexpected cross-domain value.
 
@@ -216,6 +216,7 @@ Standalone scripts run via `npx tsx scripts/<name>.ts`. All load `.env.local` au
 | `scripts/test-scoring.ts` | Test the LLM scoring prompt with real data at different token limits |
 | `scripts/test-llm.ts` | Test LLM API connectivity |
 | `scripts/fetch-preview.ts` | Preview scoring pipeline: shows raw/weighted/blended scores, semantic dedup, before/after comparison |
+| `scripts/prefilter-debug.ts` | Dry-run prefilter analysis: shows exactly which articles are removed and why for a given user |
 
 ## Stack
 

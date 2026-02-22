@@ -3,7 +3,7 @@ import { getEnabledSourcesForUser } from '../db/sources';
 import { createDigest, updateDigestArticleCount } from '../db/digests';
 import { getActiveInterestsByUserId } from '../db/interests';
 import { getPreferencesByUserId } from '../db/preferences';
-import { getAllActiveUsers } from '../db/users';
+import { getAllActiveUsers, getUserById } from '../db/users';
 import { getGlobalSetting } from '../db/settings';
 import {
   getUnscoredArticlesForUser,
@@ -31,9 +31,9 @@ import type { IngestionLogger } from '../ingestion/logger';
 import type { Article } from '@/types';
 
 // Default thresholds (overridden by global settings)
-const DEFAULT_EMBEDDING_LLM_THRESHOLD = 0.28;
-const DEFAULT_EMBEDDING_SERENDIPITY_MIN = 0.20;
-const DEFAULT_EMBEDDING_SERENDIPITY_MAX = 0.35;
+const DEFAULT_EMBEDDING_LLM_THRESHOLD = 0.25;
+const DEFAULT_EMBEDDING_SERENDIPITY_MIN = 0.12;
+const DEFAULT_EMBEDDING_SERENDIPITY_MAX = 0.25;
 const DEFAULT_SERENDIPITY_SAMPLE_SIZE = 5;
 const DEFAULT_MAX_LLM_CANDIDATES = 40;
 const DEFAULT_EXCLUSION_PENALTY_THRESHOLD = 0.40;
@@ -193,7 +193,10 @@ export async function runRelevanceEngine(userId: string, provider: string, logge
     ingested_at: '',
   })) as Article[];
 
-  const { kept: filtered, removed } = prefilterArticles(asArticles);
+  const user = await getUserById(userId);
+  const { kept: filtered, removed } = prefilterArticles(asArticles, {
+    userCreatedAt: user?.created_at ? new Date(user.created_at) : undefined,
+  });
   result.afterPrefilterCount = filtered.length;
 
   logger?.log('prefilter', `Prefilter: ${unscored.length} → ${filtered.length} (${removed.length} removed)`);

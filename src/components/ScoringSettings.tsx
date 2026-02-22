@@ -2,25 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-interface ScoringConfig {
-  embedding_llm_threshold: string;
-  embedding_serendipity_min: string;
-  embedding_serendipity_max: string;
-  serendipity_sample_size: string;
-  max_llm_candidates: string;
-  bonus_min_score: string;
-  bonus_max_articles: string;
-}
-
-const DEFAULTS: ScoringConfig = {
-  embedding_llm_threshold: '0.35',
-  embedding_serendipity_min: '0.20',
-  embedding_serendipity_max: '0.35',
-  serendipity_sample_size: '5',
-  max_llm_candidates: '40',
-  bonus_min_score: '0.15',
-  bonus_max_articles: '20',
-};
+type ScoringConfig = Record<string, string>;
 
 const SCORING_LABELS: Record<string, string> = {
   embedding_llm_threshold: 'Embedding → LLM threshold',
@@ -28,12 +10,26 @@ const SCORING_LABELS: Record<string, string> = {
   embedding_serendipity_max: 'Serendipity pool max',
   serendipity_sample_size: 'Serendipity sample size',
   max_llm_candidates: 'Max LLM candidates per user',
+  blended_primary_weight: 'Blended primary weight',
+  blended_secondary_weight: 'Blended secondary weight',
+  semantic_dedup_threshold: 'Semantic dedup threshold',
+  exclusion_penalty_threshold: 'Exclusion penalty threshold',
+  source_trust_min: 'Source trust min multiplier',
+  source_trust_max: 'Source trust max multiplier',
+  affinity_analysis_day: 'Affinity analysis day (0=Sun)',
 };
 
 const BONUS_LABELS: Record<string, string> = {
   bonus_min_score: 'Bonus minimum score floor',
   bonus_max_articles: 'Max bonus articles per digest',
 };
+
+const INTEGER_KEYS = new Set([
+  'serendipity_sample_size',
+  'max_llm_candidates',
+  'bonus_max_articles',
+  'affinity_analysis_day',
+]);
 
 const PROVIDERS = [
   { value: 'openai', label: 'OpenAI (GPT-4o-mini)', description: 'Fast, cheap, reliable' },
@@ -42,7 +38,8 @@ const PROVIDERS = [
 ] as const;
 
 export default function ScoringSettings() {
-  const [values, setValues] = useState<ScoringConfig>(DEFAULTS);
+  const [values, setValues] = useState<ScoringConfig>({});
+  const [loading, setLoading] = useState(true);
   const [provider, setProvider] = useState('synthetic');
   const [bonusEnabled, setBonusEnabled] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -57,10 +54,11 @@ export default function ScoringSettings() {
             setBonusEnabled(data.bonus_digest_enabled !== 'false');
             delete data.bonus_digest_enabled;
           }
-          setValues(prev => ({ ...prev, ...data }));
+          setValues(data);
         }
+        setLoading(false);
       })
-      .catch(() => {});
+      .catch(() => { setLoading(false); });
     fetch('/api/settings/provider')
       .then(res => res.json())
       .then(data => {
@@ -127,21 +125,25 @@ export default function ScoringSettings() {
 
       <hr className="border-card-border" />
 
+      {loading ? (
+        <p className="text-sm text-muted">Loading...</p>
+      ) : (
       <div className="space-y-3">
         {(Object.keys(SCORING_LABELS)).map(key => (
           <div key={key} className="flex items-center justify-between gap-4">
             <label className="text-sm text-foreground">{SCORING_LABELS[key]}</label>
             <input
               type="number"
-              step={key.includes('size') || key.includes('candidates') ? '1' : '0.01'}
+              step={INTEGER_KEYS.has(key) ? '1' : '0.01'}
               min="0"
-              value={values[key as keyof ScoringConfig]}
+              value={values[key] ?? ''}
               onChange={e => setValues(prev => ({ ...prev, [key]: e.target.value }))}
               className="w-20 px-2 py-1 text-sm rounded border border-card-border bg-background text-foreground text-right"
             />
           </div>
         ))}
       </div>
+      )}
 
       <hr className="border-card-border" />
 
@@ -168,9 +170,9 @@ export default function ScoringSettings() {
               <label className="text-sm text-foreground">{BONUS_LABELS[key]}</label>
               <input
                 type="number"
-                step={key.includes('articles') ? '1' : '0.01'}
+                step={INTEGER_KEYS.has(key) ? '1' : '0.01'}
                 min="0"
-                value={values[key as keyof ScoringConfig]}
+                value={values[key] ?? ''}
                 onChange={e => setValues(prev => ({ ...prev, [key]: e.target.value }))}
                 className="w-20 px-2 py-1 text-sm rounded border border-card-border bg-background text-foreground text-right"
               />

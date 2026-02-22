@@ -13,6 +13,7 @@
   --serendipity-light: rgba(224,180,74,0.1);
   --success: #5cc9b5;
   --danger: #ef4444;
+  --info: #6ca6f0;
 }
 
 @theme inline {
@@ -28,6 +29,7 @@
   --color-serendipity-light: var(--serendipity-light);
   --color-success: var(--success);
   --color-danger: var(--danger);
+  --color-info: var(--info);
   --font-sans: var(--font-dm-sans);
   --font-mono: var(--font-jetbrains-mono);
 }

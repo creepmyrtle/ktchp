@@ -236,10 +236,14 @@ export async function ensureSchema(): Promise<void> {
     await sql`ALTER TABLE interests ADD COLUMN IF NOT EXISTS expanded_description TEXT`;
   } catch { /* column may already exist */ }
 
-  // Add fetch error tracking to sources
+  // Add fetch error tracking and health columns to sources
   try {
     await sql`ALTER TABLE sources ADD COLUMN IF NOT EXISTS last_fetch_error TEXT`;
     await sql`ALTER TABLE sources ADD COLUMN IF NOT EXISTS last_fetched_at TIMESTAMPTZ`;
+    await sql`ALTER TABLE sources ADD COLUMN IF NOT EXISTS last_fetch_status TEXT`;
+    await sql`ALTER TABLE sources ADD COLUMN IF NOT EXISTS last_new_article_at TIMESTAMPTZ`;
+    await sql`ALTER TABLE sources ADD COLUMN IF NOT EXISTS consecutive_errors INTEGER DEFAULT 0`;
+    await sql`ALTER TABLE sources ADD COLUMN IF NOT EXISTS articles_14d INTEGER DEFAULT 0`;
   } catch { /* columns may already exist */ }
 }
 

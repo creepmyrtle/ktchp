@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from 'react';
 import type { UserArticleWithSource, Sentiment, DigestTier } from '@/types';
 import ActionBar from './FeedbackButtons';
 import { useSwipeToArchive, SWIPE_ZONE_PX } from '@/hooks/useSwipeToArchive';
+import { timeAgo } from '@/lib/utils/time';
 
 interface ArticleCardProps {
   article: UserArticleWithSource;
@@ -81,18 +82,6 @@ export default function ArticleCard({ article, swipeDirection = 'right', tier, o
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ articleId: article.article_id, action: 'read' }),
     });
-  }
-
-  function timeAgo(dateStr: string | Date | null): string {
-    if (!dateStr) return '';
-    const str = typeof dateStr === 'string' ? dateStr : dateStr.toISOString();
-    const utcDate = str.endsWith('Z') ? str : str + 'Z';
-    const diff = Date.now() - new Date(utcDate).getTime();
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    if (hours < 1) return 'Just now';
-    if (hours < 24) return `${hours}h ago`;
-    const days = Math.floor(hours / 24);
-    return `${days}d ago`;
   }
 
   const indicatorEl = (
