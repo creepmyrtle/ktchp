@@ -21,6 +21,8 @@ interface CostByUser {
   display_name: string;
   source_count: number;
   private_source_count: number;
+  interest_count: number;
+  exclusion_count: number;
   articles_ingested: number;
   articles_sent_to_llm: number;
   llm_tokens: number;
@@ -255,6 +257,8 @@ export default function CostDashboard() {
                 <tr className="text-muted border-b border-card-border">
                   <th className="text-left py-1.5 pr-2 font-normal">User</th>
                   <th className="text-right py-1.5 px-2 font-normal">Sources</th>
+                  <th className="text-right py-1.5 px-2 font-normal hidden sm:table-cell">Interests</th>
+                  <th className="text-right py-1.5 px-2 font-normal hidden sm:table-cell">Exclusions</th>
                   <th className="text-right py-1.5 px-2 font-normal">Articles</th>
                   <th className="text-right py-1.5 px-2 font-normal hidden sm:table-cell">Sent to LLM</th>
                   <th className="text-right py-1.5 px-2 font-normal hidden sm:table-cell">LLM Tokens</th>
@@ -269,6 +273,8 @@ export default function CostDashboard() {
                       {u.display_name}
                     </td>
                     <td className="text-right py-1.5 px-2 text-muted">{u.source_count}</td>
+                    <td className="text-right py-1.5 px-2 text-muted hidden sm:table-cell">{u.interest_count}</td>
+                    <td className="text-right py-1.5 px-2 text-muted hidden sm:table-cell">{u.exclusion_count}</td>
                     <td className="text-right py-1.5 px-2 text-muted">{fmt(u.articles_ingested)}</td>
                     <td className="text-right py-1.5 px-2 text-muted hidden sm:table-cell">{fmt(u.articles_sent_to_llm)}</td>
                     <td className="text-right py-1.5 px-2 text-muted hidden sm:table-cell">{fmt(u.llm_tokens)}</td>

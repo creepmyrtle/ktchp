@@ -42,6 +42,20 @@ Once a week (configurable day, default Sunday), ketchup analyzes your liked and 
 
 Source trust factors are computed weekly from your feedback history per source. Sources you consistently like get a small scoring boost (up to 1.2×); sources you consistently dislike get a penalty (down to 0.8×). Trust indicators appear as dot ratings next to source names in Settings → Sources once you've rated 5+ articles from a source.
 
+### Source Health
+
+Each source displays a health indicator showing its current status:
+
+- **Active** (green) — Published at least 1 article within the last 3 days
+- **Slow** (yellow) — Last new article was 4–14 days ago
+- **Inactive** (gray) — No new articles in 14+ days
+- **Error** (red) — Most recent fetch failed (HTTP error, timeout, parse failure)
+- **New** (blue) — Added less than 24 hours ago and hasn't been fetched yet
+
+Health data includes article frequency (new articles per day or per 2 weeks), last new article recency, and structured error details with consecutive failure tracking. Sources with persistent errors (3+ days) show a contextual hint.
+
+When adding a new source, a pre-check validates the feed before saving — fetching the URL, counting articles and recency, and warning about potential issues (empty feeds, stale content, missing content snippets). Users can still add feeds with warnings.
+
 ### Preference Learning
 
 The system learns user preferences over time from feedback. After every 50 new feedback events (likes, dislikes, neutrals, reads), an LLM analyzes recent patterns and generates natural language preference statements (e.g., "User strongly prefers technical deep-dives over news summaries"). These preferences are injected into the scoring prompt for more personalized results.
@@ -84,14 +98,15 @@ src/
 │   └── api/
 │       ├── auth/                 # login, logout (redirects to login), register
 │       ├── account/              # profile updates (display name, password)
-│       ├── admin/                # user management, invite codes, analytics (admin only)
+│       ├── admin/                # user management, invite codes, analytics, limits, storage, system health (admin only)
 │       ├── ingest/route.ts       # POST — runs full ingestion pipeline
 │       ├── ingestion-logs/       # GET recent logs, GET log by ID
 │       ├── digests/              # GET recent, GET by ID, GET latest, POST clear
-│       ├── interests/            # CRUD for user interests (+ embedding generation)
-│       ├── exclusions/           # CRUD for excluded topics (+ embedding generation)
+│       ├── interests/            # CRUD for user interests (+ embedding generation, soft limits)
+│       ├── exclusions/           # CRUD for excluded topics (+ embedding generation, soft limits)
+│       ├── limits/               # GET user-facing resource limits and current counts
 │       ├── suggestions/          # Interest suggestions (accept/dismiss)
-│       ├── sources/              # CRUD for RSS sources + trust indicators
+│       ├── sources/              # CRUD for RSS sources + trust indicators + feed pre-check + soft limits
 │       ├── feedback/             # POST engagement actions (sentiment, read, bookmark, archive)
 │       ├── preferences/          # GET/DELETE learned preferences
 │       └── settings/             # provider, schedule, swipe direction, scoring thresholds
@@ -109,16 +124,20 @@ src/
 │   ├── ExclusionManager.tsx      # Add/delete excluded topics
 │   ├── SuggestionBanner.tsx      # Digest banner linking to pending suggestions
 │   ├── SourceTrustIndicator.tsx  # 5-dot trust indicator for sources
+│   ├── SourceHealthIndicator.tsx # Source health status dot + frequency + recency
+│   ├── SourcePageHeader.tsx      # Explainer + expandable source tips
+│   ├── AddSourcePreCheck.tsx     # Feed validation before adding (check → review → confirm)
 │   ├── PreferenceViewer.tsx      # View/delete learned preferences
 │   ├── ScheduleManager.tsx       # GitHub Actions schedule info
-│   ├── SourceManager.tsx         # Add/edit/delete RSS sources, OPML import, trust indicators
+│   ├── SourceManager.tsx         # Add/edit/delete RSS sources, OPML import, health + trust indicators
 │   ├── SwipeSettings.tsx         # Configure swipe-to-archive direction
 │   ├── ScoringSettings.tsx       # Embedding/LLM threshold tuning (admin)
-│   ├── AdminPanel.tsx            # Admin tabs: users, invite codes, scoring, analytics
+│   ├── AdminPanel.tsx            # Admin tabs: users, invite codes, scoring, analytics, system health
 │   ├── UserManager.tsx           # Activate/deactivate/delete users (admin)
 │   ├── InviteCodeManager.tsx     # Generate/revoke invite codes, shows claimed-by username (admin)
 │   ├── AnalyticsDashboard.tsx    # Usage analytics (admin)
 │   ├── CostDashboard.tsx         # LLM cost tracking (admin)
+│   ├── SystemHealth.tsx          # System health: storage, user overview, resource limits (admin)
 │   ├── AccountSettings.tsx       # Change password, display name
 │   ├── Toast.tsx                 # Toast notification system
 │   └── CaughtUpMessage.tsx       # Completion stats when digest is fully archived
@@ -151,10 +170,14 @@ src/
 │   │   ├── settings.ts           # Key-value settings store (per-user + global)
 │   │   ├── users.ts              # User CRUD, full cascading delete, active user queries
 │   │   ├── invite-codes.ts       # Invite code CRUD with username join
-│   │   └── ingestion-logs.ts     # Ingestion log CRUD
+│   │   ├── ingestion-logs.ts     # Ingestion log CRUD
+│   │   ├── retention.ts          # Automatic data retention cleanup (runs after ingestion)
+│   │   └── cost-analytics.ts     # Cost tracking and per-user analytics
+│   ├── utils/
+│   │   └── time.ts               # Shared timeAgo() utility
 │   ├── ingestion/
 │   │   ├── index.ts              # Fetch loop + article embedding generation + semantic dedup
-│   │   ├── rss.ts                # RSS feed parser
+│   │   ├── rss.ts                # RSS feed parser + error categorization + feed validation
 │   │   ├── manual.ts             # Manual URL fetcher
 │   │   ├── logger.ts             # IngestionLogger class
 │   │   └── utils.ts              # URL normalization, hashing
@@ -174,8 +197,8 @@ Vercel Postgres (Neon) with pgvector extension.
 | Table | Purpose |
 |-------|---------|
 | `users` | Multi-user auth (username, bcrypt password hash, admin flag, active flag) |
-| `sessions` | Session tokens with expiry |
-| `sources` | RSS feed URLs with enable/disable, default flag, per-source max items |
+| `sessions` | Session tokens with expiry and rolling refresh |
+| `sources` | RSS feed URLs with enable/disable, default flag, per-source max items, health tracking (fetch status, article frequency, error history) |
 | `user_source_settings` | Per-user enable/disable toggle for default sources |
 | `articles` | Ingested articles (shared content only — title, URL, raw content, provider, semantic duplicate flag) |
 | `user_articles` | Per-user article state: relevance score, embedding score, reason, serendipity flag, sentiment, read, bookmark, archive, digest assignment |
@@ -217,6 +240,7 @@ Standalone scripts run via `npx tsx scripts/<name>.ts`. All load `.env.local` au
 | `scripts/test-llm.ts` | Test LLM API connectivity |
 | `scripts/fetch-preview.ts` | Preview scoring pipeline: shows raw/weighted/blended scores, semantic dedup, before/after comparison |
 | `scripts/prefilter-debug.ts` | Dry-run prefilter analysis: shows exactly which articles are removed and why for a given user |
+| `scripts/resize-embeddings.ts` | Re-generate all embeddings at a new dimension. Use `--dry-run` to preview, or `--target-dims=N` to override |
 
 ## Stack
 
@@ -226,18 +250,20 @@ Standalone scripts run via `npx tsx scripts/<name>.ts`. All load `.env.local` au
 - **LLM**: Kimi K2.5 via Synthetic API (OpenAI-compatible). Anthropic Claude infrastructure preserved but inactive.
 - **Styling**: Tailwind CSS 4, dark theme (DM Sans + JetBrains Mono)
 - **Deployment**: Vercel (hosting) + GitHub Actions (daily cron at 5 AM CT)
-- **Auth**: Invite-based multi-user with bcrypt + session cookies (httpOnly, HMAC-SHA256, 7-day expiry)
+- **Auth**: Invite-based multi-user with bcrypt + session cookies (httpOnly, HMAC-SHA256, 7-day rolling expiry with automatic refresh)
 
 ## Environment Variables
 
 | Variable | Required | Purpose |
 |----------|----------|---------|
 | `POSTGRES_URL` | Yes | Vercel Postgres connection string |
-| `CRON_SECRET` | Yes | Secret for session signing and cron API auth |
+| `CRON_SECRET` | Yes | Authenticating the ingestion cron endpoint |
+| `SESSION_SECRET` | No | Secret for session cookie signing (falls back to CRON_SECRET) |
 | `SYNTHETIC_API_KEY` | Yes | API key for Kimi K2.5 (via synthetic.new) for LLM scoring |
 | `OPENAI_API_KEY` | Yes | API key for OpenAI embeddings (`text-embedding-3-small`) |
 | `ANTHROPIC_API_KEY` | No | Anthropic API key (inactive, kept for future use) |
 | `MIN_RELEVANCE_SCORE` | No | Minimum LLM score for digest inclusion (default: 0.5) |
+| `EMBEDDING_DIMENSIONS` | No | Embedding vector dimensions (default: 512). Lower values reduce storage |
 
 ## Quick Start — Deploy Your Own Instance
 
@@ -273,7 +299,9 @@ In your Vercel project, go to **Settings > Environment Variables** and add:
 | `OPENAI_API_KEY` | `sk-...` | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
 | `SYNTHETIC_API_KEY` | Your API key | [synthetic.new](https://synthetic.new) |
 
-Make sure all three are added for **Production**, **Preview**, and **Development** environments.
+Optionally, add `SESSION_SECRET` (another random string) to separate session signing from cron auth. If not set, `CRON_SECRET` is used for both.
+
+Make sure all three required keys are added for **Production**, **Preview**, and **Development** environments.
 
 ### Step 4: Redeploy
 
@@ -342,6 +370,36 @@ npm run build       # Production build
 
 Create a `.env.local` with the variables from Step 3 above, plus `POSTGRES_URL` from your Vercel database (found in Settings > Environment Variables). The schema auto-creates on first run.
 
+### Data Retention
+
+After each ingestion run, ketchup automatically cleans up old data to manage storage:
+
+- **Ingestion logs** older than 30 days are deleted
+- **Feedback events** older than 90 days are deleted
+- **User articles** from digests older than 60 days: non-interacted rows are deleted; interacted rows (liked, bookmarked, read) are preserved but detached from the digest and have scoring columns cleared
+- **Digests** older than 90 days are deleted, along with orphaned articles and embeddings
+- **Dismissed suggestions** older than 30 days are deleted
+
+Bookmarked and liked articles are never deleted — only their scoring metadata is cleared.
+
+### Resource Limits
+
+Admins can configure per-user soft limits (Settings > Admin > System Health):
+
+- **Max interests per user** (default 20)
+- **Max exclusions per user** (default 15)
+- **Max private sources per user** (default 25)
+
+Users see a warning when approaching limits. The API returns a clear 400 error when limits are exceeded.
+
+### Scaling
+
+If storage becomes tight, you can reduce embedding dimensions from 512 to 256 (or lower). This roughly halves embedding storage with minimal quality impact for the scoring use case:
+
+1. Set `EMBEDDING_DIMENSIONS=256` in your environment
+2. Run `npx tsx scripts/resize-embeddings.ts --dry-run` to preview the impact
+3. Run `npx tsx scripts/resize-embeddings.ts` to re-generate all embeddings at the new dimension
+
 ---
 
 ## Future Improvements
@@ -354,7 +412,6 @@ Create a `.env.local` with the variables from Step 3 above, plus `POSTGRES_URL` 
 - **New user digest seeding** — Trigger scoring for new users at registration using already-ingested articles (pipeline supports this, not yet wired up)
 
 ### Sources
-- **Source health monitoring** — Track fetch success rates per source, surface broken/stale feeds
 - **Auto-discovery** — Given a website URL, auto-detect its RSS feed
 - **Non-RSS sources** — Support Hacker News, Reddit, newsletters, or arbitrary web pages
 
@@ -370,7 +427,6 @@ Create a `.env.local` with the variables from Step 3 above, plus `POSTGRES_URL` 
 - **Decay old preferences** — Reduce confidence on preferences derived from old feedback
 
 ### Infrastructure
-- **Log retention policy** — Auto-delete verbose logs older than N days to manage storage
 - **Background ingestion** — Move ingestion to a queue/worker for reliability
 - **API key rotation** — Support multiple LLM providers with automatic failover
 - **Search** — Full-text search across all ingested articles

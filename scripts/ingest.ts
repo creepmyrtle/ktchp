@@ -59,6 +59,17 @@ async function main() {
     logger.log('complete', 'Pipeline finished', summary);
     await logger.persist('success', summary);
 
+    // Run retention cleanup (non-blocking — failure doesn't break pipeline)
+    try {
+      const { runRetention } = await import('@/lib/db/retention');
+      const retention = await runRetention();
+      const totalCleaned = Object.values(retention).reduce((a, b) => a + b, 0);
+      logger.log('retention', `Retention cleanup: ${totalCleaned} rows removed`, retention as unknown as Record<string, unknown>);
+      console.log('Retention cleanup:', totalCleaned > 0 ? JSON.stringify(retention) : '0 rows (nothing old enough)');
+    } catch (retentionErr) {
+      console.warn('Retention cleanup failed (non-fatal):', retentionErr);
+    }
+
     console.log('Ingestion complete:', JSON.stringify(summary, null, 2));
     process.exit(0);
   } catch (error) {

@@ -44,7 +44,7 @@ export async function generateEmbeddings(texts: string[]): Promise<EmbeddingResu
     const response = await client.embeddings.create({
       model: 'text-embedding-3-small',
       input: batch,
-      dimensions: 512,
+      dimensions: config.embeddingDimensions,
     });
     for (const item of response.data) {
       allEmbeddings.push(item.embedding);

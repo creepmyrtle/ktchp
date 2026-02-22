@@ -67,6 +67,10 @@ function parseOpml(xml: string): OpmlFeed[] {
   return feeds;
 }
 
+interface SourceLimits {
+  private_sources: { current: number; max: number };
+}
+
 export default function SourceManager() {
   const [sources, setSources] = useState<Source[]>([]);
   const [trustMap, setTrustMap] = useState<Map<string, TrustData>>(new Map());
@@ -74,6 +78,7 @@ export default function SourceManager() {
   const [importing, setImporting] = useState(false);
   const [importStatus, setImportStatus] = useState<string | null>(null);
   const [importHadAdds, setImportHadAdds] = useState(false);
+  const [limits, setLimits] = useState<SourceLimits | null>(null);
 
   const fetchSources = useCallback(async () => {
     const res = await fetch('/api/sources');
@@ -82,6 +87,13 @@ export default function SourceManager() {
     }
     setLoading(false);
   }, []);
+
+  useEffect(() => {
+    fetch('/api/limits')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setLimits(data); })
+      .catch(() => {});
+  }, [sources]);
 
   useEffect(() => { fetchSources(); }, [fetchSources]);
 
@@ -187,13 +199,21 @@ export default function SourceManager() {
     e.target.value = '';
   }
 
+  const atLimit = limits ? limits.private_sources.current >= limits.private_sources.max : false;
+
   if (loading) return <p className="text-muted text-sm">Loading...</p>;
 
   return (
     <div className="space-y-4">
       <SourcePageHeader />
 
-      <AddSourcePreCheck onSourceAdded={fetchSources} />
+      <AddSourcePreCheck onSourceAdded={fetchSources} atLimit={atLimit} />
+
+      {atLimit && limits && (
+        <p className="text-xs text-yellow-400 -mt-2">
+          Private source limit reached ({limits.private_sources.current}/{limits.private_sources.max}). Remove or disable a source to add a new one.
+        </p>
+      )}
 
       <div className="p-4 rounded-lg bg-card border border-card-border space-y-2">
         <p className="text-sm font-medium">Import from OPML</p>

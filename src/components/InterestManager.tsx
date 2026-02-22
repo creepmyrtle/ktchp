@@ -11,11 +11,16 @@ interface Interest {
   active: boolean;
 }
 
+interface Limits {
+  interests: { current: number; max: number };
+}
+
 export default function InterestManager() {
   const [interests, setInterests] = useState<Interest[]>([]);
   const [loading, setLoading] = useState(true);
   const [newCategory, setNewCategory] = useState('');
   const [newDescription, setNewDescription] = useState('');
+  const [limits, setLimits] = useState<Limits | null>(null);
 
   const fetchInterests = useCallback(async () => {
     const res = await fetch('/api/interests');
@@ -25,11 +30,20 @@ export default function InterestManager() {
     setLoading(false);
   }, []);
 
+  useEffect(() => {
+    fetch('/api/limits')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setLimits(data); })
+      .catch(() => {});
+  }, [interests]);
+
   useEffect(() => { fetchInterests(); }, [fetchInterests]);
+
+  const atLimit = limits ? limits.interests.current >= limits.interests.max : false;
 
   async function addInterest(e: React.FormEvent) {
     e.preventDefault();
-    if (!newCategory.trim()) return;
+    if (!newCategory.trim() || atLimit) return;
 
     const res = await fetch('/api/interests', {
       method: 'POST',
@@ -80,11 +94,16 @@ export default function InterestManager() {
         />
         <button
           type="submit"
-          disabled={!newCategory.trim()}
+          disabled={!newCategory.trim() || atLimit}
           className="self-end px-4 py-2 rounded bg-accent text-white text-sm hover:opacity-90 disabled:opacity-50"
         >
           Add Interest
         </button>
+        {atLimit && limits && (
+          <p className="text-xs text-yellow-400">
+            Interest limit reached ({limits.interests.current}/{limits.interests.max}). Deactivate or remove an interest to add a new one.
+          </p>
+        )}
       </form>
 
       {[...interests].sort((a, b) => a.category.localeCompare(b.category)).map(interest => (

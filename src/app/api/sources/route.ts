@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSessionFromCookies } from '@/lib/auth';
 import { getSourcesForUser, createSource } from '@/lib/db/sources';
+import { getGlobalSetting } from '@/lib/db/settings';
 import type { Source } from '@/types';
 
 type HealthStatus = 'active' | 'slow' | 'stale' | 'error' | 'new';
@@ -66,6 +67,18 @@ export async function POST(request: Request) {
     const { name, type, config } = await request.json();
     if (!name || !type || !config) {
       return NextResponse.json({ error: 'Name, type, and config required' }, { status: 400 });
+    }
+
+    // Check soft limit on private sources
+    const existing = await getSourcesForUser(userId);
+    const privateCount = existing.filter(s => !s.is_default && s.enabled).length;
+    const maxSetting = await getGlobalSetting('max_private_sources_per_user');
+    const maxSources = maxSetting ? parseInt(maxSetting, 10) : 25;
+    if (privateCount >= maxSources) {
+      return NextResponse.json(
+        { error: `Private source limit reached (${maxSources}). Remove or disable a source to add a new one.` },
+        { status: 400 }
+      );
     }
 
     const source = await createSource(userId, name, type, config);

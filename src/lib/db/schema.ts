@@ -1,4 +1,5 @@
 import { sql } from '@vercel/postgres';
+import { config } from '../config';
 
 export async function ensureSchema(): Promise<void> {
   await sql`
@@ -236,6 +237,11 @@ export async function ensureSchema(): Promise<void> {
     await sql`ALTER TABLE interests ADD COLUMN IF NOT EXISTS expanded_description TEXT`;
   } catch { /* column may already exist */ }
 
+  // Add refreshed_at to sessions for rolling refresh
+  try {
+    await sql`ALTER TABLE sessions ADD COLUMN IF NOT EXISTS refreshed_at BIGINT`;
+  } catch { /* column may already exist */ }
+
   // Add fetch error tracking and health columns to sources
   try {
     await sql`ALTER TABLE sources ADD COLUMN IF NOT EXISTS last_fetch_error TEXT`;
@@ -273,7 +279,8 @@ async function ensureEmbeddingsTable(): Promise<void> {
   // (handles case where table was created before pgvector was enabled)
   if (usePgvector) {
     try {
-      await sql`ALTER TABLE embeddings ADD COLUMN IF NOT EXISTS embedding VECTOR(512)`;
+      const dims = config.embeddingDimensions;
+      await sql.query(`ALTER TABLE embeddings ADD COLUMN IF NOT EXISTS embedding VECTOR(${dims})`);
     } catch { /* column may already exist */ }
   }
 

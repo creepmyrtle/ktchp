@@ -36,6 +36,7 @@
 - `'use client'` directive on all interactive components
 - Toast notifications via `useToast()` from `Toast.tsx` context provider
 - Swipe gestures via `useSwipeToArchive` hook with velocity detection
+- Shared utilities in `lib/utils/` (e.g., `timeAgo()` in `time.ts` — used by ArticleCard and SourceHealthIndicator)
 
 ### Database
 - Schema auto-created on first run via `initializeDatabase()` in `lib/db/index.ts`
@@ -55,6 +56,9 @@
 - Interest weights use discrete pill buttons (0, 0.2, 0.4, 0.6, 0.8, 1.0) — not sliders
 - Feedback button order reverses based on swipe direction setting
 - Card archive animation: opacity fade (300ms) → height collapse (300ms) → display:none, with scroll position preservation. CSS handles opacity only; JS handles all spatial collapse via `requestAnimationFrame`
+- Source health indicators: colored dots (active/slow/stale/error/new) with frequency and recency stats
+- Add-source pre-check: validates feed URL before saving (idle → checking → result → adding → added state machine)
+- Source page header: permanent explainer + collapsible tips section
 
 ### Scoring Pipeline
 - Two-stage: embedding prefilter → LLM refinement
@@ -76,7 +80,8 @@
 - `src/hooks/` — Custom React hooks
 - `src/lib/` — Server-side logic (no React)
   - `lib/db/` — Database queries (one file per table/domain)
-  - `lib/ingestion/` — RSS fetching and article storage
+  - `lib/utils/` — Shared utilities (`time.ts`)
+  - `lib/ingestion/` — RSS fetching, article storage, error categorization, feed validation
   - `lib/relevance/` — Scoring pipeline (prefilter → embed → LLM → digest)
   - `lib/affinity.ts` — Weekly LLM-based interest discovery from feedback
   - `lib/interest-expansion.ts` — LLM expansion of interest descriptions for embedding

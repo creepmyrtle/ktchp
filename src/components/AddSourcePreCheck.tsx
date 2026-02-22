@@ -16,9 +16,10 @@ type FlowState = 'idle' | 'checking' | 'result' | 'adding' | 'added';
 
 interface AddSourcePreCheckProps {
   onSourceAdded: () => void;
+  atLimit?: boolean;
 }
 
-export default function AddSourcePreCheck({ onSourceAdded }: AddSourcePreCheckProps) {
+export default function AddSourcePreCheck({ onSourceAdded, atLimit = false }: AddSourcePreCheckProps) {
   const [state, setState] = useState<FlowState>('idle');
   const [feedUrl, setFeedUrl] = useState('');
   const [feedName, setFeedName] = useState('');
@@ -105,7 +106,7 @@ export default function AddSourcePreCheck({ onSourceAdded }: AddSourcePreCheckPr
     setState('idle');
   }
 
-  const isDisabled = state === 'checking' || state === 'adding' || state === 'added';
+  const isDisabled = state === 'checking' || state === 'adding' || state === 'added' || atLimit;
 
   return (
     <div className="p-4 rounded-lg bg-card border border-card-border space-y-2">

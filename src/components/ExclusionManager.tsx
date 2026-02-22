@@ -8,11 +8,16 @@ interface Exclusion {
   description: string | null;
 }
 
+interface Limits {
+  exclusions: { current: number; max: number };
+}
+
 export default function ExclusionManager() {
   const [exclusions, setExclusions] = useState<Exclusion[]>([]);
   const [loading, setLoading] = useState(true);
   const [newCategory, setNewCategory] = useState('');
   const [newDescription, setNewDescription] = useState('');
+  const [limits, setLimits] = useState<Limits | null>(null);
 
   const fetchExclusions = useCallback(async () => {
     const res = await fetch('/api/exclusions');
@@ -22,11 +27,20 @@ export default function ExclusionManager() {
     setLoading(false);
   }, []);
 
+  useEffect(() => {
+    fetch('/api/limits')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setLimits(data); })
+      .catch(() => {});
+  }, [exclusions]);
+
   useEffect(() => { fetchExclusions(); }, [fetchExclusions]);
+
+  const atLimit = limits ? limits.exclusions.current >= limits.exclusions.max : false;
 
   async function addExclusion(e: React.FormEvent) {
     e.preventDefault();
-    if (!newCategory.trim()) return;
+    if (!newCategory.trim() || atLimit) return;
 
     const res = await fetch('/api/exclusions', {
       method: 'POST',
@@ -73,11 +87,16 @@ export default function ExclusionManager() {
         />
         <button
           type="submit"
-          disabled={!newCategory.trim()}
+          disabled={!newCategory.trim() || atLimit}
           className="self-end px-4 py-2 rounded bg-accent text-white text-sm hover:opacity-90 disabled:opacity-50"
         >
           Add Exclusion
         </button>
+        {atLimit && limits && (
+          <p className="text-xs text-yellow-400">
+            Exclusion limit reached ({limits.exclusions.current}/{limits.exclusions.max}). Remove an exclusion to add a new one.
+          </p>
+        )}
       </form>
 
       {exclusions.map(exclusion => (

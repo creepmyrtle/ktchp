@@ -3,6 +3,7 @@ import { getSessionFromCookies } from '@/lib/auth';
 import { getExclusionsByUserId, createExclusion, updateExclusion } from '@/lib/db/exclusions';
 import { generateEmbedding, storeEmbedding, buildInterestEmbeddingText } from '@/lib/embeddings';
 import { expandInterestDescription } from '@/lib/interest-expansion';
+import { getGlobalSetting } from '@/lib/db/settings';
 
 export async function GET() {
   try {
@@ -29,6 +30,17 @@ export async function POST(request: Request) {
     const { category, description } = await request.json();
     if (!category) {
       return NextResponse.json({ error: 'Category required' }, { status: 400 });
+    }
+
+    // Check soft limit
+    const existing = await getExclusionsByUserId(userId);
+    const maxSetting = await getGlobalSetting('max_exclusions_per_user');
+    const maxExclusions = maxSetting ? parseInt(maxSetting, 10) : 15;
+    if (existing.length >= maxExclusions) {
+      return NextResponse.json(
+        { error: `Exclusion limit reached (${maxExclusions}). Remove an exclusion to add a new one.` },
+        { status: 400 }
+      );
     }
 
     const exclusion = await createExclusion(userId, category, description || null);

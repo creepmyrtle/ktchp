@@ -135,6 +135,8 @@ export interface CostByUser {
   display_name: string;
   source_count: number;
   private_source_count: number;
+  interest_count: number;
+  exclusion_count: number;
   articles_ingested: number;
   articles_sent_to_llm: number;
   llm_tokens: number;
@@ -172,7 +174,13 @@ export async function getCostByUser(days: number, rates: CostRates): Promise<Cos
       ) as source_count,
       (SELECT COUNT(*) FROM sources s
         WHERE s.user_id = u.id AND s.is_default = FALSE AND s.enabled = TRUE
-      ) as private_source_count
+      ) as private_source_count,
+      (SELECT COUNT(*) FROM interests i
+        WHERE i.user_id = u.id AND i.active = TRUE
+      ) as interest_count,
+      (SELECT COUNT(*) FROM exclusions e
+        WHERE e.user_id = u.id
+      ) as exclusion_count
     FROM users u
     WHERE u.is_active = TRUE
   `;
@@ -207,6 +215,8 @@ export async function getCostByUser(days: number, rates: CostRates): Promise<Cos
       display_name: user.display_name || user.username,
       source_count: parseInt(user.source_count, 10),
       private_source_count: parseInt(user.private_source_count, 10),
+      interest_count: parseInt(user.interest_count, 10),
+      exclusion_count: parseInt(user.exclusion_count, 10),
       articles_ingested: articleMap.get(tr.user_id) || 0,
       articles_sent_to_llm: parseInt(tr.sent_to_llm, 10),
       llm_tokens: totalTokens,

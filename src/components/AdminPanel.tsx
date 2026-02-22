@@ -6,8 +6,9 @@ import InviteCodeManager from './InviteCodeManager';
 import ScoringSettings from './ScoringSettings';
 import AnalyticsDashboard from './AnalyticsDashboard';
 import CostDashboard from './CostDashboard';
+import SystemHealth from './SystemHealth';
 
-const ADMIN_TABS = ['Users', 'Invite Codes', 'Scoring', 'Analytics'] as const;
+const ADMIN_TABS = ['Users', 'Invite Codes', 'Scoring', 'Analytics', 'System Health'] as const;
 type AdminTab = (typeof ADMIN_TABS)[number];
 
 export default function AdminPanel() {
@@ -42,6 +43,7 @@ export default function AdminPanel() {
           </div>
         </div>
       )}
+      {activeTab === 'System Health' && <SystemHealth />}
     </div>
   );
 }
