@@ -95,7 +95,7 @@ export default function ArticleCard({ article, swipeDirection = 'right', tier, o
       className={`flex-shrink-0 flex items-center rounded-lg opacity-0 ${
         swipeDirection === 'right' ? 'justify-end pr-6' : 'justify-start pl-6'
       } ${sentiment ? 'bg-success/20' : 'bg-serendipity/20'}`}
-      style={{ width: `50px` }} //TODO don't hardcode this
+      style={{ width: '120px' }}
     >
       <span className="text-xl">{sentiment ? '\u2713' : '\u26A0'}</span>
     </div>

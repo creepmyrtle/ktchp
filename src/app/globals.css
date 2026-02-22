@@ -89,7 +89,10 @@ body {
 /* Hide scrollbar on swipe containers */
 .swipe-scroll {
   scrollbar-width: none;
-  touch-action: pan-y; /* NOTE prevent swiping on X-axis */
+  -ms-overflow-style: none;
+}
+.swipe-scroll::-webkit-scrollbar {
+  display: none;
 }
 
 /* Custom scrollbar */
@@ -126,21 +129,4 @@ body {
 }
 .scrollbar-none::-webkit-scrollbar {
   display: none;
-}
-
-
-/* SECTION Wrapper */
-.swipe-card-wrapper {
-  display: grid;
-  grid-template-rows: 1fr;
-  transition: grid-template-rows 300ms cubic-bezier(0.4, 0, 0.2, 1);
-  will-change: grid-template-rows;
-}
-
-.swipe-card-wrapper.collapsed {
-  grid-template-rows: 0fr;
-}
-
-.swipe-card-inner {
-  overflow: hidden; 
 }
