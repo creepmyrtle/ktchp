@@ -8,12 +8,7 @@ export default function SourcePageHeader() {
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted leading-relaxed">
-        ketchup checks your sources daily and scores new articles against
-        your interests. For best results, add sources that publish
-        frequently — daily news sites, active blogs, and feeds with
-        regular new content work best. Once you&apos;ve rated 5+ articles from
-        a source, a trust rating (dots) will appear — sources you
-        consistently enjoy get a small boost in your digest scoring.
+        Sources are checked daily and scored against your interests. Add feeds that publish frequently for best results.
       </p>
 
       <div>
