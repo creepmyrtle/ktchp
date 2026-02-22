@@ -110,16 +110,10 @@ body {
   animation: fadeUp 0.4s ease-out;
 }
 
-/* Archive exit animation */
+/* Archive exit animation — opacity fade only; spatial collapse handled by JS on the wrapper */
 .card-archiving {
   opacity: 0;
-  max-height: 0;
-  margin-top: 0;
-  margin-bottom: 0;
-  padding-top: 0;
-  padding-bottom: 0;
-  overflow: hidden;
-  transition: opacity 200ms ease, max-height 300ms ease 100ms, margin 300ms ease 100ms, padding 300ms ease 100ms;
+  transition: opacity 300ms ease;
 }
 
 /* Scrollbar-hiding utility */

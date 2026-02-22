@@ -30,35 +30,35 @@ export default function ArticleCard({ article, swipeDirection = 'right', tier, o
       body: JSON.stringify({ articleId: article.article_id, action: 'archived' }),
     });
 
-    // Pin the wrapper height so collapse can transition smoothly
     const wrapper = wrapperRef.current;
-    if (wrapper) {
-      wrapper.style.height = `${wrapper.offsetHeight}px`;
-    }
-
-    // Capture scroll position before animation starts
     const savedScrollY = window.scrollY;
 
-    setArchiving(true);
-
-    // After fade, collapse the space smoothly
-    setTimeout(() => {
+    // Pin wrapper height in a rAF to batch the read/write and avoid DOM thrashing
+    requestAnimationFrame(() => {
       if (wrapper) {
-        wrapper.style.transition = 'height 300ms ease-out';
-        wrapper.style.height = '0px';
-        wrapper.style.overflow = 'hidden';
-        // After collapse, fully remove from layout and notify parent
-        setTimeout(() => {
-          if (wrapper) wrapper.style.display = 'none';
-          // Restore scroll position if the collapse caused a shift
-          if (window.scrollY !== savedScrollY) {
-            window.scrollTo(0, savedScrollY);
-          }
-          setArchived(true);
-          onArchived?.();
-        }, 300);
+        wrapper.style.height = `${wrapper.offsetHeight}px`;
       }
-    }, 400);
+
+      setArchiving(true);
+
+      // After opacity fade (300ms), collapse the space
+      setTimeout(() => {
+        if (wrapper) {
+          wrapper.style.transition = 'height 300ms ease-out';
+          wrapper.style.height = '0px';
+          wrapper.style.overflow = 'hidden';
+          // After collapse, remove from layout and notify parent
+          setTimeout(() => {
+            if (wrapper) wrapper.style.display = 'none';
+            if (window.scrollY !== savedScrollY) {
+              window.scrollTo(0, savedScrollY);
+            }
+            setArchived(true);
+            onArchived?.();
+          }, 300);
+        }
+      }, 300);
+    });
   }, [article.article_id, onArchived]);
 
   function handleSwipeBlocked() {
