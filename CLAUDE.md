@@ -11,11 +11,11 @@
 
 - Next.js 16 (App Router, React 19, Turbopack)
 - Vercel Postgres (Neon) with pgvector
-- OpenAI `text-embedding-3-small` (512d) for embeddings
+- OpenAI `text-embedding-3-small` (configurable dimensions, default 512) for embeddings
 - Kimi K2.5 via Synthetic API for LLM scoring (OpenAI-compatible client)
 - Tailwind CSS 4, dark theme only
 - Fonts: DM Sans (body) + JetBrains Mono (mono)
-- Auth: bcrypt + httpOnly session cookies (HMAC-SHA256, 7-day expiry)
+- Auth: bcrypt + httpOnly session cookies (HMAC-SHA256, 7-day rolling expiry with automatic refresh at 3.5 days)
 
 ## Architecture Patterns
 
@@ -23,13 +23,16 @@
 - **Articles are shared**, stored once in `articles` table regardless of user count
 - **Per-user state** lives in `user_articles` (scores, sentiment, bookmarks, archive, digest assignment)
 - **Ingestion and scoring are decoupled** — RSS fetching is global, relevance scoring is per-user
-- **Embeddings are ephemeral** — article embeddings pruned after 7 days, interest embeddings kept permanently
+- **Embeddings are ephemeral** — article embeddings pruned after 7 days, interest/exclusion embeddings kept permanently
+- **Retention is automatic** — old logs (30d), feedback (90d), uninteracted user_articles (60d), digests (90d), orphaned articles/embeddings cleaned after each ingestion
 
 ### API Routes
 - All admin routes use `requireAdmin()` server-side check
 - Auth check pattern: `const userId = await getSessionFromCookies(); if (!userId) return 401;`
 - Logout uses 303 redirect (not 307) to convert POST → GET
 - Settings stored in key-value `settings` table with `user_id` scope (or `'global'`)
+- Soft resource limits enforced on POST for interests, exclusions, and sources (400 with clear message)
+- Session tokens auto-refresh after 3.5 days of use (transparent to callers)
 
 ### Components
 - Server components for pages (data fetching), client components for interactivity
@@ -39,8 +42,9 @@
 - Shared utilities in `lib/utils/` (e.g., `timeAgo()` in `time.ts` — used by ArticleCard and SourceHealthIndicator)
 
 ### Database
-- Schema auto-created on first run via `initializeDatabase()` in `lib/db/index.ts`
+- Schema auto-created on first run via `getDb()` → `ensureSchema()` in `lib/db/index.ts` / `lib/db/schema.ts`
 - pgvector with JSONB fallback (auto-detected)
+- Automatic data retention runs after each ingestion (see `lib/db/retention.ts`)
 - User deletion cascades manually through all 10+ referencing tables (see `deleteUser` in `users.ts`)
 - Invite codes track `used_by_username` via LEFT JOIN (not denormalized)
 
@@ -76,10 +80,18 @@
 ## File Organization
 
 - `src/app/` — Pages and API routes (Next.js App Router)
+  - `api/admin/` — Admin-only routes: users, invite codes, analytics, costs, limits, storage, user overview
+  - `api/limits/` — User-facing resource limits and current counts
 - `src/components/` — Client components (one per file, default export)
+  - Key admin components: `AdminPanel.tsx`, `SystemHealth.tsx`, `CostDashboard.tsx`, `AnalyticsDashboard.tsx`
 - `src/hooks/` — Custom React hooks
 - `src/lib/` — Server-side logic (no React)
+  - `lib/config.ts` — Environment config (API keys, session secret, embedding dimensions, thresholds)
+  - `lib/auth.ts` — Session management with rolling refresh, cron auth, cookie handling
   - `lib/db/` — Database queries (one file per table/domain)
+    - `lib/db/retention.ts` — Automatic data retention cleanup (runs after ingestion)
+    - `lib/db/cost-analytics.ts` — Per-user/per-source cost tracking and pipeline efficiency
+    - `lib/db/analytics.ts` — Scoring analytics (tier feedback, score bands, interest accuracy)
   - `lib/utils/` — Shared utilities (`time.ts`)
   - `lib/ingestion/` — RSS fetching, article storage, error categorization, feed validation
   - `lib/relevance/` — Scoring pipeline (prefilter → embed → LLM → digest)
@@ -89,9 +101,11 @@
 - `src/types/` — Shared TypeScript interfaces
 - `scripts/` — Standalone CLI scripts (run via `npx tsx`)
   - `scripts/prefilter-debug.ts` — Dry-run prefilter analysis per user (read-only, no DB changes)
+  - `scripts/resize-embeddings.ts` — Re-generate embeddings at new dimensions (`--dry-run` to preview)
 
 ## Environment
 
 - Production: Vercel (app) + GitHub Actions (daily cron at 5 AM CT)
 - Database: Vercel Postgres (Neon) — free tier, 256 MB limit
 - Required env vars: `POSTGRES_URL`, `CRON_SECRET`, `SYNTHETIC_API_KEY`, `OPENAI_API_KEY`
+- Optional env vars: `SESSION_SECRET` (separate session signing from cron auth), `EMBEDDING_DIMENSIONS` (default 512), `MIN_RELEVANCE_SCORE` (default 0.5)

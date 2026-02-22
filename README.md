@@ -171,6 +171,7 @@ src/
 │   │   ├── users.ts              # User CRUD, full cascading delete, active user queries
 │   │   ├── invite-codes.ts       # Invite code CRUD with username join
 │   │   ├── ingestion-logs.ts     # Ingestion log CRUD
+│   │   ├── analytics.ts          # Scoring analytics (tier feedback, score bands, interest accuracy)
 │   │   ├── retention.ts          # Automatic data retention cleanup (runs after ingestion)
 │   │   └── cost-analytics.ts     # Cost tracking and per-user analytics
 │   ├── utils/
@@ -202,7 +203,7 @@ Vercel Postgres (Neon) with pgvector extension.
 | `user_source_settings` | Per-user enable/disable toggle for default sources |
 | `articles` | Ingested articles (shared content only — title, URL, raw content, provider, semantic duplicate flag) |
 | `user_articles` | Per-user article state: relevance score, embedding score, reason, serendipity flag, sentiment, read, bookmark, archive, digest assignment |
-| `embeddings` | Vector embeddings for articles, interests, and exclusions (pgvector VECTOR(512) + JSONB fallback) |
+| `embeddings` | Vector embeddings for articles, interests, and exclusions (pgvector VECTOR + JSONB fallback, configurable dimensions) |
 | `digests` | Generated digests with timestamp and article count, scoped per user |
 | `interests` | User interest categories with descriptions, expanded descriptions, and weights |
 | `exclusions` | User-defined excluded topics with category, description, and expanded description |
@@ -216,7 +217,7 @@ Vercel Postgres (Neon) with pgvector extension.
 
 ### Storage Notes
 
-**Embedding storage**: Each 512-dimension vector uses ~2 KB. At ~200 articles/day, this would grow to ~190 MB/year if left unchecked. To manage this on the free tier (256 MB):
+**Embedding storage**: Each vector uses ~4 bytes per dimension (e.g., 512d = ~2 KB, 256d = ~1 KB). At ~200 articles/day with default dimensions, this would grow to ~190 MB/year if left unchecked. To manage this on the free tier (256 MB):
 
 - **Automatic pruning**: Article embeddings older than 7 days are automatically deleted after each scoring run. Once all users have been scored, the embedding has served its purpose.
 - **Interest and exclusion embeddings** are never pruned (just a handful of rows each).
@@ -246,7 +247,7 @@ Standalone scripts run via `npx tsx scripts/<name>.ts`. All load `.env.local` au
 
 - **Framework**: Next.js 16 (App Router, React 19, Turbopack)
 - **Database**: Vercel Postgres (Neon) with pgvector
-- **Embeddings**: OpenAI `text-embedding-3-small` (512 dimensions)
+- **Embeddings**: OpenAI `text-embedding-3-small` (configurable dimensions, default 512)
 - **LLM**: Kimi K2.5 via Synthetic API (OpenAI-compatible). Anthropic Claude infrastructure preserved but inactive.
 - **Styling**: Tailwind CSS 4, dark theme (DM Sans + JetBrains Mono)
 - **Deployment**: Vercel (hosting) + GitHub Actions (daily cron at 5 AM CT)
@@ -369,6 +370,8 @@ npm run build       # Production build
 ```
 
 Create a `.env.local` with the variables from Step 3 above, plus `POSTGRES_URL` from your Vercel database (found in Settings > Environment Variables). The schema auto-creates on first run.
+
+## Operations
 
 ### Data Retention
 
