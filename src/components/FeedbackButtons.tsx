@@ -12,8 +12,6 @@ interface ActionBarProps {
   reversed?: boolean;
   onArchive: () => void;
   onSentimentChange?: (sentiment: Sentiment | null) => void;
-  /** When true, hides sentiment buttons and archive — shows only bookmark + share (for touch devices where swipe handles those) */
-  hideDesktopControls?: boolean;
 }
 
 export default function ActionBar({
@@ -24,7 +22,6 @@ export default function ActionBar({
   reversed = false,
   onArchive,
   onSentimentChange,
-  hideDesktopControls = false,
 }: ActionBarProps) {
   const [sentiment, setSentiment] = useState<Sentiment | null>(initialSentiment);
   const [isBookmarked, setIsBookmarked] = useState(initialIsBookmarked);
@@ -89,24 +86,10 @@ export default function ActionBar({
     </button>
   );
 
-  // On touch devices, only show bookmark + share (swipe handles sentiment + archive)
-  if (hideDesktopControls) {
-    return (
-      <div className="flex items-center gap-0.5">
-        <button onClick={handleBookmark} className={iconBtnClass(isBookmarked)} title={isBookmarked ? 'Remove bookmark' : 'Bookmark'}>
-          {isBookmarked ? '\uD83D\uDD16' : '\uD83D\uDCCC'}
-        </button>
-        <button onClick={handleShare} className={iconBtnClass(false)} title="Copy link">
-          &#x1F517;
-        </button>
-      </div>
-    );
-  }
-
   return (
     <div className="flex items-center gap-0.5 sm:gap-1 flex-wrap">
-      {/* Sentiment group — order swaps when reversed */}
-      <div className="flex items-center border border-card-border rounded-lg overflow-hidden">
+      {/* Sentiment group — hidden on mobile (swipe handles this), visible on desktop */}
+      <div className="hidden sm:flex items-center border border-card-border rounded-lg overflow-hidden">
         {reversed ? <>{skipBtn}{likeBtn}</> : <>{likeBtn}{skipBtn}</>}
       </div>
 
@@ -120,8 +103,8 @@ export default function ActionBar({
         &#x1F517;
       </button>
 
-      {/* Archive */}
-      <button onClick={onArchive} className={`${iconBtnClass(false)} hover:text-success hover:bg-success/10`} title="Archive">
+      {/* Archive — hidden on mobile (swipe handles this), visible on desktop */}
+      <button onClick={onArchive} className={`${iconBtnClass(false)} hover:text-success hover:bg-success/10 hidden sm:inline-flex`} title="Archive">
         &#x1F4E5;
       </button>
     </div>

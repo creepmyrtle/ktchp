@@ -242,32 +242,15 @@ export default function ArticleCard({ article, reversed = false, tier, onArchive
                 <span className="text-xs text-muted">
                   {timeAgo(article.published_at)}
                 </span>
-                {/* On touch devices: hide sentiment/archive buttons, show only bookmark+share.
-                    On desktop: show full button layout */}
-                {isTouchDevice ? (
-                  <div className="flex items-center gap-0.5">
-                    <ActionBar
-                      articleId={article.article_id}
-                      articleUrl={article.url}
-                      initialSentiment={article.sentiment}
-                      initialIsBookmarked={article.is_bookmarked}
-                      reversed={reversed}
-                      onArchive={handleArchive}
-                      onSentimentChange={(s) => setSentiment(s)}
-                      hideDesktopControls
-                    />
-                  </div>
-                ) : (
                   <ActionBar
-                    articleId={article.article_id}
-                    articleUrl={article.url}
-                    initialSentiment={article.sentiment}
-                    initialIsBookmarked={article.is_bookmarked}
-                    reversed={reversed}
-                    onArchive={handleArchive}
-                    onSentimentChange={(s) => setSentiment(s)}
-                  />
-                )}
+                  articleId={article.article_id}
+                  articleUrl={article.url}
+                  initialSentiment={article.sentiment}
+                  initialIsBookmarked={article.is_bookmarked}
+                  reversed={reversed}
+                  onArchive={handleArchive}
+                  onSentimentChange={(s) => setSentiment(s)}
+                />
               </div>
             </div>
           </div>
