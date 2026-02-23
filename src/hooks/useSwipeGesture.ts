@@ -12,6 +12,8 @@ interface SwipeGestureState {
   isSwiping: boolean;
   swipeDirection: 'left' | 'right' | null;
   progress: number;
+  /** Reset all swipe state — call this when restoring a card after undo */
+  reset: () => void;
 }
 
 interface TouchRecord {
@@ -177,5 +179,16 @@ export function useSwipeGesture({
     };
   }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { cardRef, style, isSwiping, swipeDirection, progress };
+  function reset() {
+    committed.current = false;
+    locked.current = null;
+    deltaX.current = 0;
+    history.current = [];
+    setStyle({});
+    setIsSwiping(false);
+    setSwipeDirection(null);
+    setProgress(0);
+  }
+
+  return { cardRef, style, isSwiping, swipeDirection, progress, reset };
 }

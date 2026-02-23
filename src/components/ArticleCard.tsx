@@ -37,7 +37,11 @@ export default function ArticleCard({ article, reversed = false, tier, onArchive
     return () => window.removeEventListener('touchstart', onTouch);
   }, []);
 
-  const collapseAndArchive = useCallback((toastMessage?: string, toastSentiment?: Sentiment | null) => {
+  // Use a ref for the undo handler to break the circular dependency:
+  // handleUndo → resetSwipe (from hook) → handleSwipeCommit → collapseAndArchive → handleUndo
+  const handleUndoRef = useRef<() => void>(() => {});
+
+  const collapseAndArchive = useCallback((toastMessage?: string) => {
     const wrapper = wrapperRef.current;
     const savedScrollY = window.scrollY;
 
@@ -66,36 +70,14 @@ export default function ArticleCard({ article, reversed = false, tier, onArchive
             if (toastMessage) {
               showToast(toastMessage, 'success', {
                 label: 'Undo',
-                onClick: () => handleUndo(toastSentiment ?? null),
+                onClick: () => handleUndoRef.current(),
               });
             }
           }, 300);
         }
       }, 300);
     });
-  }, [onArchived, showToast]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleUndo = useCallback((prevSentiment: Sentiment | null) => {
-    // Fire unarchive API
-    fetch('/api/feedback', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ articleId: article.article_id, action: 'unarchived' }),
-    });
-
-    const wrapper = wrapperRef.current;
-    if (wrapper) {
-      wrapper.style.display = '';
-      wrapper.style.transition = 'height 300ms ease-out';
-      wrapper.style.height = '';
-      wrapper.style.overflow = '';
-    }
-
-    setArchived(false);
-    setArchiving(false);
-    setSentiment(prevSentiment);
-    onUnarchived?.();
-  }, [article.article_id, onUnarchived]);
+  }, [onArchived, showToast]);
 
   // Desktop archive handler (from button)
   const handleArchive = useCallback(() => {
@@ -132,14 +114,38 @@ export default function ArticleCard({ article, reversed = false, tier, onArchive
     });
 
     const label = swipeSentiment === 'liked' ? 'Liked + archived' : 'Skipped + archived';
-    collapseAndArchive(label, swipeSentiment);
+    collapseAndArchive(label);
   }, [article.article_id, reversed, collapseAndArchive]);
 
-  const { cardRef, style: swipeStyle, isSwiping, swipeDirection, progress } = useSwipeGesture({
+  const { cardRef, style: swipeStyle, isSwiping, swipeDirection, progress, reset: resetSwipe } = useSwipeGesture({
     onSwipeCommit: handleSwipeCommit,
     reversed,
     enabled: !archiving && !archived && isTouchDevice,
   });
+
+  // Wire up the undo handler now that resetSwipe is available
+  handleUndoRef.current = () => {
+    fetch('/api/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ articleId: article.article_id, action: 'unarchived' }),
+    });
+
+    resetSwipe();
+
+    const wrapper = wrapperRef.current;
+    if (wrapper) {
+      wrapper.style.display = '';
+      wrapper.style.transition = 'height 300ms ease-out';
+      wrapper.style.height = '';
+      wrapper.style.overflow = '';
+    }
+
+    setArchived(false);
+    setArchiving(false);
+    setSentiment(null);
+    onUnarchived?.();
+  };
 
   // Auto-track read on link click
   function handleLinkClick() {
