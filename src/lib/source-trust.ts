@@ -10,8 +10,7 @@ const DEFAULT_TRUST_MAX = 1.2;
 interface SourceFeedbackStats {
   source_id: string;
   liked: number;
-  neutral: number;
-  disliked: number;
+  skipped: number;
   total: number;
 }
 
@@ -20,8 +19,7 @@ async function getSourceFeedbackStats(userId: string, daysBack: number = 60): Pr
     SELECT
       a.source_id,
       COUNT(*) FILTER (WHERE ua.sentiment = 'liked') as liked,
-      COUNT(*) FILTER (WHERE ua.sentiment = 'neutral') as neutral,
-      COUNT(*) FILTER (WHERE ua.sentiment = 'disliked') as disliked,
+      COUNT(*) FILTER (WHERE ua.sentiment = 'skipped') as skipped,
       COUNT(*) as total
     FROM user_articles ua
     JOIN articles a ON ua.article_id = a.id
@@ -33,8 +31,7 @@ async function getSourceFeedbackStats(userId: string, daysBack: number = 60): Pr
   return rows.map(r => ({
     source_id: r.source_id,
     liked: parseInt(r.liked, 10),
-    neutral: parseInt(r.neutral, 10),
-    disliked: parseInt(r.disliked, 10),
+    skipped: parseInt(r.skipped, 10),
     total: parseInt(r.total, 10),
   }));
 }
@@ -62,8 +59,9 @@ export async function recomputeSourceTrust(userId: string, logger?: IngestionLog
       continue;
     }
 
-    // Compute sentiment score from -1 (all disliked) to +1 (all liked)
-    const sentimentScore = (s.liked - s.disliked) / s.total;
+    // Compute sentiment score: skipped applies half the penalty of the old "disliked"
+    // Range: -0.5 (all skipped) to +1.0 (all liked)
+    const sentimentScore = (s.liked - 0.5 * s.skipped) / s.total;
 
     // Map to trust multiplier range
     const range = trustMax - trustMin;

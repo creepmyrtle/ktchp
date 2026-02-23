@@ -2,8 +2,7 @@ interface CaughtUpMessageProps {
   isComplete?: boolean;
   totalCount?: number;
   likedCount?: number;
-  neutralCount?: number;
-  dislikedCount?: number;
+  skippedCount?: number;
   bookmarkedCount?: number;
 }
 
@@ -11,8 +10,7 @@ export default function CaughtUpMessage({
   isComplete,
   totalCount,
   likedCount,
-  neutralCount,
-  dislikedCount,
+  skippedCount,
   bookmarkedCount,
 }: CaughtUpMessageProps) {
   if (isComplete && totalCount && totalCount > 0) {
@@ -24,7 +22,7 @@ export default function CaughtUpMessage({
           You processed all {totalCount} articles.
         </p>
         <p className="text-muted text-xs mt-1">
-          {likedCount || 0} liked &middot; {neutralCount || 0} neutral &middot; {dislikedCount || 0} disliked &middot; {bookmarkedCount || 0} bookmarked
+          {likedCount || 0} liked &middot; {skippedCount || 0} skipped &middot; {bookmarkedCount || 0} bookmarked
         </p>
         <p className="text-muted text-xs mt-3">
           Next digest: ~5:00 AM CT

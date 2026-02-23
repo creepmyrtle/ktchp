@@ -7,8 +7,14 @@ export async function GET() {
     const userId = await getSessionFromCookies();
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const direction = (await getSetting(userId, 'swipe_archive_direction')) || 'right';
-    return NextResponse.json({ direction });
+    const reversedStr = await getSetting(userId, 'swipe_reversed');
+    // Migration: if old direction setting exists, convert it
+    if (reversedStr === null) {
+      const oldDirection = await getSetting(userId, 'swipe_archive_direction');
+      const reversed = oldDirection === 'left';
+      return NextResponse.json({ reversed });
+    }
+    return NextResponse.json({ reversed: reversedStr === 'true' });
   } catch (error) {
     console.error('Get swipe setting error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -20,13 +26,13 @@ export async function PUT(request: Request) {
     const userId = await getSessionFromCookies();
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { direction } = await request.json();
-    if (direction !== 'right' && direction !== 'left') {
-      return NextResponse.json({ error: 'Invalid direction' }, { status: 400 });
+    const { reversed } = await request.json();
+    if (typeof reversed !== 'boolean') {
+      return NextResponse.json({ error: 'Invalid value' }, { status: 400 });
     }
 
-    await setSetting(userId, 'swipe_archive_direction', direction);
-    return NextResponse.json({ success: true, direction });
+    await setSetting(userId, 'swipe_reversed', String(reversed));
+    return NextResponse.json({ success: true, reversed });
   } catch (error) {
     console.error('Set swipe setting error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

@@ -7,8 +7,7 @@ interface TierFeedback {
   total: number;
   rated: number;
   liked: number;
-  neutral: number;
-  disliked: number;
+  skipped: number;
   bookmarked: number;
 }
 
@@ -16,8 +15,7 @@ interface ScoreBand {
   band: string;
   count: number;
   liked: number;
-  neutral: number;
-  disliked: number;
+  skipped: number;
   avg_sentiment: number;
 }
 
@@ -25,7 +23,7 @@ interface InterestAccuracy {
   category: string;
   total: number;
   liked: number;
-  disliked: number;
+  skipped: number;
   accuracy: number;
 }
 
@@ -38,7 +36,7 @@ interface Correlation {
 interface ThresholdRec {
   current_threshold: number;
   bonus_like_rate: number | null;
-  recommended_dislike_rate: number | null;
+  recommended_skip_rate: number | null;
   suggestion: string | null;
   suggested_threshold: number | null;
 }
@@ -127,8 +125,7 @@ export default function AnalyticsDashboard() {
                   <th className="text-right py-1.5 px-2 font-normal">Articles</th>
                   <th className="text-right py-1.5 px-2 font-normal">Rated</th>
                   <th className="text-right py-1.5 px-2 font-normal">Liked</th>
-                  <th className="text-right py-1.5 px-2 font-normal">Neutral</th>
-                  <th className="text-right py-1.5 px-2 font-normal">Disliked</th>
+                  <th className="text-right py-1.5 px-2 font-normal">Skipped</th>
                   <th className="text-right py-1.5 pl-2 font-normal">Bookmarked</th>
                 </tr>
               </thead>
@@ -139,8 +136,7 @@ export default function AnalyticsDashboard() {
                     <td className="text-right py-1.5 px-2 text-muted">{t.total}</td>
                     <td className="text-right py-1.5 px-2 text-muted">{t.rated}</td>
                     <td className="text-right py-1.5 px-2 text-green-400">{pct(t.liked, t.rated)}</td>
-                    <td className="text-right py-1.5 px-2 text-muted">{pct(t.neutral, t.rated)}</td>
-                    <td className="text-right py-1.5 px-2 text-red-400">{pct(t.disliked, t.rated)}</td>
+                    <td className="text-right py-1.5 px-2 text-muted">{pct(t.skipped, t.rated)}</td>
                     <td className="text-right py-1.5 pl-2 text-muted">{pct(t.bookmarked, t.total)}</td>
                   </tr>
                 ))}
@@ -196,7 +192,7 @@ export default function AnalyticsDashboard() {
                   <th className="text-left py-1.5 pr-3 font-normal">Interest</th>
                   <th className="text-right py-1.5 px-2 font-normal">Articles</th>
                   <th className="text-right py-1.5 px-2 font-normal">Liked</th>
-                  <th className="text-right py-1.5 px-2 font-normal">Disliked</th>
+                  <th className="text-right py-1.5 px-2 font-normal">Skipped</th>
                   <th className="text-right py-1.5 pl-2 font-normal">Accuracy</th>
                 </tr>
               </thead>
@@ -206,7 +202,7 @@ export default function AnalyticsDashboard() {
                     <td className="py-1.5 pr-3 text-foreground">{ia.category}</td>
                     <td className="text-right py-1.5 px-2 text-muted">{ia.total}</td>
                     <td className="text-right py-1.5 px-2 text-green-400">{ia.liked}</td>
-                    <td className="text-right py-1.5 px-2 text-red-400">{ia.disliked}</td>
+                    <td className="text-right py-1.5 px-2 text-muted">{ia.skipped}</td>
                     <td className={`text-right py-1.5 pl-2 font-medium ${
                       ia.accuracy >= 0.7 ? 'text-green-400' : ia.accuracy >= 0.4 ? 'text-yellow-400' : 'text-red-400'
                     }`}>

@@ -64,7 +64,7 @@ export async function ensureSchema(): Promise<void> {
       relevance_score REAL,
       relevance_reason TEXT,
       is_serendipity BOOLEAN DEFAULT FALSE,
-      sentiment TEXT CHECK (sentiment IN ('liked', 'neutral', 'disliked')),
+      sentiment TEXT CHECK (sentiment IN ('liked', 'skipped')),
       is_read BOOLEAN DEFAULT FALSE,
       is_bookmarked BOOLEAN DEFAULT FALSE,
       is_archived BOOLEAN DEFAULT FALSE,
@@ -219,6 +219,13 @@ export async function ensureSchema(): Promise<void> {
 
   // Embeddings table — try pgvector first, fall back to JSONB
   await ensureEmbeddingsTable();
+
+  // Migrate sentiment from three-way (liked/neutral/disliked) to two-way (liked/skipped)
+  try {
+    await sql`UPDATE user_articles SET sentiment = 'skipped' WHERE sentiment IN ('neutral', 'disliked')`;
+    await sql`ALTER TABLE user_articles DROP CONSTRAINT IF EXISTS user_articles_sentiment_check`;
+    await sql`ALTER TABLE user_articles ADD CONSTRAINT user_articles_sentiment_check CHECK (sentiment IN ('liked', 'skipped'))`;
+  } catch { /* constraint may already be updated */ }
 
   // Add embedding_score and digest_tier to user_articles if not exists
   try {

@@ -33,7 +33,7 @@ export async function runPreferenceLearning(userId: string): Promise<boolean> {
   const existingPrefs = await getPreferencesByUserId(userId);
 
   // Only sentiment + read actions matter for learning
-  const LEARNING_ACTIONS = new Set(['liked', 'neutral', 'disliked', 'read']);
+  const LEARNING_ACTIONS = new Set(['liked', 'skipped', 'read']);
   const relevant = (recentFeedback as Record<string, unknown>[])
     .filter(f => LEARNING_ACTIONS.has(f.action as string));
 
@@ -46,11 +46,11 @@ export async function runPreferenceLearning(userId: string): Promise<boolean> {
     return true;
   });
 
-  // Prioritize strong signals (liked/disliked/read) over neutrals, cap at 50
+  // Prioritize strong signals (liked/read) over weak (skipped), cap at 100
   const MAX_ARTICLES = 100;
-  const strong = dedupedFeedback.filter(f => f.action !== 'neutral');
-  const neutral = dedupedFeedback.filter(f => f.action === 'neutral');
-  const capped = [...strong, ...neutral].slice(0, MAX_ARTICLES);
+  const strong = dedupedFeedback.filter(f => f.action !== 'skipped');
+  const weak = dedupedFeedback.filter(f => f.action === 'skipped');
+  const capped = [...strong, ...weak].slice(0, MAX_ARTICLES);
 
   const feedbackList = capped
     .map(f =>

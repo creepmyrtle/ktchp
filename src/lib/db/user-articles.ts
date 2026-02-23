@@ -67,8 +67,7 @@ export async function getDigestCompletionStats(userId: string, digestId: string,
   archived_count: number;
   remaining_count: number;
   liked_count: number;
-  neutral_count: number;
-  disliked_count: number;
+  skipped_count: number;
   bookmarked_count: number;
 }> {
   const tiers = tier ? (Array.isArray(tier) ? tier : [tier]) : null;
@@ -80,8 +79,7 @@ export async function getDigestCompletionStats(userId: string, digestId: string,
           COUNT(*) FILTER (WHERE is_archived = TRUE) as archived_count,
           COUNT(*) FILTER (WHERE is_archived = FALSE) as remaining_count,
           COUNT(*) FILTER (WHERE sentiment = 'liked') as liked_count,
-          COUNT(*) FILTER (WHERE sentiment = 'neutral') as neutral_count,
-          COUNT(*) FILTER (WHERE sentiment = 'disliked') as disliked_count,
+          COUNT(*) FILTER (WHERE sentiment = 'skipped') as skipped_count,
           COUNT(*) FILTER (WHERE is_bookmarked = TRUE) as bookmarked_count
         FROM user_articles
         WHERE user_id = $1 AND digest_id = $2 AND digest_tier = ANY($3)`,
@@ -93,8 +91,7 @@ export async function getDigestCompletionStats(userId: string, digestId: string,
           COUNT(*) FILTER (WHERE is_archived = TRUE) as archived_count,
           COUNT(*) FILTER (WHERE is_archived = FALSE) as remaining_count,
           COUNT(*) FILTER (WHERE sentiment = 'liked') as liked_count,
-          COUNT(*) FILTER (WHERE sentiment = 'neutral') as neutral_count,
-          COUNT(*) FILTER (WHERE sentiment = 'disliked') as disliked_count,
+          COUNT(*) FILTER (WHERE sentiment = 'skipped') as skipped_count,
           COUNT(*) FILTER (WHERE is_bookmarked = TRUE) as bookmarked_count
         FROM user_articles
         WHERE user_id = ${userId} AND digest_id = ${digestId}
@@ -106,8 +103,7 @@ export async function getDigestCompletionStats(userId: string, digestId: string,
     archived_count: parseInt(r.archived_count, 10),
     remaining_count: parseInt(r.remaining_count, 10),
     liked_count: parseInt(r.liked_count, 10),
-    neutral_count: parseInt(r.neutral_count, 10),
-    disliked_count: parseInt(r.disliked_count, 10),
+    skipped_count: parseInt(r.skipped_count, 10),
     bookmarked_count: parseInt(r.bookmarked_count, 10),
   };
 }
@@ -252,14 +248,22 @@ export async function archiveUserArticle(
   userId: string,
   articleId: string
 ): Promise<ArticleEngagementState | null> {
-  // Check sentiment first
-  const { rows: checkRows } = await sql`
-    SELECT sentiment FROM user_articles WHERE user_id = ${userId} AND article_id = ${articleId}
-  `;
-  if (!checkRows[0] || !checkRows[0].sentiment) return null;
-
   const { rows } = await sql`
     UPDATE user_articles SET is_archived = TRUE, archived_at = NOW()
+    WHERE user_id = ${userId} AND article_id = ${articleId}
+    RETURNING article_id, sentiment, is_read, is_bookmarked, is_archived
+  `;
+  if (!rows[0]) return null;
+  const r = rows[0];
+  return { articleId: r.article_id, sentiment: r.sentiment, is_read: r.is_read, is_bookmarked: r.is_bookmarked, is_archived: r.is_archived };
+}
+
+export async function unarchiveUserArticle(
+  userId: string,
+  articleId: string
+): Promise<ArticleEngagementState> {
+  const { rows } = await sql`
+    UPDATE user_articles SET is_archived = FALSE, archived_at = NULL, sentiment = NULL
     WHERE user_id = ${userId} AND article_id = ${articleId}
     RETURNING article_id, sentiment, is_read, is_bookmarked, is_archived
   `;

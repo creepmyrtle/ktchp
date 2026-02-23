@@ -80,8 +80,8 @@ export default async function DigestPage() {
               date={latestDigest.generated_at}
               articles={articles}
               bonusArticles={bonusArticles}
-              stats={stats || { total_article_count: 0, archived_count: 0, remaining_count: 0, liked_count: 0, neutral_count: 0, disliked_count: 0, bookmarked_count: 0 }}
-              bonusStats={bonusStats || { total_article_count: 0, archived_count: 0, remaining_count: 0, liked_count: 0, neutral_count: 0, disliked_count: 0, bookmarked_count: 0 }}
+              stats={stats || { total_article_count: 0, archived_count: 0, remaining_count: 0, liked_count: 0, skipped_count: 0, bookmarked_count: 0 }}
+              bonusStats={bonusStats || { total_article_count: 0, archived_count: 0, remaining_count: 0, liked_count: 0, skipped_count: 0, bookmarked_count: 0 }}
             >
               <DigestSelector digests={enrichedDigests} currentId={latestDigest.id} />
             </DigestContent>

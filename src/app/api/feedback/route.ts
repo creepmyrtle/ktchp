@@ -7,11 +7,12 @@ import {
   updateUserArticleRead,
   updateUserArticleBookmark,
   archiveUserArticle,
+  unarchiveUserArticle,
 } from '@/lib/db/user-articles';
 import type { FeedbackAction, Sentiment } from '@/types';
 
-const VALID_ACTIONS: FeedbackAction[] = ['liked', 'neutral', 'disliked', 'read', 'bookmark', 'unbookmark', 'archived'];
-const SENTIMENTS: Sentiment[] = ['liked', 'neutral', 'disliked'];
+const VALID_ACTIONS: FeedbackAction[] = ['liked', 'skipped', 'read', 'bookmark', 'unbookmark', 'archived', 'unarchived'];
+const SENTIMENTS: Sentiment[] = ['liked', 'skipped'];
 
 async function logEvent(userId: string, articleId: string, action: FeedbackAction) {
   try {
@@ -40,7 +41,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Article not found' }, { status: 404 });
     }
 
-    // Handle sentiment (liked / neutral / disliked) — three-way toggle
+    // Handle sentiment (liked / skipped) — two-way toggle
     if (SENTIMENTS.includes(action as Sentiment)) {
       const sentiment = action as Sentiment;
       const newSentiment = userArticle.sentiment === sentiment ? null : sentiment;
@@ -70,18 +71,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true, ...state });
     }
 
-    // Handle archive — requires sentiment
+    // Handle archive
     if (action === 'archived') {
-      if (!userArticle.sentiment) {
-        return NextResponse.json(
-          { error: 'Sentiment required before archiving' },
-          { status: 400 }
-        );
-      }
       const state = await archiveUserArticle(userId, articleId);
       if (!state) {
         return NextResponse.json({ error: 'Failed to archive' }, { status: 500 });
       }
+      await logEvent(userId, articleId, action);
+      return NextResponse.json({ success: true, ...state });
+    }
+
+    // Handle unarchive (undo)
+    if (action === 'unarchived') {
+      const state = await unarchiveUserArticle(userId, articleId);
       await logEvent(userId, articleId, action);
       return NextResponse.json({ success: true, ...state });
     }

@@ -9,9 +9,11 @@ interface ActionBarProps {
   articleUrl: string;
   initialSentiment: Sentiment | null;
   initialIsBookmarked: boolean;
-  swipeDirection?: 'right' | 'left';
+  reversed?: boolean;
   onArchive: () => void;
   onSentimentChange?: (sentiment: Sentiment | null) => void;
+  /** When true, hides sentiment buttons and archive — shows only bookmark + share (for touch devices where swipe handles those) */
+  hideDesktopControls?: boolean;
 }
 
 export default function ActionBar({
@@ -19,13 +21,13 @@ export default function ActionBar({
   articleUrl,
   initialSentiment,
   initialIsBookmarked,
-  swipeDirection = 'right',
+  reversed = false,
   onArchive,
   onSentimentChange,
+  hideDesktopControls = false,
 }: ActionBarProps) {
   const [sentiment, setSentiment] = useState<Sentiment | null>(initialSentiment);
   const [isBookmarked, setIsBookmarked] = useState(initialIsBookmarked);
-  const [sentimentPulse, setSentimentPulse] = useState(false);
   const { showToast } = useToast();
 
   function sendAction(action: string) {
@@ -56,28 +58,17 @@ export default function ActionBar({
     );
   }
 
-  function handleArchive() {
-    if (!sentiment) {
-      setSentimentPulse(true);
-      setTimeout(() => setSentimentPulse(false), 600);
-      showToast('Rate this article first', 'error');
-      return;
-    }
-    onArchive();
-  }
-
   const sentimentBtnClass = (value: Sentiment) => {
     const isActive = sentiment === value;
     const colors = {
       liked: isActive ? 'bg-success/15 text-success border-success/30' : '',
-      neutral: isActive ? 'bg-muted/15 text-muted border-muted/30' : '',
-      disliked: isActive ? 'bg-danger/15 text-danger border-danger/30' : '',
+      skipped: isActive ? 'bg-muted/15 text-muted border-muted/30' : '',
     };
     return `p-1.5 sm:p-2 rounded-md text-sm border transition-all ${
       isActive
         ? colors[value]
         : 'border-transparent text-muted hover:text-foreground hover:bg-card-border/30'
-    } ${sentimentPulse && !sentiment ? 'animate-pulse' : ''}`;
+    }`;
   };
 
   const iconBtnClass = (active: boolean) =>
@@ -87,35 +78,36 @@ export default function ActionBar({
         : 'text-muted hover:text-foreground hover:bg-card-border/30'
     }`;
 
+  const likeBtn = (
+    <button onClick={() => handleSentiment('liked')} className={sentimentBtnClass('liked')} title="Like">
+      &#x1F44D;
+    </button>
+  );
+  const skipBtn = (
+    <button onClick={() => handleSentiment('skipped')} className={sentimentBtnClass('skipped')} title="Skip">
+      &#x2192;
+    </button>
+  );
+
+  // On touch devices, only show bookmark + share (swipe handles sentiment + archive)
+  if (hideDesktopControls) {
+    return (
+      <div className="flex items-center gap-0.5">
+        <button onClick={handleBookmark} className={iconBtnClass(isBookmarked)} title={isBookmarked ? 'Remove bookmark' : 'Bookmark'}>
+          {isBookmarked ? '\uD83D\uDD16' : '\uD83D\uDCCC'}
+        </button>
+        <button onClick={handleShare} className={iconBtnClass(false)} title="Copy link">
+          &#x1F517;
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center gap-0.5 sm:gap-1 flex-wrap">
-      {/* Sentiment group — "like" is opposite the swipe side for easy one-handed reach */}
+      {/* Sentiment group — order swaps when reversed */}
       <div className="flex items-center border border-card-border rounded-lg overflow-hidden">
-        {swipeDirection === 'right' ? (
-          <>
-            <button onClick={() => handleSentiment('liked')} className={sentimentBtnClass('liked')} title="Liked">
-              &#x1F44D;
-            </button>
-            <button onClick={() => handleSentiment('neutral')} className={sentimentBtnClass('neutral')} title="Neutral">
-              &#x2796;
-            </button>
-            <button onClick={() => handleSentiment('disliked')} className={sentimentBtnClass('disliked')} title="Disliked">
-              &#x1F44E;
-            </button>
-          </>
-        ) : (
-          <>
-            <button onClick={() => handleSentiment('disliked')} className={sentimentBtnClass('disliked')} title="Disliked">
-              &#x1F44E;
-            </button>
-            <button onClick={() => handleSentiment('neutral')} className={sentimentBtnClass('neutral')} title="Neutral">
-              &#x2796;
-            </button>
-            <button onClick={() => handleSentiment('liked')} className={sentimentBtnClass('liked')} title="Liked">
-              &#x1F44D;
-            </button>
-          </>
-        )}
+        {reversed ? <>{skipBtn}{likeBtn}</> : <>{likeBtn}{skipBtn}</>}
       </div>
 
       {/* Bookmark */}
@@ -128,8 +120,8 @@ export default function ActionBar({
         &#x1F517;
       </button>
 
-      {/* Archive — hidden on mobile (use swipe instead) */}
-      <button onClick={handleArchive} className={`${iconBtnClass(false)} ${sentiment ? 'hover:text-success hover:bg-success/10' : ''} hidden sm:inline-flex`} title="Archive">
+      {/* Archive */}
+      <button onClick={onArchive} className={`${iconBtnClass(false)} hover:text-success hover:bg-success/10`} title="Archive">
         &#x1F4E5;
       </button>
     </div>

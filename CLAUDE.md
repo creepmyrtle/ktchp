@@ -38,7 +38,8 @@
 - Server components for pages (data fetching), client components for interactivity
 - `'use client'` directive on all interactive components
 - Toast notifications via `useToast()` from `Toast.tsx` context provider
-- Swipe gestures via `useSwipeToArchive` hook with velocity detection
+- Swipe gestures via `useSwipeGesture` hook with touch event tracking and velocity detection
+- Toast undo support: `showToast(message, type, { label, onClick })` with 3s timeout for action toasts
 - Shared utilities in `lib/utils/` (e.g., `timeAgo()` in `time.ts` — used by ArticleCard and SourceHealthIndicator)
 
 ### Database
@@ -58,7 +59,10 @@
 - Settings tabs are role-gated: non-admin users see only user-facing tabs
 - Default sources show "Default" label instead of delete button
 - Interest weights use discrete pill buttons (0, 0.2, 0.4, 0.6, 0.8, 1.0) — not sliders
-- Feedback button order reverses based on swipe direction setting
+- **Two-way sentiment**: `liked` / `skipped` (not three-way). Swipe right to like, left to skip (reversible via settings)
+- **Mobile swipe UX**: single gesture swipes card off-screen, logs sentiment + archives simultaneously, shows undo toast
+- **Touch detection**: `isTouchDevice` state set on first `touchstart` event (not screen width). Touch devices hide sentiment/archive buttons (swipe handles those); desktop shows full button layout
+- Feedback button order reverses based on `reversed` setting
 - Card archive animation: opacity fade (300ms) → height collapse (300ms) → display:none, with scroll position preservation. CSS handles opacity only; JS handles all spatial collapse via `requestAnimationFrame`
 - Source health indicators: colored dots (active/slow/stale/error/new) with frequency and recency stats
 - Add-source pre-check: validates feed URL before saving (idle → checking → result → adding → added state machine)

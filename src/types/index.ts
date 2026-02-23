@@ -2,10 +2,10 @@
 export type SourceType = 'rss' | 'manual_url';
 
 // Sentiment values
-export type Sentiment = 'liked' | 'neutral' | 'disliked';
+export type Sentiment = 'liked' | 'skipped';
 
 // Feedback actions (append-only event log)
-export type FeedbackAction = 'liked' | 'neutral' | 'disliked' | 'read' | 'bookmark' | 'unbookmark' | 'archived';
+export type FeedbackAction = 'liked' | 'skipped' | 'read' | 'bookmark' | 'unbookmark' | 'archived' | 'unarchived';
 
 // User
 export interface User {

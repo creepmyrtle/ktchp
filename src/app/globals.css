@@ -88,15 +88,6 @@ body {
   background: var(--serendipity);
 }
 
-/* Hide scrollbar on swipe containers */
-.swipe-scroll {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-.swipe-scroll::-webkit-scrollbar {
-  display: none;
-}
-
 /* Custom scrollbar */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--background); }

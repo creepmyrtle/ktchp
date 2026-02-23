@@ -43,7 +43,7 @@ export default function BookmarkCard({ article }: BookmarkCardProps) {
         <span className="text-xs text-muted">{article.source_name}</span>
         {article.sentiment && (
           <span className="text-xs text-muted">
-            {article.sentiment === 'liked' ? '\uD83D\uDC4D' : article.sentiment === 'disliked' ? '\uD83D\uDC4E' : '\u2796'} {article.sentiment}
+            {article.sentiment === 'liked' ? '\uD83D\uDC4D' : '\u2192'} {article.sentiment}
           </span>
         )}
       </div>
