@@ -221,9 +221,10 @@ export async function ensureSchema(): Promise<void> {
   await ensureEmbeddingsTable();
 
   // Migrate sentiment from three-way (liked/neutral/disliked) to two-way (liked/skipped)
+  // Must drop constraint BEFORE updating data, since old constraint rejects 'skipped'
   try {
-    await sql`UPDATE user_articles SET sentiment = 'skipped' WHERE sentiment IN ('neutral', 'disliked')`;
     await sql`ALTER TABLE user_articles DROP CONSTRAINT IF EXISTS user_articles_sentiment_check`;
+    await sql`UPDATE user_articles SET sentiment = 'skipped' WHERE sentiment IN ('neutral', 'disliked')`;
     await sql`ALTER TABLE user_articles ADD CONSTRAINT user_articles_sentiment_check CHECK (sentiment IN ('liked', 'skipped'))`;
   } catch { /* constraint may already be updated */ }
 

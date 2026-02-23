@@ -4,6 +4,11 @@ interface CaughtUpMessageProps {
   likedCount?: number;
   skippedCount?: number;
   bookmarkedCount?: number;
+  /** When set, shows a combined summary line for bonus articles */
+  bonusLikedCount?: number;
+  bonusSkippedCount?: number;
+  bonusBookmarkedCount?: number;
+  bonusTotalCount?: number;
 }
 
 export default function CaughtUpMessage({
@@ -12,18 +17,30 @@ export default function CaughtUpMessage({
   likedCount,
   skippedCount,
   bookmarkedCount,
+  bonusLikedCount,
+  bonusSkippedCount,
+  bonusBookmarkedCount,
+  bonusTotalCount,
 }: CaughtUpMessageProps) {
   if (isComplete && totalCount && totalCount > 0) {
+    const hasBonus = bonusTotalCount && bonusTotalCount > 0;
+    const grandTotal = totalCount + (bonusTotalCount ?? 0);
+
     return (
       <div className="text-center py-12 mt-8 border-t border-card-border">
         <div className="text-2xl mb-2">&#10003;</div>
         <p className="text-foreground font-light text-lg">Digest complete</p>
         <p className="text-muted text-sm mt-2">
-          You processed all {totalCount} articles.
+          You processed {hasBonus ? `all ${grandTotal}` : `all ${totalCount}`} articles.
         </p>
         <p className="text-muted text-xs mt-1">
           {likedCount || 0} liked &middot; {skippedCount || 0} skipped &middot; {bookmarkedCount || 0} bookmarked
         </p>
+        {hasBonus && (
+          <p className="text-muted text-xs mt-0.5">
+            Bonus: {bonusLikedCount || 0} liked &middot; {bonusSkippedCount || 0} skipped &middot; {bonusBookmarkedCount || 0} bookmarked
+          </p>
+        )}
         <p className="text-muted text-xs mt-3">
           Next digest: ~5:00 AM CT
         </p>

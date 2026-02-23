@@ -29,6 +29,7 @@ export default function DigestContent({ digestId, date, articles, bonusArticles 
   const [archivedCount, setArchivedCount] = useState(stats.archived_count);
   const [bonusArchivedCount, setBonusArchivedCount] = useState(bonusStats?.archived_count ?? 0);
   const [liveStats, setLiveStats] = useState<Stats>(stats);
+  const [liveBonusStats, setLiveBonusStats] = useState<Stats | null>(bonusStats ?? null);
   const [swipeHintDismissed, setSwipeHintDismissed] = useState(true);
   const [bonusExpanded, setBonusExpanded] = useState(false);
   const [reversed, setReversed] = useState(false);
@@ -80,14 +81,26 @@ export default function DigestContent({ digestId, date, articles, bonusArticles 
   const allCleared = archivedCount === totalCount && totalCount > 0;
   const allBonusCleared = bonusArchivedCount === bonusTotalCount && bonusTotalCount > 0;
 
-  // Fetch fresh stats from server when main digest is fully cleared
+  // Fetch fresh stats from server when main digest or bonus is fully cleared
   useEffect(() => {
     if (!allCleared) return;
     fetch(`/api/digests/${digestId}/stats`)
       .then(r => r.json())
-      .then(data => { if (data.total_article_count) setLiveStats(data); })
+      .then(data => {
+        if (data.total_article_count) setLiveStats(data);
+        if (data.bonus_total_count != null) {
+          setLiveBonusStats({
+            total_article_count: data.bonus_total_count,
+            archived_count: data.bonus_archived_count,
+            remaining_count: data.bonus_remaining_count,
+            liked_count: data.bonus_liked_count,
+            skipped_count: data.bonus_skipped_count,
+            bookmarked_count: data.bonus_bookmarked_count,
+          });
+        }
+      })
       .catch(() => {});
-  }, [allCleared, digestId]);
+  }, [allCleared, allBonusCleared, digestId]);
 
   // Separate recommended from serendipity articles
   const recommendedArticles = articles.filter(a => a.digest_tier !== 'serendipity');
@@ -178,6 +191,17 @@ export default function DigestContent({ digestId, date, articles, bonusArticles 
         </div>
       )}
 
+      {/* Main digest completion — shown when main is cleared but bonus remains */}
+      {allCleared && bonusTotalCount > 0 && !allBonusCleared && (
+        <CaughtUpMessage
+          isComplete={true}
+          totalCount={totalCount}
+          likedCount={liveStats.liked_count}
+          skippedCount={liveStats.skipped_count}
+          bookmarkedCount={liveStats.bookmarked_count}
+        />
+      )}
+
       {/* Bonus digest section — visible after main is complete but bonus is not yet cleared */}
       {bonusTotalCount > 0 && allCleared && !allBonusCleared && (
         <div className="mt-2">
@@ -223,14 +247,18 @@ export default function DigestContent({ digestId, date, articles, bonusArticles 
         </div>
       )}
 
-      {/* Caught up / completion message — only after all articles (main + bonus) are cleared */}
+      {/* Final completion — after all articles (main + bonus) are cleared */}
       {allCleared && (bonusTotalCount === 0 || allBonusCleared) && (
         <CaughtUpMessage
           isComplete={true}
-          totalCount={totalCount + bonusTotalCount}
+          totalCount={totalCount}
           likedCount={liveStats.liked_count}
           skippedCount={liveStats.skipped_count}
           bookmarkedCount={liveStats.bookmarked_count}
+          bonusTotalCount={liveBonusStats?.total_article_count}
+          bonusLikedCount={liveBonusStats?.liked_count}
+          bonusSkippedCount={liveBonusStats?.skipped_count}
+          bonusBookmarkedCount={liveBonusStats?.bookmarked_count}
         />
       )}
     </>
